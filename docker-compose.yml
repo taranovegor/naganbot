@@ -3,7 +3,7 @@ version: '3'
 services:
     php:
         build: ./docker/php
-        container_name: tg_bot_russian_roulette_php
+        container_name: tg_bot_nagan_php
         restart: always
         volumes:
             - .:/var/www/html
@@ -12,14 +12,12 @@ services:
             - mysql
             - rabbitmq
         networks:
-            - tg_bot_russian_roulette
+            - tg_bot_nagan
 
     mysql:
         image: mariadb:10
-        container_name: tg_bot_russian_roulette_mysql
+        container_name: tg_bot_nagan_mysql
         restart: always
-        ports:
-            - 3306:3306
         volumes:
             - ./docker/mysql/db:/var/lib/mysql
         environment:
@@ -29,11 +27,13 @@ services:
             - MYSQL_ROOT_PASSWORD
             - MYSQL_DATABASE
         networks:
-            - tg_bot_russian_roulette
+            - tg_bot_nagan
+        ports:
+            - 3306:3306
 
     nginx:
         image: nginx:1.17-alpine
-        container_name: tg_bot_russian_roulette_nginx
+        container_name: tg_bot_nagan_nginx
         restart: always
         ports:
             - "${NGINX_EXPOSE_PORT}:80"
@@ -43,16 +43,17 @@ services:
         links:
             - php
         networks:
-            - tg_bot_russian_roulette
+            - tg_bot_nagan
 
     rabbitmq:
         image: rafakato/rabbitmq-delayed-message-exchange
-        container_name: tg_bot_russian_roulette_rabbitmq
+        container_name: tg_bot_nagan_rabbitmq
         restart: always
+        entrypoint: ['echo', 'RabbitMQ service disabled']
         networks:
-            - tg_bot_russian_roulette
+            - tg_bot_nagan
 
 networks:
-    tg_bot_russian_roulette:
+    tg_bot_nagan:
         external:
             true

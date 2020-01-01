@@ -1,11 +1,12 @@
-FROM php:7.4-fpm
+FROM php:7.4-fpm-alpine
 
-RUN apt-get update && \
-    apt-get -y --no-install-recommends install \
+RUN apk update && \
+    apk add --no-cache \
         git \
         libzip-dev \
         supervisor \
         libxml2-dev
+
 RUN docker-php-ext-install \
         opcache \
         json \

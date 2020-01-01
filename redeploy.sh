@@ -9,3 +9,4 @@ docker exec -it tg_bot_russian_roulette_php php /var/www/html/bin/console rabbit
 sleep 5
 docker exec -it tg_bot_russian_roulette_php php /var/www/html/bin/console rabbitmq-supervisor:control --wait-for-supervisord start
 docker exec -it tg_bot_russian_roulette_php php bin/console doctrine:migrations:migrate --allow-no-migration --no-interaction
+#docker exec -it tg_bot_russian_roulette_php php bin/console translation:update ru --force

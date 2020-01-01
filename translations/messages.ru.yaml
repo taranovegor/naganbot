@@ -1,0 +1,15 @@
+game:
+    invite.join: "Вступить в игру: %command"
+    shot_himself: "%gunslinger прострелил себе голову"
+    joined_list:
+        title: "Участники игры %date"
+        item: "%num. %gunslinger"
+        item_info:
+            owner: "владелец"
+            shot_himself: "здох"
+command:
+    create: "Пригласить в игру"
+    join: "Присоединится к игре"
+    joined: "Список присоединившихся"
+    setlimit: "Установить количество игроков"
+    help: "Помощь"
