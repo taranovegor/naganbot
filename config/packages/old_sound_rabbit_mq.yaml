@@ -1,0 +1,33 @@
+old_sound_rabbit_mq:
+    connections:
+        default:
+            url:                '%env(RABBITMQ_URL)%'
+            vhost:              '/'
+            lazy:               true
+            heartbeat:          0
+            keepalive:          false
+            connection_timeout: 3
+            read_write_timeout: 3
+
+#    producers:
+#        task:
+#            connection:       default
+#            exchange_options: { name: 'task', type: direct }
+#    consumers:
+#        task:
+#            connection:       default
+#            exchange_options: { name: 'task', type: direct }
+#            queue_options:    { name: 'task'}
+#            callback:         App\Consumer\TaskConsumer
+
+rabbit_mq_supervisor:
+    paths:
+        log_file:               '%kernel.project_dir%/var/log/supervisor.log'
+        worker_output_log_file: '%kernel.project_dir%/var/log/rabbitmq_output_%kernel.environment%.log'
+        worker_error_log_file:  '%kernel.project_dir%/var/log/rabbitmq_error_%kernel.environment%.log'
+        php_executable:         'php -d memory_limit=512g'
+    consumer:
+        general:
+            messages: 250
+        individual:
+

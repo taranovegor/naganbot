@@ -1,0 +1,18 @@
+parameters:
+    telegram_route_secret: '%env(TELEGRAM_BOT_TOKEN)%'
+    default_locale: ru
+    available_locales:
+        - ru
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/*'
+        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']
