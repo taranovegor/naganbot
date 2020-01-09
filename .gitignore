@@ -14,7 +14,7 @@ gen
 /public/bundles/
 /var/
 /vendor/
-/src/supervisor
+/src/supervisor/
 ###< symfony/framework-bundle ###
 
 ###> phpunit/phpunit ###

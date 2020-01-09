@@ -16,3 +16,13 @@ services:
     App\Controller\:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
+
+    App\EventListener\CommandListener:
+        tags:
+            - { name: kernel.event_listener, event: boshurik_telegram_bot.update, method: onUpdate, priority: 1 }
+
+    App\EventListener\ExceptionListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, priority: 10 }
+        arguments:
+            $exceptionLogger: '@monolog.logger.exception'

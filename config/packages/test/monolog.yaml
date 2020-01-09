@@ -5,3 +5,11 @@ monolog:
             path: "%kernel.logs_dir%/%kernel.environment%.log"
             level: debug
             channels: ["!event"]
+        exception:
+            type:  rotating_file
+            path: '%kernel.logs_dir%/exception.%kernel.environment%.log'
+            level: debug
+            channels: ['exception']
+            max_files:  30
+    channels:
+        - 'exception'
