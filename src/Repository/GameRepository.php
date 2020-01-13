@@ -64,14 +64,17 @@ class GameRepository extends ServiceEntityRepository
      *
      * @throws EntityNotFoundException
      */
-    public function getCreatedTodayByChat(Chat $chat): Game
+    public function getActiveOrCreatedTodayByChat(Chat $chat): Game
     {
         $from = (new \DateTime())->setTime(0, 0, 0);
         $to = (new \DateTime())->setTime(23, 59, 59);
 
         ($qb = $this->createQueryBuilder('gt'))
             ->where($qb->expr()->eq('gt.chat', ':chat'))
-            ->andWhere($qb->expr()->between('gt.createdAt', ':time_from', ':time_to'))
+            ->andWhere($qb->expr()->orX(
+                $qb->expr()->between('gt.createdAt', ':time_from', ':time_to'),
+                $qb->expr()->isNull('gt.playedAt')
+            ))
             ->setParameters([
                 'chat' => $chat->getId(),
                 'time_from' => $from,

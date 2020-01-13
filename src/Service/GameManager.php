@@ -150,15 +150,12 @@ class GameManager
     {
         $chat = $this->chatRepository->get($chat->getId());
         try {
-            $game = $this->gameTableRepository->getCreatedTodayByChat($chat);
+            $game = $this->gameTableRepository->getActiveOrCreatedTodayByChat($chat);
         } catch (EntityNotFoundException $e) {
             throw new NotFoundActiveGameException();
         }
         if ($game->getPlayedAt() && $game->isCreatedToday()) {
             throw new GameIsAlreadyPlayedException();
-        }
-        if ($game->getPlayedAt() && false === $game->isCreatedToday()) {
-            throw new NotFoundActiveGameException();
         }
 
         $user = $this->userRepository->get($entering->getId());
