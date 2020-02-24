@@ -1,12 +1,11 @@
 #!/bin/sh
 
-docker-compose -f docker-compose.yml stop
-docker-compose -f docker-compose.yml build
-docker-compose -f docker-compose.yml up -d
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml stop
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml build
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-docker exec -it tg_bot_nagan_php composer install
-docker exec -it tg_bot_nagan_php php /var/www/html/bin/console rabbitmq-supervisor:rebuild
+docker-compose exec php composer install
+docker-compose exec php php /var/www/html/bin/console rabbitmq-supervisor:rebuild
 sleep 5
-docker exec -it tg_bot_nagan_php php /var/www/html/bin/console rabbitmq-supervisor:control --wait-for-supervisord start
-docker exec -it tg_bot_nagan_php php bin/console doctrine:migrations:migrate --allow-no-migration --no-interaction
-#docker exec -it tg_bot_nagan_php php bin/console translation:update ru --force
+docker-compose exec php php /var/www/html/bin/console rabbitmq-supervisor:control --wait-for-supervisord start
+docker-compose exec php php bin/console doctrine:migrations:migrate --allow-no-migration --no-interaction
