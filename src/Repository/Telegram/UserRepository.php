@@ -5,9 +5,14 @@
 
 namespace App\Repository\Telegram;
 
+use App\Entity\Game\Game;
+use App\Entity\Game\Gunslinger;
+use App\Entity\Telegram\Chat;
 use App\Entity\Telegram\User;
 use App\Exception\EntityNotFoundException;
+use App\Model\Telegram\TopUser;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -56,5 +61,37 @@ class UserRepository extends ServiceEntityRepository
         }
 
         return $object;
+    }
+
+    /**
+     * @param Chat $chat
+     * @param int  $limit
+     *
+     * @return array|TopUser[]
+     */
+    public function topByChat(Chat $chat, int $limit = 5): array
+    {
+        ($qb = $this->createQueryBuilder('_user'))
+            ->select('_user AS user, COUNT(_user.id) AS number_of_wins')
+            ->innerJoin(Gunslinger::class, '_gunslinger', Join::WITH, $qb->expr()->eq('_user.id', '_gunslinger.user'))
+            ->innerJoin(Game::class, '_game', Join::WITH, '_gunslinger.game = _game.id')
+            ->where($qb->expr()->eq('_game.chat', ':chat'))
+            ->andWhere($qb->expr()->eq('_gunslinger.shotHimself', ':shot_himself'))
+            ->andWhere($qb->expr()->isNotNull('_game.playedAt'))
+            ->groupBy('_user.id')
+            ->orderBy('number_of_wins', 'DESC')
+            ->setMaxResults($limit)
+            ->setParameters([
+                'chat' => $chat,
+                'shot_himself' => true,
+            ])
+        ;
+
+        $results = [];
+        foreach ($qb->getQuery()->getResult() as $result) {
+            $results[] = new TopUser($result['user'], $result['number_of_wins']);
+        }
+
+        return $results;
     }
 }

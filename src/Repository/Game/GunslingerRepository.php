@@ -7,6 +7,7 @@ namespace App\Repository\Game;
 
 use App\Entity\Game\Gunslinger;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -32,7 +33,7 @@ class GunslingerRepository extends ServiceEntityRepository
     /**
      * @param Gunslinger $gunslinger
      *
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException
      */
     public function add(Gunslinger $gunslinger)
     {

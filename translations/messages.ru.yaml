@@ -6,7 +6,7 @@ game:
         item: "%num. %gunslinger"
         item_info:
             owner: "владелец"
-            shot_himself: "здох"
+            shot_himself: "выбыл"
 command:
     create: "Пригласить в игру"
     join: "Присоединится к игре"
@@ -14,4 +14,8 @@ command:
     setlimit: "Установить количество игроков"
     help: "Помощь"
     force: "Принудительно запустить игру"
-
+    top: "Топ игроков"
+user:
+    top:
+        title: "Топ-%count% выбывших игроков:"
+        item: "%num%. %user% - %count% раз | %num%. %user% - %count% раза | %num%. %user% - %count% раз"
