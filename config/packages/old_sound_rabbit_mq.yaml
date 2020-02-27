@@ -30,4 +30,3 @@ rabbit_mq_supervisor:
         general:
             messages: 250
         individual:
-

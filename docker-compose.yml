@@ -9,7 +9,7 @@ services:
             - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
         depends_on:
             - mysql
-            - rabbitmq
+#            - rabbitmq
 
     mysql:
         image: mariadb:10
@@ -36,8 +36,8 @@ services:
         links:
             - php
 
-    rabbitmq:
-        image: rafakato/rabbitmq-delayed-message-exchange
-        container_name: tg_bot_nagan_rabbitmq
-        restart: always
-        entrypoint: ['echo', 'RabbitMQ service disabled']
+#    rabbitmq:
+#        image: rafakato/rabbitmq-delayed-message-exchange
+#        container_name: tg_bot_nagan_rabbitmq
+#        restart: always
+#        entrypoint: ['echo', 'RabbitMQ service disabled']

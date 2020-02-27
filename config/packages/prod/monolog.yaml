@@ -21,11 +21,4 @@ monolog:
             handler: deprecation
             max_level: info
             channels: ["php"]
-        exception:
-            type:  rotating_file
-            path: '%kernel.logs_dir%/exception.%kernel.environment%.log'
-            level: debug
-            channels: ['exception']
-            max_files:  30
     channels:
-        - 'exception'
