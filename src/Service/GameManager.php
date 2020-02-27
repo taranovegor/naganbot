@@ -113,7 +113,7 @@ class GameManager
             if (false === $game->isPlayed()) {
                 throw new GameIsAlreadyCreatedException();
             }
-            if($game->isCreatedToday()) {
+            if ($game->isCreatedToday()) {
                 throw new GameIsAlreadyPlayedException();
             }
         } catch (EntityNotFoundException $e) {
@@ -226,6 +226,7 @@ class GameManager
      * @param Chat $chat
      *
      * @return Gunslinger[]|Collection
+     *
      * @throws EntityNotFoundException
      */
     public function joined(Chat $chat): Collection

@@ -5,7 +5,6 @@
 
 namespace App\Event;
 
-
 use App\Entity\Game;
 use App\Entity\Gunslinger;
 

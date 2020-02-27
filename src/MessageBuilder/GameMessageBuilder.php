@@ -90,7 +90,7 @@ class GameMessageBuilder extends AbstractTranslatableMessageBuilder
         $this->message
             ->clear()
             ->addLine($this->translator->trans('game.joined_list.title', [
-                '%date' => $gameTable->getCreatedAt()->format('d.m.Y',)
+                '%date' => $gameTable->getCreatedAt()->format('d.m.Y'),
             ]))
         ;
 

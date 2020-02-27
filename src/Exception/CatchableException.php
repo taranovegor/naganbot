@@ -5,7 +5,6 @@
 
 namespace App\Exception;
 
-
 use Throwable;
 
 /**
