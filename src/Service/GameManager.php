@@ -13,6 +13,7 @@ use App\Event\GunslingerJoinedEvent;
 use App\Event\GunslingerShotHimselfEvent;
 use App\Exception\Game\AlreadyRegisteredInGameException;
 use App\Exception\EntityNotFoundException;
+use App\Exception\Game\FailedToScrollDrumException;
 use App\Exception\Game\GameIsAlreadyCreatedException;
 use App\Exception\Game\ShotDeadNotFoundException;
 use App\Exception\Game\GameIsAlreadyPlayedException;
@@ -192,30 +193,33 @@ class GameManager
         $game = $this->gameTableRepository->getByChat($chat);
         $gunslingers = $game->getGunslingers();
 
-        if (4 > $gunslingers->count()) {
+        if ($gunslingers->count() < 6) {
             throw new NotEnoughGunslingersException();
         }
 
-        foreach ($gunslingers as $chamber => $gunslinger) {
-            if ($chamber !== random_int($chamber, $gunslingers->count() - 1)) {
-                continue;
-            }
-
-            $shotHimself = new ShotHimself($gunslinger);
-            $this->shotHimselfRepository->add($shotHimself);
-            $game->setAsPlayed();
-
-            $this->flusher->flush();
-
-            $this->eventDispatcher->dispatch(
-                new GunslingerShotHimselfEvent($game, $shotHimself),
-                GunslingerShotHimselfEvent::EVENT
-            );
-
-            return $shotHimself;
+        $drum = [0, 0, 0, 0, 0, 1];
+        if (false === shuffle($drum)) {
+            throw new FailedToScrollDrumException();
         }
 
-        throw new ShotDeadNotFoundException();
+        $chamber = array_search(1, $drum, true);
+        $gunslinger = $gunslingers->get($chamber);
+        if (!$gunslinger instanceof Gunslinger) {
+            throw new ShotDeadNotFoundException();
+        }
+
+        $shotHimself = new ShotHimself($gunslinger);
+        $this->shotHimselfRepository->add($shotHimself);
+        $game->setAsPlayed();
+
+        $this->flusher->flush();
+
+        $this->eventDispatcher->dispatch(
+            new GunslingerShotHimselfEvent($game, $shotHimself),
+            GunslingerShotHimselfEvent::EVENT
+        );
+
+        return $shotHimself;
     }
 
     /**
