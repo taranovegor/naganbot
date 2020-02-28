@@ -193,7 +193,7 @@ class GameManager
         $game = $this->gameTableRepository->getByChat($chat);
         $gunslingers = $game->getGunslingers();
 
-        if ($gunslingers->count() < 6) {
+        if ($gunslingers->count() < 5) {
             throw new NotEnoughGunslingersException();
         }
 
