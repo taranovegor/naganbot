@@ -27,7 +27,6 @@ class KeyboardButton
      */
     private bool $requestLocation;
 
-
     /**
      * KeyboardButton constructor.
      *

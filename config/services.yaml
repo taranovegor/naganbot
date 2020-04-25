@@ -13,10 +13,6 @@ services:
         resource: '../src/*'
         exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
 
-    App\Controller\:
-        resource: '../src/Controller'
-        tags: ['controller.service_arguments']
-
     App\EventListener\CommandListener:
         tags:
             - { name: kernel.event_listener, event: boshurik_telegram_bot.update, method: onUpdate, priority: 1 }

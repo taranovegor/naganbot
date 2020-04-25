@@ -6,8 +6,7 @@
 namespace App\EventSubscriber;
 
 use App\Event\GameEvent;
-use App\Event\GunslingerJoinedEvent;
-use App\Event\GunslingerShotHimselfEvent;
+use App\Event\GunslingerEvent;
 use App\Exception\Game\GunslingerWasNotKickedException;
 use App\MessageBuilder\GameMessageBuilder;
 use App\Model\Message;
@@ -51,10 +50,10 @@ class GameSubscriber implements EventSubscriberInterface
             GameEvent::CREATED => [
                 ['onGameCreated', 0],
             ],
-            GunslingerJoinedEvent::EVENT => [
+            GunslingerEvent::JOINED => [
                 ['onGunslingerJoined', 0],
             ],
-            GunslingerShotHimselfEvent::EVENT => [
+            GunslingerEvent::SHOT_HIMSELF => [
                 ['onGunslingerShotHimself', 0],
             ],
         ];
@@ -69,40 +68,42 @@ class GameSubscriber implements EventSubscriberInterface
     public function onGameCreated(GameEvent $event)
     {
         $this->api->sendMessage(
-            $event->getGameTable()->getChat()->getId(),
+            $event->getGame()->getChat()->getId(),
             $this->gameMessageBuilder->buildCreate()->toString(),
             ParseMode::DEFAULT
         );
     }
 
     /**
-     * @param GunslingerJoinedEvent $event
+     * @param GunslingerEvent $event
      *
      * @throws \TelegramBot\Api\Exception
      * @throws \TelegramBot\Api\InvalidArgumentException
      */
-    public function onGunslingerJoined(GunslingerJoinedEvent $event)
+    public function onGunslingerJoined(GunslingerEvent $event)
     {
         $this->api->sendMessage(
-            $event->getGameTable()->getChat()->getId(),
+            $event->getGunslinger()->getGame()->getChat()->getId(),
             $this->gameMessageBuilder->buildJoin()->toString(),
             ParseMode::DEFAULT
         );
     }
 
     /**
-     * @param GunslingerShotHimselfEvent $event
+     * @param GunslingerEvent $event
      *
+     * @throws GunslingerWasNotKickedException
      * @throws \TelegramBot\Api\Exception
      * @throws \TelegramBot\Api\InvalidArgumentException
-     * @throws GunslingerWasNotKickedException
      */
-    public function onGunslingerShotHimself(GunslingerShotHimselfEvent $event)
+    public function onGunslingerShotHimself(GunslingerEvent $event)
     {
+        $game = $event->getGunslinger()->getGame();
+
         /** @var Message $message */
         foreach ($this->gameMessageBuilder->buildPlay() as $message) {
             $this->api->sendMessage(
-                $event->getGameTable()->getChat()->getId(),
+                $game->getChat()->getId(),
                 $message->toString(),
                 ParseMode::DEFAULT
             );
@@ -110,21 +111,21 @@ class GameSubscriber implements EventSubscriberInterface
         }
 
         $this->api->sendMessage(
-            $event->getGameTable()->getChat()->getId(),
+            $game->getChat()->getId(),
             $this->gameMessageBuilder->buildShotHimself(
-                $event->getShotHimself()
+                $event->getGunslinger()
             )->toString(),
             ParseMode::DEFAULT
         );
 
         try {
             $this->api->kickChatMember(
-                $event->getGameTable()->getChat()->getId(),
-                $event->getShotHimself()->getGunslinger()->getUser()->getId()
+                $game->getChat()->getId(),
+                $event->getGunslinger()->getUser()->getId()
             );
             $this->api->unbanChatMember(
-                $event->getGameTable()->getChat()->getId(),
-                $event->getShotHimself()->getGunslinger()->getUser()->getId()
+                $game->getChat()->getId(),
+                $event->getGunslinger()->getUser()->getId()
             );
         } catch (\TelegramBot\Api\Exception $e) {
             throw new GunslingerWasNotKickedException();

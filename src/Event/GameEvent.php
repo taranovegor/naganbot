@@ -5,7 +5,7 @@
 
 namespace App\Event;
 
-use App\Entity\Game;
+use App\Entity\Game\Game;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
@@ -13,31 +13,28 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 class GameEvent extends Event
 {
-    public const CREATED = 'game.created';
-    public const GUNSLINGER_JOINED = 'game.gunslinger_joined';
-    public const REQUIRED_NUMBER_OF_GUNSLINGER_REACHED = 'game.required_number_of_gunslinger_reached';
-    public const GUNSLINGER_SHOT_HIMSELF = 'game.gunslinger_shot_himself';
+    public const CREATED = 'event.game.created';
 
     /**
      * @var Game
      */
-    private Game $gameTable;
+    private Game $game;
 
     /**
      * GameEvent constructor.
      *
-     * @param Game $gameTable
+     * @param Game $game
      */
-    public function __construct(Game $gameTable)
+    public function __construct(Game $game)
     {
-        $this->gameTable = $gameTable;
+        $this->game = $game;
     }
 
     /**
      * @return Game
      */
-    public function getGameTable(): Game
+    public function getGame(): Game
     {
-        return $this->gameTable;
+        return $this->game;
     }
 }

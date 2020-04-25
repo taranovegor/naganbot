@@ -1,11 +1,40 @@
-# Russian Roulette bot
+# Nagan bot
 
-Run application
+Create file for local environment
 ```
-sh redeploy.sh
+touch .env.local
+```
+
+Deploy application
+```
+sh redeploy.sh -p
 ```
 
 Set telegram webhook
 ```
-docker exec -it toplyvo_telegram_notifier_php php bin/console telegram:webhook:set <url> [<path-to-certificate>]
+sh console.sh telegram:webhook:set <url> [<path-to-certificate>]
+```
+
+Stop all containers
+```
+sh redeploy.sh -s
+```
+
+## Manipulating application
+
+Symfony console commands
+```
+sh console.sh <specific command>
+```
+
+Composer commands
+```
+sh composer.sh <specific command>
+```
+
+## Code quality
+
+Check Symfony coding standards
+```
+sh checkstyle.sh
 ```

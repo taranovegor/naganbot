@@ -33,7 +33,7 @@ class EventDispatcher
      *
      * @return object
      */
-    public function dispatch($event, string $eventName = null)
+    public function dispatch($event, string $eventName = null): object
     {
         return $this->eventDispatcher->dispatch($event, $eventName);
     }

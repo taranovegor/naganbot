@@ -5,6 +5,7 @@
 
 namespace App\Entity\Telegram;
 
+use App\Repository\Telegram\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use TelegramBot\Api\Types\User as UserType;
 
@@ -12,7 +13,7 @@ use TelegramBot\Api\Types\User as UserType;
  * Class User
  *
  * @ORM\Table(name="telegram_user")
- * @ORM\Entity(repositoryClass="App\Repository\Telegram\UserRepository")
+ * @ORM\Entity(repositoryClass=UserRepository::class)
  */
 class User
 {

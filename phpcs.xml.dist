@@ -5,15 +5,13 @@
 
     <arg name="basepath" value="."/>
     <arg name="cache" value=".phpcs-cache"/>
-    <arg name="colors"/>
     <arg name="extensions" value="php"/>
 
-    <rule ref="PSR2"/>
+    <rule ref="vendor/escapestudios/symfony2-coding-standard/Symfony"/>
+    <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace"/>
 
-    <file>bin/</file>
-    <file>config/</file>
-    <file>public/</file>
+    <exclude-pattern>src/Kernel.php</exclude-pattern>
+    <exclude-pattern>src/Migrations/*</exclude-pattern>
+
     <file>src/</file>
-    <file>tests/</file>
-
 </ruleset>

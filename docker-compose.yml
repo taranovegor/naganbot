@@ -2,21 +2,21 @@ version: '3'
 services:
     php:
         build: ./docker/php
-        container_name: tg_bot_nagan_php
+        container_name: nagan_bot_php
         restart: always
         volumes:
             - .:/var/www/html
             - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
         depends_on:
             - mysql
-#            - rabbitmq
 
     mysql:
         image: mariadb:10
-        container_name: tg_bot_nagan_mysql
+        container_name: nagan_bot_mysql
         restart: always
         volumes:
-            - ./docker/mysql/db:/var/lib/mysql
+            - ./docker/mysql/conf.d:/etc/mysql/conf.d
+            - ./docker/mysql/database:/var/lib/mysql
         environment:
             - TZ
             - MYSQL_USER
@@ -26,7 +26,7 @@ services:
 
     nginx:
         image: nginx:1.17-alpine
-        container_name: tg_bot_nagan_nginx
+        container_name: nagan_bot_nginx
         restart: always
         ports:
             - ${NGINX_EXPOSE_PORT}:80
@@ -35,9 +35,3 @@ services:
             - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
         links:
             - php
-
-#    rabbitmq:
-#        image: rafakato/rabbitmq-delayed-message-exchange
-#        container_name: tg_bot_nagan_rabbitmq
-#        restart: always
-#        entrypoint: ['echo', 'RabbitMQ service disabled']

@@ -3,10 +3,6 @@
  * (c) Taranov Egor <dev@taranovegor.com>
  */
 
-/**
- * (c) Taranov Egor <dev@taranovegor.com>
- */
-
 namespace App\Model;
 
 use App\Entity\Telegram\User;

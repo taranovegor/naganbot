@@ -5,9 +5,10 @@
 
 namespace App\MessageBuilder;
 
-use App\Command\JoinCommand;
-use App\Entity\Game;
-use App\Entity\ShotHimself;
+use App\Telegram\Command\JoinCommand;
+use App\Entity\Game\Game;
+use App\Entity\Game\Gunslinger;
+use App\Entity\Game\ShotHimself;
 use App\Model\Message;
 use App\Model\Username;
 use Generator;
@@ -65,27 +66,26 @@ class GameMessageBuilder extends AbstractTranslatableMessageBuilder
     }
 
     /**
-     * @param ShotHimself $shotHimself
+     * @param Gunslinger $shotHimself
      *
      * @return Message
      */
-    public function buildShotHimself(ShotHimself $shotHimself): Message
+    public function buildShotHimself(Gunslinger $shotHimself): Message
     {
         return $this->message
             ->clear()
             ->add($this->translator->trans('game.shot_himself', [
-                '%gunslinger' => Username::fromUser($shotHimself->getGunslinger()->getUser())->toString(),
+                '%gunslinger' => Username::fromUser($shotHimself->getUser())->toString(),
             ]))
         ;
     }
 
     /**
-     * @param Game        $gameTable
-     * @param ShotHimself $shotHimself
+     * @param Game $gameTable
      *
      * @return Message
      */
-    public function buildJoined(Game $gameTable, ?ShotHimself $shotHimself): Message
+    public function buildJoined(Game $gameTable): Message
     {
         $this->message
             ->clear()
@@ -106,7 +106,7 @@ class GameMessageBuilder extends AbstractTranslatableMessageBuilder
                 )->addSpace();
             }
 
-            if (null !== $shotHimself && $gameTable->isPlayed() && $gunslinger->isSame($shotHimself->getGunslinger())) {
+            if ($gameTable->isPlayed() && $gunslinger->isShotHimself()) {
                 $this->message->add(
                     $this->translator->trans('game.joined_list.item_info.shot_himself')
                 )->addSpace();

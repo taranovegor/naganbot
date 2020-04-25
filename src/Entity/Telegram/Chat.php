@@ -5,6 +5,7 @@
 
 namespace App\Entity\Telegram;
 
+use App\Repository\Telegram\ChatRepository;
 use Doctrine\ORM\Mapping as ORM;
 use TelegramBot\Api\Types\Chat as ChatType;
 
@@ -12,7 +13,7 @@ use TelegramBot\Api\Types\Chat as ChatType;
  * Class Chat
  *
  * @ORM\Table(name="telegram_chat")
- * @ORM\Entity(repositoryClass="App\Repository\Telegram\ChatRepository")
+ * @ORM\Entity(repositoryClass=ChatRepository::class)
  */
 class Chat
 {

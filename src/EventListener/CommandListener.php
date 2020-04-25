@@ -6,25 +6,26 @@
 namespace App\EventListener;
 
 use App\Exception\CatchableException;
-use App\Service\TelegramDataSaver;
-use BoShurik\TelegramBotBundle\Event\Telegram\UpdateEvent;
+use App\Exception\ChatOnlyException;
+use App\Service\TelegramUpdateHandler;
+use BoShurik\TelegramBotBundle\Event\UpdateEvent;
 
 /**
- * Class CommandSubscriber
+ * Class CommandListener
  */
 class CommandListener
 {
     /**
-     * @var TelegramDataSaver
+     * @var TelegramUpdateHandler
      */
-    private TelegramDataSaver $dataSaver;
+    private TelegramUpdateHandler $dataSaver;
 
     /**
      * CommandSubscriber constructor.
      *
-     * @param TelegramDataSaver $dataSaver
+     * @param TelegramUpdateHandler $dataSaver
      */
-    public function __construct(TelegramDataSaver $dataSaver)
+    public function __construct(TelegramUpdateHandler $dataSaver)
     {
         $this->dataSaver = $dataSaver;
     }
@@ -33,7 +34,7 @@ class CommandListener
      * @param UpdateEvent $event
      *
      * @throws CatchableException
-     * @throws \App\Exception\ChatOnlyException
+     * @throws ChatOnlyException
      */
     public function onUpdate(UpdateEvent $event)
     {
