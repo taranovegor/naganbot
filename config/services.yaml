@@ -13,10 +13,6 @@ services:
         resource: '../src/*'
         exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
 
-    App\EventListener\CommandListener:
-        tags:
-            - { name: kernel.event_listener, event: boshurik_telegram_bot.update, method: onUpdate, priority: 1 }
-
     App\EventListener\ExceptionListener:
         tags:
             - { name: kernel.event_listener, event: kernel.exception, priority: 10 }
