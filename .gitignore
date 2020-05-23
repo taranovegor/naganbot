@@ -23,5 +23,4 @@ gen
 
 ###> docker-compose ###
 /docker/mysql/database/*
-!/docker/mysql/database/.gitkeep
 ###< docker-compose ###
