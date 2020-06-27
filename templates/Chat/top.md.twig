@@ -1,0 +1,6 @@
+{{ 'chat.top.title'|trans({'%count%': amount}) }}
+{% for num, statistic in users_chat_statistics %}
+{% apply inline|line_break %}
+    {{ 'chat.top.user.prepend'|trans({'%num%': num + 1, '%username%': statistic.user|username}) }} - {{ 'number_of_times'|trans({'%count%': statistic.numberOfWins}, 'counters') }}
+{% endapply %}
+{% endfor %}

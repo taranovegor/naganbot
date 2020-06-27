@@ -1,61 +1,65 @@
 <?php
 /**
- * (c) Taranov Egor <dev@taranovegor.com>
+ * Copyright (C) 14.08.20 Egor Taranov
+ * This file is part of Nagan bot <https://github.com/taranovegor/nagan-bot>.
+ *
+ * Nagan bot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Nagan bot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Nagan bot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace App\Entity\Telegram;
 
 use App\Repository\Telegram\ChatRepository;
+use App\ValueObject\Telegram\Chat\Type;
 use Doctrine\ORM\Mapping as ORM;
-use TelegramBot\Api\Types\Chat as ChatType;
 
 /**
  * Class Chat
  *
  * @ORM\Table(name="telegram_chat")
  * @ORM\Entity(repositoryClass=ChatRepository::class)
+ *
+ * @link https://core.telegram.org/bots/api#chat
  */
 class Chat
 {
     /**
-     * @var int
-     *
      * @ORM\Id()
      * @ORM\Column(name="id", type="bigint", unique=true, nullable=false)
      */
     private int $id;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="type", type="string", nullable=false)
+     * @ORM\Embedded(class=Type::class)
      */
-    private string $type;
+    private Type $type;
 
     /**
-     * @var null|string
-     *
      * @ORM\Column(name="title", type="string", nullable=true)
      */
     private ?string $title;
 
     /**
-     * @var null|string
-     *
      * @ORM\Column(name="first_name", type="string", nullable=true)
      */
     private ?string $firstName;
 
     /**
-     * @var null|string
-     *
      * @ORM\Column(name="last_name", type="string", nullable=true)
      */
     private ?string $lastName;
 
     /**
-     * @var null|string
-     *
      * @ORM\Column(name="invite_link", type="string", nullable=true)
      */
     private ?string $inviteLink;
@@ -63,16 +67,13 @@ class Chat
     /**
      * Chat constructor.
      *
-     * @param int    $id
-     * @param string $type
+     * @param int  $id
+     * @param Type $type
      */
-    public function __construct(int $id, string $type)
+    public function __construct(int $id, Type $type)
     {
         $this->id = $id;
         $this->type = $type;
-        $this->title = null;
-        $this->firstName = null;
-        $this->lastName = null;
         $this->inviteLink = null;
     }
 
@@ -94,11 +95,11 @@ class Chat
     }
 
     /**
-     * @param string $type
+     * @param Type $type
      *
      * @return Chat
      */
-    public function setType(string $type): Chat
+    public function setType(Type $type): Chat
     {
         $this->type = $type;
 
@@ -183,45 +184,5 @@ class Chat
         $this->inviteLink = $inviteLink;
 
         return $this;
-    }
-
-    /**
-     * @param ChatType $chat
-     *
-     * @return Chat
-     */
-    public function updateFromChatType(ChatType $chat): Chat
-    {
-        return $this
-            ->setTitle($chat->getTitle())
-            ->setFirstName($chat->getFirstName())
-            ->setLastName($chat->getLastName())
-            ->setInviteLink($chat->getInviteLink())
-        ;
-    }
-
-    /**
-     * @param Chat $chat
-     *
-     * @return bool
-     */
-    public function isSame(Chat $chat): bool
-    {
-        return $chat->getId() === $this->getId();
-    }
-
-    /**
-     * @param ChatType $chat
-     *
-     * @return Chat
-     */
-    public static function createFromChatType(ChatType $chat): Chat
-    {
-        return (new self($chat->getId(), $chat->getType()))
-            ->setTitle($chat->getTitle())
-            ->setFirstName($chat->getFirstName())
-            ->setLastName($chat->getLastName())
-            ->setInviteLink($chat->getInviteLink())
-        ;
     }
 }

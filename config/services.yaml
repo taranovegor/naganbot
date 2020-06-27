@@ -1,8 +1,5 @@
-parameters:
-    telegram_route_secret: '%env(TELEGRAM_BOT_TOKEN)%'
-    default_locale: ru
-    available_locales:
-        - ru
+imports:
+    - { resource: parameters.yaml }
 
 services:
     _defaults:
@@ -10,11 +7,15 @@ services:
         autoconfigure: true
 
     App\:
-        resource: '../src/*'
-        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+        resource: '../src/'
+        exclude:
+            - '../src/Constant/'
+            - '../src/Entity/'
+            - '../src/Exception/'
+            - '../src/Event/'
+            - '../src/ValueObject/'
+            - '../src/Kernel.php'
 
-    App\EventListener\ExceptionListener:
-        tags:
-            - { name: kernel.event_listener, event: kernel.exception, priority: 10 }
+    App\Manager\Game\GameManager:
         arguments:
-            $exceptionLogger: '@monolog.logger.exception'
+            $numberOfPlayers: '%app.game.number_of_players%'

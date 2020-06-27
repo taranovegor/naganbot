@@ -1,17 +1,30 @@
 <?php
 /**
- * (c) Taranov Egor <dev@taranovegor.com>
+ * Copyright (C) 14.08.20 Egor Taranov
+ * This file is part of Nagan bot <https://github.com/taranovegor/nagan-bot>.
+ *
+ * Nagan bot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Nagan bot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Nagan bot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace App\Entity\Game;
 
-use App\Entity\Game\Game;
 use App\Entity\Telegram\User;
+use App\Repository\Game\GunslingerRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use App\Repository\Game\GunslingerRepository;
 
 /**
  * Class Gunslinger
@@ -25,7 +38,7 @@ class Gunslinger
      * @var UuidInterface
      *
      * @ORM\Id()
-     * @ORM\Column(name="id", type="uuid_binary", unique=true, nullable=false)
+     * @ORM\Column(name="id", type="uuid_binary")
      */
     private UuidInterface $id;
 
@@ -48,29 +61,30 @@ class Gunslinger
     /**
      * @var DateTime
      *
-     * @ORM\Column(name="joined_at", type="datetime", nullable=false)
+     * @ORM\Column(name="joined_at", type="datetime")
      */
     private DateTime $joinedAt;
 
     /**
      * @var bool
      *
-     * @ORM\Column(name="shot_himself", type="boolean", nullable=false)
+     * @ORM\Column(name="shot_himself", type="boolean")
      */
-    private bool $shotHimself = false;
+    private bool $shotHimself;
 
     /**
      * Gunslinger constructor.
      *
-     * @param Game $gameTable
+     * @param Game $game
      * @param User $user
      */
-    public function __construct(Game $gameTable, User $user)
+    public function __construct(Game $game, User $user)
     {
         $this->id = Uuid::uuid4();
-        $this->game = $gameTable;
+        $this->game = $game;
         $this->user = $user;
         $this->joinedAt = new DateTime();
+        $this->shotHimself = false;
     }
 
     /**
@@ -121,15 +135,5 @@ class Gunslinger
         $this->shotHimself = true;
 
         return $this;
-    }
-
-    /**
-     * @param Gunslinger $gunslinger
-     *
-     * @return bool
-     */
-    public function isSame(Gunslinger $gunslinger): bool
-    {
-        return $this->getId()->equals($gunslinger->getId());
     }
 }

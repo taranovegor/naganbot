@@ -1,20 +1,33 @@
 <?php
 /**
- * (c) Taranov Egor <dev@taranovegor.com>
+ * Copyright (C) 14.08.20 Egor Taranov
+ * This file is part of Nagan bot <https://github.com/taranovegor/nagan-bot>.
+ *
+ * Nagan bot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Nagan bot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Nagan bot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace App\Entity\Game;
 
-use App\Entity\Game\Gunslinger;
 use App\Entity\Telegram\Chat;
 use App\Entity\Telegram\User;
+use App\Repository\Game\GameRepository;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use App\Repository\Game\GameRepository;
 
 /**
  * Class GameTable
@@ -25,24 +38,18 @@ use App\Repository\Game\GameRepository;
 class Game
 {
     /**
-     * @var UuidInterface
-     *
      * @ORM\Id()
-     * @ORM\Column(name="id", type="uuid_binary", unique=true, nullable=false)
+     * @ORM\Column(name="id", type="uuid_binary")
      */
     private UuidInterface $id;
 
     /**
-     * @var Chat
-     *
      * @ORM\ManyToOne(targetEntity=Chat::class, cascade={"persist"})
      * @ORM\JoinColumn(name="chat_id", referencedColumnName="id", nullable=false)
      */
     private Chat $chat;
 
     /**
-     * @var User
-     *
      * @ORM\ManyToOne(targetEntity=User::class, cascade={"persist"})
      * @ORM\JoinColumn(name="owner_user_id", referencedColumnName="id", nullable=false)
      */
@@ -57,15 +64,11 @@ class Game
     private Collection $gunslingers;
 
     /**
-     * @var DateTime
-     *
-     * @ORM\Column(name="created_at", type="datetime", nullable=false)
+     * @ORM\Column(name="created_at", type="datetime")
      */
     private DateTime $createdAt;
 
     /**
-     * @var null|DateTime
-     *
      * @ORM\Column(name="played_out_at", type="datetime", nullable=true)
      */
     private ?DateTime $playedAt;
@@ -119,20 +122,17 @@ class Game
     }
 
     /**
-     * @param User $user
+     * @param Gunslinger $gunslinger
      *
-     * @return null|Gunslinger
+     * @return Game
      */
-    public function getGunslingerByUser(User $user): ?Gunslinger
+    public function addGunslinger(Gunslinger $gunslinger): Game
     {
-        /** @var Gunslinger $gunslinger */
-        foreach ($this->gunslingers->toArray() as $gunslinger) {
-            if ($user->isSame($gunslinger->getUser())) {
-                return $gunslinger;
-            }
+        if (!$this->gunslingers->contains($gunslinger)) {
+            $this->gunslingers->add($gunslinger);
         }
 
-        return null;
+        return $this;
     }
 
     /**
@@ -162,7 +162,7 @@ class Game
     /**
      * @return Game
      */
-    public function setAsPlayed(): Game
+    public function markAsPlayed(): Game
     {
         if (null === $this->playedAt) {
             $this->playedAt = new DateTime();
@@ -176,10 +176,7 @@ class Game
      */
     public function isCreatedToday(): bool
     {
-        return 0 === (int) (clone $this
-                ->createdAt
-                ->setTime(0, 0, 0)
-            )
+        return 0 === (int) (clone $this->createdAt->modify('today'))
             ->diff(new DateTime())
             ->format('%R%a')
         ;

@@ -1,10 +1,18 @@
 monolog:
     handlers:
-        exception:
-            type:  rotating_file
-            path: '%kernel.logs_dir%/exception.%kernel.environment%.log'
+        game:
+            type: rotating_file
+            path: '%kernel.logs_dir%/game.log'
             level: debug
-            channels: ['exception']
-            max_files:  30
+            channels: ['game', 'gunslinger']
+            max_files:  7
+        update_handler:
+            type: rotating_file
+            path: '%kernel.logs_dir%/update_handler.log'
+            level: debug
+            channels: ['update_handler']
+            max_files:  7
     channels:
-        - 'exception'
+        - 'game'
+        - 'gunslinger'
+        - 'update_handler'
