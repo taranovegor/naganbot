@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ -f .env.local ]; then
-    export $(cat .env.local)
+    export $(cat .env.local | sed 's/#.*//g' | xargs)
 fi
 
 STOP=false

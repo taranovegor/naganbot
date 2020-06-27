@@ -1,7 +1,12 @@
 version: '3'
 services:
     php:
-        build: ./docker/php
+        build:
+            context: ./docker/php
+            args:
+                - TZ
+                - UID
+                - GID
         container_name: nagan_bot_php
         restart: always
         volumes:
