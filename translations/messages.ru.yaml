@@ -1,25 +1,29 @@
 game:
-    invite.join: "Вступить в игру: %command"
-    shot_himself: "%gunslinger прострелил себе голову"
-    joined_list:
-        title: "Участники игры %date"
-        item: "%num. %gunslinger"
-        item_info:
-            owner: "владелец"
-            shot_himself: "выбыл"
+    create:
+        subtitle: 'Вступить в игру: %command%'
+    joined:
+        title: 'Участники игры %date%:'
+        gunslinger:
+            prepend: '%num%. %username%'
+            information:
+                owner: 'владелец'
+                shot_himself: 'убит'
+
 command:
-    create: "Пригласить в игру"
-    join: "Присоединится к игре"
-    joined: "Список присоединившихся"
-    setlimit: "Установить количество игроков"
-    help: "Помощь"
-    force: "Принудительно запустить игру"
-    top: "Топ игроков"
-    me: "Информация обо мне"
+    create: 'Создать игру'
+    join: 'Присоединиться к игре'
+    joined: 'Список пользователей в игре'
+    force: 'Принудительно запустить игру'
+    top: 'Топ самоубийц'
+    me: 'Информация обо мне'
+    help: 'Помощь'
+
 user:
-    top:
-        title: "Топ-%count% выбывших игроков:"
-        item: "%num%. %user% - %count% раз | %num%. %user% - %count% раза | %num%. %user% - %count% раз"
     me:
-        title: "Ты выстрелил себе в висок"
-        count: "%count% раз | %count% раза | %count% раз"
+        prepend: 'Ты выстрелил себе в висок'
+
+chat:
+    top:
+        title: 'Топ-%count% выбывших игроков:'
+        user:
+            prepend: '%num%. %username%'

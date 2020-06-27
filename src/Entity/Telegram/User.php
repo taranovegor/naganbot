@@ -1,78 +1,84 @@
 <?php
 /**
- * (c) Taranov Egor <dev@taranovegor.com>
+ * Copyright (C) 14.08.20 Egor Taranov
+ * This file is part of Nagan bot <https://github.com/taranovegor/nagan-bot>.
+ *
+ * Nagan bot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Nagan bot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Nagan bot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace App\Entity\Telegram;
 
 use App\Repository\Telegram\UserRepository;
+use App\ValueObject\Telegram\User\LanguageCode;
+use App\ValueObject\Telegram\User\Username;
 use Doctrine\ORM\Mapping as ORM;
-use TelegramBot\Api\Types\User as UserType;
 
 /**
  * Class User
  *
  * @ORM\Table(name="telegram_user")
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ *
+ * @link https://core.telegram.org/bots/api#user
  */
 class User
 {
     /**
-     * @var int
-     *
      * @ORM\Id()
-     * @ORM\Column(name="id", type="integer", unique=true, nullable=false)
+     * @ORM\Column(name="id", type="integer")
      */
     private int $id;
 
     /**
-     * @var bool
-     *
-     * @ORM\Column(name="is_bot", type="boolean", nullable=false)
+     * @ORM\Column(name="is_bot", type="boolean")
      */
     private bool $isBot;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="first_name", type="string", nullable=false)
+     * @ORM\Column(name="first_name", type="string")
      */
     private string $firstName;
 
     /**
-     * @var null|string
-     *
      * @ORM\Column(name="last_name", type="string", nullable=true)
      */
     private ?string $lastName;
 
     /**
-     * @var null|string
-     *
-     * @ORM\Column(name="username", type="string", nullable=true)
+     * @ORM\Embedded(class=Username::class)
      */
-    private ?string $username;
+    private Username $username;
 
     /**
-     * @var null|string
-     *
-     * @ORM\Column(name="language_code", type="string", nullable=true)
+     * @ORM\Embedded(class=LanguageCode::class)
      */
-    private ?string $languageCode;
+    private LanguageCode $languageCode;
 
     /**
      * User constructor.
      *
      * @param int    $id
      * @param string $firstName
+     * @param bool   $isBot
      */
-    public function __construct(int $id, string $firstName)
+    public function __construct(int $id, string $firstName, bool $isBot)
     {
         $this->id = $id;
         $this->firstName = $firstName;
-        $this->lastName = null;
-        $this->username = null;
-        $this->languageCode = null;
+        $this->isBot = $isBot;
+        $this->username = new Username(null);
+        $this->languageCode = new LanguageCode(null);
     }
 
     /**
@@ -124,7 +130,7 @@ class User
     }
 
     /**
-     * @return null|string
+     * @return string|null
      */
     public function getLastName(): ?string
     {
@@ -132,7 +138,7 @@ class User
     }
 
     /**
-     * @param null|string $lastName
+     * @param string|null $lastName
      *
      * @return User
      */
@@ -144,19 +150,19 @@ class User
     }
 
     /**
-     * @return null|string
+     * @return Username
      */
-    public function getUsername(): ?string
+    public function getUsername(): Username
     {
         return $this->username;
     }
 
     /**
-     * @param null|string $username
+     * @param Username $username
      *
      * @return User
      */
-    public function setUsername(?string $username): User
+    public function setUsername(Username $username): User
     {
         $this->username = $username;
 
@@ -164,19 +170,19 @@ class User
     }
 
     /**
-     * @return null|string
+     * @return LanguageCode
      */
-    public function getLanguageCode(): ?string
+    public function getLanguageCode(): LanguageCode
     {
         return $this->languageCode;
     }
 
     /**
-     * @param null|string $languageCode
+     * @param LanguageCode $languageCode
      *
      * @return User
      */
-    public function setLanguageCode(?string $languageCode): User
+    public function setLanguageCode(LanguageCode $languageCode): User
     {
         $this->languageCode = $languageCode;
 
@@ -188,40 +194,8 @@ class User
      *
      * @return bool
      */
-    public function isSame(User $user): bool
+    public function isEquals(User $user): bool
     {
         return $this->getId() === $user->getId();
-    }
-
-    /**
-     * @param UserType $user
-     *
-     * @return User
-     */
-    public function updateFromUserType(UserType $user): User
-    {
-        return $this
-            ->setIsBot($user->isBot())
-            ->setFirstName($user->getFirstName())
-            ->setLastName($user->getLastName())
-            ->setUsername($user->getUsername())
-            ->setLanguageCode($user->getLanguageCode())
-        ;
-    }
-
-    /**
-     * @param UserType $user
-     *
-     * @return User
-     */
-    public static function createFromUserType(UserType $user): User
-    {
-        return (new self($user->getId(), $user->getFirstName()))
-            ->setIsBot($user->isBot())
-            ->setFirstName($user->getFirstName())
-            ->setLastName($user->getLastName())
-            ->setUsername($user->getUsername())
-            ->setLanguageCode($user->getLanguageCode())
-        ;
     }
 }

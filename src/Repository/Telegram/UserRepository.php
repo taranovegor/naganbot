@@ -1,6 +1,20 @@
 <?php
 /**
- * (c) Taranov Egor <dev@taranovegor.com>
+ * Copyright (C) 14.08.20 Egor Taranov
+ * This file is part of Nagan bot <https://github.com/taranovegor/nagan-bot>.
+ *
+ * Nagan bot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Nagan bot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Nagan bot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace App\Repository\Telegram;
@@ -9,9 +23,10 @@ use App\Entity\Game\Game;
 use App\Entity\Game\Gunslinger;
 use App\Entity\Telegram\Chat;
 use App\Entity\Telegram\User;
-use App\Exception\EntityNotFoundException;
-use App\Model\Telegram\TopUser;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -38,7 +53,7 @@ class UserRepository extends ServiceEntityRepository
     /**
      * @param User $user
      *
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException
      */
     public function add(User $user)
     {
@@ -46,67 +61,30 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param int $id
-     *
-     * @return User
-     *
-     * @throws EntityNotFoundException
-     */
-    public function get(int $id): User
-    {
-        $object = $this->find($id);
-
-        if (!$object instanceof User) {
-            throw new EntityNotFoundException();
-        }
-
-        return $object;
-    }
-
-    /**
-     * @param Chat $chat
-     * @param int  $limit
-     *
-     * @return array|TopUser[]
-     */
-    public function topByChat(Chat $chat, int $limit = 5): array
-    {
-        ($qb = $this->createQueryBuilder('_user'))
-            ->select('_user AS user, COUNT(_user.id) AS number_of_wins')
-            ->innerJoin(Gunslinger::class, '_gunslinger', Join::WITH, $qb->expr()->eq('_user.id', '_gunslinger.user'))
-            ->innerJoin(Game::class, '_game', Join::WITH, '_gunslinger.game = _game.id')
-            ->where($qb->expr()->eq('_game.chat', ':chat'))
-            ->andWhere($qb->expr()->eq('_gunslinger.shotHimself', ':shot_himself'))
-            ->andWhere($qb->expr()->isNotNull('_game.playedAt'))
-            ->groupBy('_user.id')
-            ->orderBy('number_of_wins', 'DESC')
-            ->setMaxResults($limit)
-            ->setParameters([
-                'chat' => $chat,
-                'shot_himself' => true,
-            ])
-        ;
-
-        $results = [];
-        foreach ($qb->getQuery()->getResult() as $result) {
-            $results[] = new TopUser($result['user'], $result['number_of_wins']);
-        }
-
-        return $results;
-    }
-
-    /**
      * @param User $user
      * @param Chat $chat
      *
-     * @return TopUser
+     * @return int
+     *
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
-    public function getStatisticByUserInChat(User $user, Chat $chat): TopUser
+    public function numberOfWinsForUserInChat(User $user, Chat $chat): int
     {
         ($qb = $this->createQueryBuilder('_user'))
             ->select($qb->expr()->count('_user.id'))
-            ->innerJoin(Gunslinger::class, '_gunslinger', Join::WITH, $qb->expr()->eq('_user.id', '_gunslinger.user'))
-            ->innerJoin(Game::class, '_game', Join::WITH, '_gunslinger.game = _game.id')
+            ->innerJoin(
+                Gunslinger::class,
+                '_gunslinger',
+                Join::WITH,
+                $qb->expr()->eq('_user.id', '_gunslinger.user')
+            )
+            ->innerJoin(
+                Game::class,
+                '_game',
+                Join::WITH,
+                $qb->expr()->eq('_gunslinger.game', '_game.id')
+            )
             ->where($qb->expr()->eq('_user', ':user'))
             ->andWhere($qb->expr()->eq('_game.chat', ':chat'))
             ->andWhere($qb->expr()->eq('_gunslinger.shotHimself', ':shot_himself'))
@@ -118,6 +96,6 @@ class UserRepository extends ServiceEntityRepository
             ])
         ;
 
-        return new TopUser($user, $qb->getQuery()->getSingleScalarResult());
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 }

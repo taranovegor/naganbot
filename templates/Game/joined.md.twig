@@ -1,0 +1,13 @@
+{{ 'game.joined.title'|trans({'%date%': game.createdAt.format('d.m.Y')}) }}
+{% for key, gunslinger in game.gunslingers %}
+{% apply inline|line_break %}
+    {{ 'game.joined.gunslinger.prepend'|trans({'%num%': key + 1, '%username%': gunslinger.user|username}) }}
+    {% if game.owner.equals(gunslinger.user) %}
+        {{ 'game.joined.gunslinger.information.owner'|trans }}
+    {% endif %}
+
+    {% if gunslinger.shotHimself %}
+        {{ 'game.joined.gunslinger.information.shot_himself'|trans }}
+    {% endif %}
+{% endapply %}
+{% endfor %}

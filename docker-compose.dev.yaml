@@ -1,0 +1,15 @@
+version: '3.4'
+services:
+    php:
+        build:
+            target: development
+        volumes:
+            - ./docker/php/conf.d/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini:ro
+        environment:
+            - PHP_IDE_CONFIG=serverName=${XDEBUG_SERVER_NAME}
+        extra_hosts:
+            - host_machine:${HOST_MACHINE}
+
+    mysql:
+        ports:
+            - ${MYSQL_EXPOSE_PORT}:3306

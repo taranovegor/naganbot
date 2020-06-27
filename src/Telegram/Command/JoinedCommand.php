@@ -1,15 +1,29 @@
 <?php
 /**
- * (c) Taranov Egor <dev@taranovegor.com>
+ * Copyright (C) 14.08.20 Egor Taranov
+ * This file is part of Nagan bot <https://github.com/taranovegor/nagan-bot>.
+ *
+ * Nagan bot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Nagan bot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Nagan bot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace App\Telegram\Command;
 
-use App\Entity\Game\Game;
-use App\Exception\EntityNotFoundException;
-use App\MessageBuilder\GameMessageBuilder;
-use App\Model\Telegram\ParseMode;
-use App\Manager\GameManager;
+use App\Constant\Telegram\ParseMode;
+use App\Exception\Common\EntityNotFoundException;
+use App\Manager\Game\GameManager;
+use App\Manager\Telegram\ChatManager;
+use App\Service\MessageBuilder\Game\GameMessageBuilder;
 use BoShurik\TelegramBotBundle\Telegram\Command\AbstractCommand;
 use BoShurik\TelegramBotBundle\Telegram\Command\PublicCommandInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -17,6 +31,9 @@ use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Exception;
 use TelegramBot\Api\InvalidArgumentException;
 use TelegramBot\Api\Types\Update;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 /**
  * Class JoinedCommand
@@ -25,33 +42,28 @@ class JoinedCommand extends AbstractCommand implements PublicCommandInterface
 {
     public const COMMAND = '/rrjoined';
 
-    /**
-     * @var TranslatorInterface
-     */
     private TranslatorInterface $translator;
 
-    /**
-     * @var GameManager
-     */
     private GameManager $gameManager;
 
-    /**
-     * @var GameMessageBuilder
-     */
-    private GameMessageBuilder $gameMessageBuilder;
+    private ChatManager $chatManager;
+
+    private GameMessageBuilder $messageBuilder;
 
     /**
      * JoinedCommand constructor.
      *
      * @param TranslatorInterface $translator
      * @param GameManager         $gameManager
-     * @param GameMessageBuilder  $gameMessageBuilder
+     * @param ChatManager         $chatManager
+     * @param GameMessageBuilder  $messageBuilder
      */
-    public function __construct(TranslatorInterface $translator, GameManager $gameManager, GameMessageBuilder $gameMessageBuilder)
+    public function __construct(TranslatorInterface $translator, GameManager $gameManager, ChatManager $chatManager, GameMessageBuilder $messageBuilder)
     {
         $this->translator = $translator;
         $this->gameManager = $gameManager;
-        $this->gameMessageBuilder = $gameMessageBuilder;
+        $this->chatManager = $chatManager;
+        $this->messageBuilder = $messageBuilder;
     }
 
     /**
@@ -74,29 +86,25 @@ class JoinedCommand extends AbstractCommand implements PublicCommandInterface
      * @param BotApi $api
      * @param Update $update
      *
-     * @return void
-     *
-     * @throws InvalidArgumentException
      * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function execute(BotApi $api, Update $update)
     {
         try {
-            $gunslingers = $this->gameManager->joined(
-                $update->getMessage()->getChat()
-            );
+            $chat = $this->chatManager->get($update->getMessage()->getChat()->getId());
+            $game = $this->gameManager->getLatestByChat($chat);
         } catch (EntityNotFoundException $e) {
             return;
         }
 
-        $game = $gunslingers[0]->getGame();
-
-        $message = $this->gameMessageBuilder->buildJoined($game);
-
         $api->sendMessage(
             $game->getChat()->getId(),
-            $message->toString(),
-            ParseMode::DEFAULT
+            $this->messageBuilder->buildJoined($game),
+            ParseMode::MARKDOWN
         );
     }
 }

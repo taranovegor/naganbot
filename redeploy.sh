@@ -1,17 +1,25 @@
 #!/bin/sh
 
 if [ -f .env.local ]; then
-    export $(cat .env.local | sed 's/#.*//g' | xargs)
+    export $(cat .env.local | sed "s/#.*//g")
 fi
 
 STOP=false
+DOWN=false
+KILL=false
 PROD=false
-DOCKER_COMPOSE_FILES="-f docker-compose.yml"
+DOCKER_COMPOSE_FILES="-f docker-compose.yaml"
 
-while getopts "sp" OPTION; do
+while getopts ":sdkp" OPTION; do
     case $OPTION in
         s)
             STOP=true
+            ;;
+        d)
+            DOWN=true
+            ;;
+        k)
+            KILL=true
             ;;
         p)
             PROD=true
@@ -20,13 +28,21 @@ while getopts "sp" OPTION; do
 done
 
 if [ $PROD = false ]; then
-    DOCKER_COMPOSE_FILES="$DOCKER_COMPOSE_FILES -f docker-compose.dev.yml"
+    DOCKER_COMPOSE_FILES="$DOCKER_COMPOSE_FILES -f docker-compose.dev.yaml"
 fi
 
-docker-compose $DOCKER_COMPOSE_FILES stop
+if [ $KILL = true ]; then
+    docker-compose $DOCKER_COMPOSE_FILES kill
+elif [ $DOWN = true ]; then
+    docker-compose $DOCKER_COMPOSE_FILES down
+else
+    docker-compose $DOCKER_COMPOSE_FILES stop
+fi
+
 if [ $STOP = true ]; then
     exit
 fi
+
 docker-compose $DOCKER_COMPOSE_FILES build
 docker-compose $DOCKER_COMPOSE_FILES up -d
 
