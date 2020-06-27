@@ -46,7 +46,7 @@ class GameManager
     /**
      * @var GameRepository
      */
-    private GameRepository $gameTableRepository;
+    private GameRepository $repository;
 
     /**
      * @var GunslingerRepository
@@ -64,6 +64,11 @@ class GameManager
     private EventDispatcher $eventDispatcher;
 
     /**
+     * @var int
+     */
+    private int $numberOfPlayers;
+
+    /**
      * GameManager constructor.
      *
      * @param ChatRepository       $chatRepository
@@ -72,35 +77,53 @@ class GameManager
      * @param GunslingerRepository $gunslingerRepository
      * @param Flusher              $flusher
      * @param EventDispatcher      $eventDispatcher
+     * @param int                  $numberOfPlayers
      */
-    public function __construct(ChatRepository $chatRepository, UserRepository $userRepository, GameRepository $gameTableRepository, GunslingerRepository $gunslingerRepository, Flusher $flusher, EventDispatcher $eventDispatcher)
+    public function __construct(ChatRepository $chatRepository, UserRepository $userRepository, GameRepository $gameTableRepository, GunslingerRepository $gunslingerRepository, Flusher $flusher, EventDispatcher $eventDispatcher, int $numberOfPlayers)
     {
         $this->chatRepository = $chatRepository;
         $this->userRepository = $userRepository;
-        $this->gameTableRepository = $gameTableRepository;
+        $this->repository = $gameTableRepository;
         $this->gunslingerRepository = $gunslingerRepository;
         $this->flusher = $flusher;
         $this->eventDispatcher = $eventDispatcher;
+        $this->numberOfPlayers = $numberOfPlayers;
+    }
+
+    /**
+     * @param \App\Entity\Telegram\Chat $chat
+     *
+     * @return Game
+     *
+     * @throws EntityNotFoundException
+     */
+    public function getLatestByChat(\App\Entity\Telegram\Chat $chat): Game
+    {
+        $object = $this->repository->findLatestByChat($chat);
+        if (!$object instanceof Game) {
+            throw new EntityNotFoundException();
+        }
+
+        return $object;
     }
 
     /**
      * @param Chat $chat
-     * @param User $inviter
+     * @param User $inviting
      *
      * @return Game
      *
      * @throws GameIsAlreadyCreatedException
      * @throws GameIsAlreadyPlayedException
-     * @throws ORMException
      * @throws EntityNotFoundException
      */
-    public function create(Chat $chat, User $inviter): Game
+    public function create(Chat $chat, User $inviting): Game
     {
         $chat = $this->chatRepository->get($chat->getId());
-        $user = $this->userRepository->get($inviter->getId());
+        $user = $this->userRepository->get($inviting->getId());
 
         try {
-            $game = $this->gameTableRepository->getByChat($chat);
+            $game = $this->repository->getByChat($chat);
             if (false === $game->isPlayed()) {
                 throw new GameIsAlreadyCreatedException();
             }
@@ -113,8 +136,7 @@ class GameManager
 
         $game = new Game($chat, $user);
         $gunslinger = new Gunslinger($game, $user);
-        $this->gameTableRepository->add($game);
-        $this->gunslingerRepository->add($gunslinger);
+        $game->addGunslinger($gunslinger);
 
         $this->flusher->flush();
 
@@ -132,17 +154,16 @@ class GameManager
      *
      * @return Gunslinger
      *
-     * @throws NotFoundActiveGameException
-     * @throws GameIsAlreadyPlayedException
      * @throws AlreadyRegisteredInGameException
      * @throws EntityNotFoundException
-     * @throws ORMException
+     * @throws GameIsAlreadyPlayedException
+     * @throws NotFoundActiveGameException
      */
     public function join(Chat $chat, User $entering): Gunslinger
     {
         $chat = $this->chatRepository->get($chat->getId());
         try {
-            $game = $this->gameTableRepository->getActiveOrCreatedTodayByChat($chat);
+            $game = $this->repository->getActiveOrCreatedTodayByChat($chat);
         } catch (EntityNotFoundException $e) {
             throw new NotFoundActiveGameException();
         }
@@ -155,7 +176,7 @@ class GameManager
             throw new AlreadyRegisteredInGameException();
         }
         $gunslinger = new Gunslinger($game, $user);
-        $this->gunslingerRepository->add($gunslinger);
+        $game->addGunslinger($gunslinger);
 
         $this->flusher->flush();
 
@@ -169,6 +190,8 @@ class GameManager
      *
      * @return Gunslinger
      *
+     * @deprecated use \App\Manager\GameManager::playGame instead
+     *
      * @throws EntityNotFoundException
      * @throws FailedToScrollDrumException
      * @throws NotEnoughGunslingersException
@@ -178,14 +201,30 @@ class GameManager
     public function play(Chat $chat): Gunslinger
     {
         $chat = $this->chatRepository->get($chat->getId());
-        $game = $this->gameTableRepository->getByChat($chat);
+        $game = $this->getLatestByChat($chat);
+
+        return $this->playGame($game);
+    }
+
+    /**
+     * @param Game $game
+     *
+     * @return Gunslinger
+     *
+     * @throws FailedToScrollDrumException
+     * @throws GameIsAlreadyPlayedException
+     * @throws NotEnoughGunslingersException
+     * @throws ShotDeadNotFoundException
+     */
+    public function playGame(Game $game): Gunslinger
+    {
         $gunslingers = $game->getGunslingers();
 
         if ($game->isPlayed()) {
             throw new GameIsAlreadyPlayedException();
         }
 
-        if ($gunslingers->count() < 5) {
+        if (false === $this->isEnoughPlayers($game)) {
             throw new NotEnoughGunslingersException();
         }
 
@@ -194,7 +233,7 @@ class GameManager
             throw new FailedToScrollDrumException();
         }
 
-        $chamber = array_search(1, $drum, true);
+        $chamber = (int) array_search(1, $drum, true);
         $gunslinger = $gunslingers->get($chamber);
         if (!$gunslinger instanceof Gunslinger) {
             throw new ShotDeadNotFoundException();
@@ -205,6 +244,7 @@ class GameManager
 
         $this->flusher->flush();
 
+        $this->eventDispatcher->dispatch(new GameEvent($game), GameEvent::PLAYED);
         $this->eventDispatcher->dispatch(new GunslingerEvent($gunslinger), GunslingerEvent::SHOT_HIMSELF);
 
         return $gunslinger;
@@ -220,8 +260,18 @@ class GameManager
     public function joined(Chat $chat): Collection
     {
         $chat = $this->chatRepository->get($chat->getId());
-        $gameTable = $this->gameTableRepository->getByChat($chat);
+        $gameTable = $this->repository->getByChat($chat);
 
         return $gameTable->getGunslingers();
+    }
+
+    /**
+     * @param Game $game
+     *
+     * @return bool
+     */
+    public function isEnoughPlayers(Game $game): bool
+    {
+        return $game->getGunslingers()->count() >= $this->numberOfPlayers;
     }
 }

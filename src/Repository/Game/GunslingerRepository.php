@@ -29,14 +29,4 @@ class GunslingerRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Gunslinger::class);
     }
-
-    /**
-     * @param Gunslinger $gunslinger
-     *
-     * @throws ORMException
-     */
-    public function add(Gunslinger $gunslinger)
-    {
-        $this->getEntityManager()->persist($gunslinger);
-    }
 }

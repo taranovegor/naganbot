@@ -5,9 +5,12 @@
 
 namespace App\Telegram\Command;
 
+use App\Exception\EntityNotFoundException;
+use App\Exception\Game\FailedToScrollDrumException;
 use App\Exception\Game\GameIsAlreadyPlayedException;
 use App\Exception\Game\NotEnoughGunslingersException;
 use App\Exception\Game\ShotDeadNotFoundException;
+use App\Manager\ChatManager;
 use App\Manager\GameManager;
 use App\MessageBuilder\GameMessageBuilder;
 use BoShurik\TelegramBotBundle\Telegram\Command\AbstractCommand;
@@ -39,17 +42,24 @@ class ForceCommand extends AbstractCommand implements PublicCommandInterface
     private GameMessageBuilder $gameMessageBuilder;
 
     /**
+     * @var ChatManager
+     */
+    private ChatManager $chatManager;
+
+    /**
      * StartCommand constructor.
      *
      * @param TranslatorInterface $translator
      * @param GameManager         $gameManager
      * @param GameMessageBuilder  $gameMessageBuilder
+     * @param ChatManager         $chatManager
      */
-    public function __construct(TranslatorInterface $translator, GameManager $gameManager, GameMessageBuilder $gameMessageBuilder)
+    public function __construct(TranslatorInterface $translator, GameManager $gameManager, GameMessageBuilder $gameMessageBuilder, ChatManager $chatManager)
     {
         $this->translator = $translator;
         $this->gameManager = $gameManager;
         $this->gameMessageBuilder = $gameMessageBuilder;
+        $this->chatManager = $chatManager;
     }
 
     /**
@@ -75,15 +85,15 @@ class ForceCommand extends AbstractCommand implements PublicCommandInterface
      * @return void
      *
      * @throws ShotDeadNotFoundException
-     * @throws \App\Exception\EntityNotFoundException
-     * @throws \App\Exception\Game\FailedToScrollDrumException
+     * @throws EntityNotFoundException
+     * @throws FailedToScrollDrumException
      */
     public function execute(BotApi $api, Update $update)
     {
         try {
-            $this->gameManager->play(
-                $update->getMessage()->getChat()
-            );
+            $chat = $this->chatManager->get((int) $update->getMessage()->getChat()->getId());
+            $game = $this->gameManager->getLatestByChat($chat);
+            $this->gameManager->playGame($game);
         } catch (NotEnoughGunslingersException | GameIsAlreadyPlayedException $e) {
             // ignore
         }

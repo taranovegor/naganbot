@@ -11,6 +11,7 @@ use App\Entity\Telegram\User;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -116,6 +117,20 @@ class Game
     public function getGunslingers(): Collection
     {
         return $this->gunslingers;
+    }
+
+    /**
+     * @param Gunslinger $gunslinger
+     *
+     * @return Game
+     */
+    public function addGunslinger(Gunslinger $gunslinger): Game
+    {
+        if (!$this->gunslingers->contains($gunslinger)) {
+            $this->gunslingers->add($gunslinger);
+        }
+
+        return $this;
     }
 
     /**
