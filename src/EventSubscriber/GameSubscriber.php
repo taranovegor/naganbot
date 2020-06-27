@@ -7,12 +7,19 @@ namespace App\EventSubscriber;
 
 use App\Event\GameEvent;
 use App\Event\GunslingerEvent;
+use App\Exception\Game\FailedToScrollDrumException;
+use App\Exception\Game\GameIsAlreadyPlayedException;
 use App\Exception\Game\GunslingerWasNotKickedException;
+use App\Exception\Game\NotEnoughGunslingersException;
+use App\Exception\Game\ShotDeadNotFoundException;
+use App\Manager\GameManager;
 use App\MessageBuilder\GameMessageBuilder;
 use App\Model\Message;
 use App\Model\Telegram\ParseMode;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use TelegramBot\Api\BotApi;
+use TelegramBot\Api\Exception;
+use TelegramBot\Api\InvalidArgumentException;
 
 /**
  * Class GameSubscriber
@@ -29,16 +36,20 @@ class GameSubscriber implements EventSubscriberInterface
      */
     private BotApi $api;
 
+    private GameManager $gameManager;
+
     /**
      * GameSubscriber constructor.
      *
      * @param GameMessageBuilder $gameMessageBuilder
      * @param BotApi             $api
+     * @param GameManager        $gameManager
      */
-    public function __construct(GameMessageBuilder $gameMessageBuilder, BotApi $api)
+    public function __construct(GameMessageBuilder $gameMessageBuilder, BotApi $api, GameManager $gameManager)
     {
         $this->gameMessageBuilder = $gameMessageBuilder;
         $this->api = $api;
+        $this->gameManager = $gameManager;
     }
 
     /**
@@ -51,7 +62,8 @@ class GameSubscriber implements EventSubscriberInterface
                 ['onGameCreated', 0],
             ],
             GunslingerEvent::JOINED => [
-                ['onGunslingerJoined', 0],
+                ['sendMessageWhenGunslingerJoined', 0],
+                ['checkPossibilityOfStartingGameWhenGunslingerJoined', 0],
             ],
             GunslingerEvent::SHOT_HIMSELF => [
                 ['onGunslingerShotHimself', 0],
@@ -62,8 +74,8 @@ class GameSubscriber implements EventSubscriberInterface
     /**
      * @param GameEvent $event
      *
-     * @throws \TelegramBot\Api\Exception
-     * @throws \TelegramBot\Api\InvalidArgumentException
+     * @throws Exception
+     * @throws InvalidArgumentException
      */
     public function onGameCreated(GameEvent $event)
     {
@@ -77,10 +89,10 @@ class GameSubscriber implements EventSubscriberInterface
     /**
      * @param GunslingerEvent $event
      *
-     * @throws \TelegramBot\Api\Exception
-     * @throws \TelegramBot\Api\InvalidArgumentException
+     * @throws Exception
+     * @throws InvalidArgumentException
      */
-    public function onGunslingerJoined(GunslingerEvent $event)
+    public function sendMessageWhenGunslingerJoined(GunslingerEvent $event)
     {
         $this->api->sendMessage(
             $event->getGunslinger()->getGame()->getChat()->getId(),
@@ -92,9 +104,24 @@ class GameSubscriber implements EventSubscriberInterface
     /**
      * @param GunslingerEvent $event
      *
+     * @throws FailedToScrollDrumException
+     * @throws GameIsAlreadyPlayedException
+     * @throws NotEnoughGunslingersException
+     * @throws ShotDeadNotFoundException
+     */
+    public function checkPossibilityOfStartingGameWhenGunslingerJoined(GunslingerEvent $event): void
+    {
+        if ($this->gameManager->isEnoughPlayers($event->getGunslinger()->getGame())) {
+            $this->gameManager->playGame($event->getGunslinger()->getGame());
+        }
+    }
+
+    /**
+     * @param GunslingerEvent $event
+     *
      * @throws GunslingerWasNotKickedException
-     * @throws \TelegramBot\Api\Exception
-     * @throws \TelegramBot\Api\InvalidArgumentException
+     * @throws Exception
+     * @throws InvalidArgumentException
      */
     public function onGunslingerShotHimself(GunslingerEvent $event)
     {
@@ -127,7 +154,7 @@ class GameSubscriber implements EventSubscriberInterface
                 $game->getChat()->getId(),
                 $event->getGunslinger()->getUser()->getId()
             );
-        } catch (\TelegramBot\Api\Exception $e) {
+        } catch (Exception $e) {
             throw new GunslingerWasNotKickedException();
         }
     }

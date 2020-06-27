@@ -1,0 +1,8 @@
+parameters:
+    app.locale.default: ru
+    app.locale.available:
+        - ru
+
+    telegram_route_secret: '%env(TELEGRAM_BOT_TOKEN)%'
+
+    app.game.number_of_players: 6

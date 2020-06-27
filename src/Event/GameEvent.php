@@ -14,6 +14,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 class GameEvent extends Event
 {
     public const CREATED = 'event.game.created';
+    public const PLAYED = 'event.game.played';
 
     /**
      * @var Game

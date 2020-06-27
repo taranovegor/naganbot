@@ -5,15 +5,23 @@
 
 namespace App\Telegram\Command;
 
+use App\Exception\EntityNotFoundException;
+use App\Exception\Game\AlreadyRegisteredInGameException;
+use App\Exception\Game\GameIsAlreadyPlayedException;
 use App\Exception\Game\NotEnoughGunslingersException;
+use App\Exception\Game\NotFoundActiveGameException;
 use App\Exception\Game\ShotDeadNotFoundException;
 use App\MessageBuilder\GameMessageBuilder;
 use App\Manager\GameManager;
 use BoShurik\TelegramBotBundle\Telegram\Command\AbstractCommand;
 use BoShurik\TelegramBotBundle\Telegram\Command\PublicCommandInterface;
+use Doctrine\ORM\ORMException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use TelegramBot\Api\BotApi;
+use TelegramBot\Api\Exception;
+use TelegramBot\Api\InvalidArgumentException;
 use TelegramBot\Api\Types\Update;
+use Throwable;
 
 /**
  * Class JoinCommand
@@ -73,15 +81,11 @@ class JoinCommand extends AbstractCommand implements PublicCommandInterface
      *
      * @return void
      *
-     * @throws ShotDeadNotFoundException
-     * @throws \App\Exception\EntityNotFoundException
-     * @throws \App\Exception\Game\AlreadyRegisteredInGameException
-     * @throws \App\Exception\Game\GameIsAlreadyPlayedException
-     * @throws \App\Exception\Game\NotFoundActiveGameException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \TelegramBot\Api\Exception
-     * @throws \TelegramBot\Api\InvalidArgumentException
-     * @throws \Throwable
+     * @throws AlreadyRegisteredInGameException
+     * @throws EntityNotFoundException
+     * @throws GameIsAlreadyPlayedException
+     * @throws NotFoundActiveGameException
+     * @throws ORMException
      */
     public function execute(BotApi $api, Update $update)
     {
@@ -89,13 +93,5 @@ class JoinCommand extends AbstractCommand implements PublicCommandInterface
             $update->getMessage()->getChat(),
             $update->getMessage()->getFrom()
         );
-
-        try {
-            $this->gameManager->play(
-                $update->getMessage()->getChat()
-            );
-        } catch (NotEnoughGunslingersException $e) {
-            // ignore
-        }
     }
 }

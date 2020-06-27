@@ -47,6 +47,8 @@ class GameRepository extends ServiceEntityRepository
      * @return \App\Entity\Game\Game
      *
      * @throws EntityNotFoundException
+     *
+     * @deprecated use \App\Repository\Game\GameRepository::findLatestByChatId or \App\Manager\GameManager::getLatestByChat instead
      */
     public function getByChat(Chat $chat): Game
     {
@@ -94,5 +96,17 @@ class GameRepository extends ServiceEntityRepository
         }
 
         return $object;
+    }
+
+    /**
+     * @param Chat $chat
+     *
+     * @return Game|null
+     */
+    public function findLatestByChat(Chat $chat): ?Game
+    {
+        return $this->findOneBy([
+            'chat' => $chat,
+        ], ['createdAt' => 'DESC']);
     }
 }
