@@ -16,7 +16,7 @@ services:
             - mysql
 
     mysql:
-        image: mariadb:10
+        image: mariadb:10.5
         container_name: nagan_bot_mysql
         restart: always
         volumes:
