@@ -6,6 +6,8 @@
 namespace App\EventListener;
 
 use App\Exception\CatchableExceptionInterface;
+use App\Exception\TranslatableExceptionInterface;
+use App\Service\DateTimeDiffFormatter;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -39,17 +41,24 @@ class ExceptionListener
     private TranslatorInterface $translator;
 
     /**
+     * @var DateTimeDiffFormatter
+     */
+    private DateTimeDiffFormatter $dateTimeDiffFormatter;
+
+    /**
      * ExceptionListener constructor.
      *
-     * @param BotApi              $api
-     * @param LoggerInterface     $exceptionLogger
-     * @param TranslatorInterface $translator
+     * @param BotApi                $api
+     * @param LoggerInterface       $exceptionLogger
+     * @param TranslatorInterface   $translator
+     * @param DateTimeDiffFormatter $dateTimeDiffFormatter
      */
-    public function __construct(BotApi $api, LoggerInterface $exceptionLogger, TranslatorInterface $translator)
+    public function __construct(BotApi $api, LoggerInterface $exceptionLogger, TranslatorInterface $translator, DateTimeDiffFormatter $dateTimeDiffFormatter)
     {
         $this->api = $api;
         $this->logger = $exceptionLogger;
         $this->translator = $translator;
+        $this->dateTimeDiffFormatter = $dateTimeDiffFormatter;
     }
 
     /**
@@ -86,11 +95,23 @@ class ExceptionListener
 
                 if ($e->isProcessed()) {
                     $responseCode = Response::HTTP_OK;
+
+                    $parameters = [];
+                    if ($e instanceof TranslatableExceptionInterface) {
+                        foreach ($e->getTranslatableParameters() as $key => $value) {
+                            if ($value instanceof \DateInterval) {
+                                $value = $this->dateTimeDiffFormatter->format($value);
+                            }
+
+                            $parameters[sprintf('%%%s%%', $key)] = $value;
+                        }
+                    }
+
                     $this->api->sendMessage(
                         $update->getMessage()->getChat()->getId(),
                         $this->translator->trans(
                             $e->getMessage(),
-                            [],
+                            $parameters,
                             'errors',
                             $update->getMessage()->getFrom()->getLanguageCode()
                         )

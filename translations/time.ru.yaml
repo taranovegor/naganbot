@@ -1,0 +1,10 @@
+diff:
+    now: "Сейчас"
+    ago:
+        day: "%count% день назад|%count% дня назад|%count% дней назад"
+        hour: "%count% час назад|%count% часа назад|%count% часов назад"
+        minute: "%count% минуту назад|%count% минуты назад|%count% минут назад"
+    in:
+        day: "через %count% день|через %count% дня|через %count% дней"
+        hour: "через %count% час|через %count% часа|через %count% часов"
+        minute: "через %count% минуту|через %count% минуты|через %count% минут"
