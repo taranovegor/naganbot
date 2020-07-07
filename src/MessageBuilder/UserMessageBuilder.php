@@ -37,4 +37,24 @@ class UserMessageBuilder extends AbstractTranslatableMessageBuilder
 
         return $this->message;
     }
+
+
+    /**
+     * @param TopUser $topUser
+     *
+     * @return Message
+     */
+    public function buildMe(TopUser $topUser): Message
+    {
+        $this->message
+            ->clear()
+            ->add($this->translator->trans('user.me.title'))
+            ->addSpace()
+            ->add($this->translator->trans('user.me.count', [
+                '%count%' => $topUser->getNumberOfWins(),
+            ]))
+        ;
+
+        return $this->message;
+    }
 }

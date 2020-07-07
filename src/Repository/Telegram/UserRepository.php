@@ -94,4 +94,30 @@ class UserRepository extends ServiceEntityRepository
 
         return $results;
     }
+
+    /**
+     * @param User $user
+     * @param Chat $chat
+     *
+     * @return TopUser
+     */
+    public function getStatisticByUserInChat(User $user, Chat $chat): TopUser
+    {
+        ($qb = $this->createQueryBuilder('_user'))
+            ->select($qb->expr()->count('_user.id'))
+            ->innerJoin(Gunslinger::class, '_gunslinger', Join::WITH, $qb->expr()->eq('_user.id', '_gunslinger.user'))
+            ->innerJoin(Game::class, '_game', Join::WITH, '_gunslinger.game = _game.id')
+            ->where($qb->expr()->eq('_user', ':user'))
+            ->andWhere($qb->expr()->eq('_game.chat', ':chat'))
+            ->andWhere($qb->expr()->eq('_gunslinger.shotHimself', ':shot_himself'))
+            ->andWhere($qb->expr()->isNotNull('_game.playedAt'))
+            ->setParameters([
+                'user' => $user,
+                'chat' => $chat,
+                'shot_himself' => true,
+            ])
+        ;
+
+        return new TopUser($user, $qb->getQuery()->getSingleScalarResult());
+    }
 }

@@ -15,7 +15,11 @@ command:
     help: "Помощь"
     force: "Принудительно запустить игру"
     top: "Топ игроков"
+    me: "Информация обо мне"
 user:
     top:
         title: "Топ-%count% выбывших игроков:"
         item: "%num%. %user% - %count% раз | %num%. %user% - %count% раза | %num%. %user% - %count% раз"
+    me:
+        title: "Ты выстрелил себе в висок"
+        count: "%count% раз | %count% раза | %count% раз"
