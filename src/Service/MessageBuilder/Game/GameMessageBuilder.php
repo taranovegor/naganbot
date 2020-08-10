@@ -83,7 +83,7 @@ class GameMessageBuilder
      */
     public function buildPlay(): Iterator
     {
-        $variation = rand(0, 2);
+        $variation = rand(0, 5);
 
         for ($step = 0; $step <= 1; $step++) {
             yield $this->twig->render('Game/play.md.twig', [
