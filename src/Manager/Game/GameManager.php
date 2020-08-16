@@ -26,6 +26,7 @@ use App\Entity\Telegram\User;
 use App\Event\Game\GameEvent;
 use App\Exception\Common\EntityNotFoundException;
 use App\Exception\Game\AlreadyCreatedException;
+use App\Exception\Game\AlreadyJoinedToGameException;
 use App\Exception\Game\AlreadyPlayedException;
 use App\Exception\Game\FailedToShuffleArrayException;
 use App\Exception\Game\GunslingerNotFoundException;
@@ -73,8 +74,8 @@ class GameManager
      * @param User $owner
      *
      * @return Game
-     *
      * @throws AlreadyCreatedException
+     * @throws AlreadyJoinedToGameException
      * @throws AlreadyPlayedException
      * @throws ORMException
      */
@@ -159,8 +160,8 @@ class GameManager
 
         $gunslingers = $this->gunslingerManager->getByGame($game);
 
-        $drum = array_fill(0, $this->numberOfPlayers + 1, 0);
-        $drum[rand(0, $this->numberOfPlayers)] = 1;
+        $drum = array_fill(0, $gunslingers->count(), 0);
+        $drum[rand(0, $gunslingers->count() - 1)] = 1;
         if (false === shuffle($drum)) {
             throw new FailedToShuffleArrayException();
         }

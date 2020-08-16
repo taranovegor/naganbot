@@ -21,6 +21,7 @@ namespace App\Telegram\Command;
 
 use App\Exception\Common\EntityNotFoundException;
 use App\Exception\Game\AlreadyCreatedException;
+use App\Exception\Game\AlreadyJoinedToGameException;
 use App\Exception\Game\AlreadyPlayedException;
 use App\Manager\Game\GameManager;
 use App\Manager\Telegram\ChatManager;
@@ -84,6 +85,7 @@ class CreateCommand extends AbstractCommand implements PublicCommandInterface
      * @param Update $update
      *
      * @throws AlreadyCreatedException
+     * @throws AlreadyJoinedToGameException
      * @throws AlreadyPlayedException
      * @throws EntityNotFoundException
      * @throws ORMException
