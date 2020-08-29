@@ -38,7 +38,7 @@ class Gunslinger
      * @var UuidInterface
      *
      * @ORM\Id()
-     * @ORM\Column(name="id", type="uuid_binary")
+     * @ORM\Column(name="id", type="uuid")
      */
     private UuidInterface $id;
 

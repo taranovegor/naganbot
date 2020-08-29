@@ -39,7 +39,7 @@ class Game
 {
     /**
      * @ORM\Id()
-     * @ORM\Column(name="id", type="uuid_binary")
+     * @ORM\Column(name="id", type="uuid")
      */
     private UuidInterface $id;
 
@@ -69,7 +69,7 @@ class Game
     private DateTime $createdAt;
 
     /**
-     * @ORM\Column(name="played_out_at", type="datetime", nullable=true)
+     * @ORM\Column(name="played_at", type="datetime", nullable=true)
      */
     private ?DateTime $playedAt;
 
