@@ -39,7 +39,7 @@ use Twig\Error\SyntaxError;
  */
 class TopCommand extends AbstractCommand implements PublicCommandInterface
 {
-    public const COMMAND = '/rrtop';
+    public const NAME = '/ngtop';
 
     private TranslatorInterface $translator;
 
@@ -66,7 +66,7 @@ class TopCommand extends AbstractCommand implements PublicCommandInterface
      */
     public function getName()
     {
-        return self::COMMAND;
+        return self::NAME;
     }
 
     /**

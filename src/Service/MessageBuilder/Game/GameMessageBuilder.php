@@ -54,7 +54,7 @@ class GameMessageBuilder
     public function buildCreate(): string
     {
         return $this->twig->render('Game/create.md.twig', [
-            'command' => JoinCommand::COMMAND,
+            'command' => JoinCommand::NAME,
         ]);
     }
 

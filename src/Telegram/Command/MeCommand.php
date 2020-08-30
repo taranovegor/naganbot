@@ -42,7 +42,7 @@ use Twig\Error\SyntaxError;
  */
 class MeCommand extends AbstractCommand implements PublicCommandInterface
 {
-    public const COMMAND = '/rrme';
+    public const NAME = '/ngme';
 
     private TranslatorInterface $translator;
 
@@ -73,7 +73,7 @@ class MeCommand extends AbstractCommand implements PublicCommandInterface
      */
     public function getName()
     {
-        return self::COMMAND;
+        return self::NAME;
     }
 
     /**

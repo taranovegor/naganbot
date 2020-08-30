@@ -37,7 +37,7 @@ use TelegramBot\Api\Types\Update;
  */
 class ForceCommand extends AbstractCommand implements PublicCommandInterface
 {
-    public const COMMAND = '/rrforce';
+    public const NAME = '/ngforce';
 
     private TranslatorInterface $translator;
 
@@ -64,7 +64,7 @@ class ForceCommand extends AbstractCommand implements PublicCommandInterface
      */
     public function getName()
     {
-        return self::COMMAND;
+        return self::NAME;
     }
 
     /**

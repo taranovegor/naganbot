@@ -39,7 +39,7 @@ use TelegramBot\Api\Types\Update;
  */
 class JoinCommand extends AbstractCommand implements PublicCommandInterface
 {
-    public const COMMAND = '/rrjoin';
+    public const NAME = '/ngjoin';
 
     private TranslatorInterface $translator;
 
@@ -74,7 +74,7 @@ class JoinCommand extends AbstractCommand implements PublicCommandInterface
      */
     public function getName()
     {
-        return self::COMMAND;
+        return self::NAME;
     }
 
     /**

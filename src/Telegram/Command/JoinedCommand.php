@@ -40,7 +40,7 @@ use Twig\Error\SyntaxError;
  */
 class JoinedCommand extends AbstractCommand implements PublicCommandInterface
 {
-    public const COMMAND = '/rrjoined';
+    public const NAME = '/ngjoined';
 
     private TranslatorInterface $translator;
 
@@ -71,7 +71,7 @@ class JoinedCommand extends AbstractCommand implements PublicCommandInterface
      */
     public function getName()
     {
-        return self::COMMAND;
+        return self::NAME;
     }
 
     /**
