@@ -38,7 +38,7 @@ use TelegramBot\Api\Types\Update;
  */
 class CreateCommand extends AbstractCommand implements PublicCommandInterface
 {
-    public const COMMAND = '/rrcreate';
+    public const NAME = '/ngcreate';
 
     private TranslatorInterface $translator;
 
@@ -69,7 +69,7 @@ class CreateCommand extends AbstractCommand implements PublicCommandInterface
      */
     public function getName()
     {
-        return self::COMMAND;
+        return self::NAME;
     }
 
     /**

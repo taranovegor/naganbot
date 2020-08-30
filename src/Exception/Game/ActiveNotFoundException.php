@@ -35,7 +35,7 @@ class ActiveNotFoundException extends \Exception implements ParameterizedExcepti
     public function getMessageParameters(): array
     {
         return [
-            'command' => CreateCommand::COMMAND,
+            'command' => CreateCommand::NAME,
         ];
     }
 }
