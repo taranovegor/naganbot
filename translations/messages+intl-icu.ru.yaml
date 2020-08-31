@@ -76,3 +76,18 @@ gunslinger:
             =5      {Дыра в форме пули заняла место в голове {username}}
             other   {{username} прострелил себе голову}
         }
+
+nagan_or_mauser:
+    nagan:
+        loaded: >-
+            {variation, plural,
+                other   {Упс, наган оказался заряжен}
+            }
+        not_loaded: >-
+            {variation, plural,
+                other   {Тебе повезло, что наган не был заряжен}
+            }
+    mauser: >-
+        {variation, plural,
+            other   {{username} решил сыграть в русскую рулетку маузером}
+        }

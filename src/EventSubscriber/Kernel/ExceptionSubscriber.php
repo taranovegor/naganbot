@@ -109,6 +109,6 @@ class ExceptionSubscriber implements EventSubscriberInterface
             ParseMode::MARKDOWN
         );
 
-        $event->setThrowable(new HttpException(Response::HTTP_NO_CONTENT));
+        $event->setThrowable(new HttpException(Response::HTTP_NO_CONTENT, $throwable->getPrevious()));
     }
 }
