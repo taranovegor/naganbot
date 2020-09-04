@@ -65,7 +65,7 @@ class ChatManager
     {
         $chat = new Chat($model->getId(), new Type($model->getType()));
         $this->repository->add($chat);
-        $this->flusher->flush();
+        $this->flusher->flush($chat);
 
         $this->eventDispatcher->dispatch(new ChatEvent($chat), ChatEvent::CREATED);
 
@@ -89,7 +89,7 @@ class ChatManager
             ->setLastName($model->getLastName())
             ->setInviteLink($model->getInviteLink())
         ;
-        $this->flusher->flush();
+        $this->flusher->flush($chat);
 
         $this->eventDispatcher->dispatch(new ChatEvent($chat), ChatEvent::UPDATED);
 

@@ -19,3 +19,7 @@ services:
     App\Manager\Game\GameManager:
         arguments:
             $numberOfPlayers: '%app.game.number_of_players%'
+
+    App\Service\Common\Flusher:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'

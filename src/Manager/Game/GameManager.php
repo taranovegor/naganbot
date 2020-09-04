@@ -96,7 +96,7 @@ class GameManager
 
         $game = new Game($chat, $owner);
         $this->repository->add($game);
-        $this->flusher->flush();
+        $this->flusher->flush($game);
 
         $this->eventDispatcher->dispatch(new GameEvent($game), GameEvent::CREATED);
 
@@ -173,11 +173,11 @@ class GameManager
         }
 
         $game->markAsPlayed();
-        $this->flusher->flush();
-
         $this->eventDispatcher->dispatch(new GameEvent($game), GameEvent::PLAYED);
 
         $this->gunslingerManager->shot($gunslinger);
+
+        $this->flusher->flush($game);
 
         return $gunslinger;
     }

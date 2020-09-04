@@ -69,7 +69,7 @@ class UserManager
     {
         $user = new User($model->getId(), $model->getFirstName(), $model->isBot());
         $this->repository->add($user);
-        $this->flusher->flush();
+        $this->flusher->flush($user);
 
         $this->eventDispatcher->dispatch(new UserEvent($user), UserEvent::CREATED);
 
@@ -93,7 +93,7 @@ class UserManager
             ->setIsBot($model->isBot())
             ->setLanguageCode(new LanguageCode($model->getLanguageCode()))
         ;
-        $this->flusher->flush();
+        $this->flusher->flush($user);
 
         $this->eventDispatcher->dispatch(new UserEvent($user), UserEvent::UPDATED);
 

@@ -19,30 +19,32 @@
 
 namespace App\Service\Common;
 
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityManager;
 
 /**
  * Class Flusher
  */
 class Flusher
 {
-    private EntityManagerInterface $entityManager;
+    private EntityManager $entityManager;
 
     /**
      * Flusher constructor.
      *
-     * @param EntityManagerInterface $entityManager
+     * @param EntityManager $entityManager
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManager $entityManager)
     {
         $this->entityManager = $entityManager;
     }
 
     /**
+     * @param object $entity
+     *
      * @return void
      */
-    public function flush(): void
+    public function flush(object $entity): void
     {
-        $this->entityManager->flush();
+        $this->entityManager->flush($entity);
     }
 }

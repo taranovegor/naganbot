@@ -83,7 +83,7 @@ class GunslingerManager
 
         $gunslinger = new Gunslinger($game, $user);
         $this->repository->add($gunslinger);
-        $this->flusher->flush();
+        $this->flusher->flush($gunslinger);
 
         $this->eventDispatcher->dispatch(new GunslingerEvent($gunslinger), GunslingerEvent::JOINED_TO_GAME);
 
@@ -126,7 +126,7 @@ class GunslingerManager
     public function shot(Gunslinger $gunslinger): Gunslinger
     {
         $gunslinger->shot();
-        $this->flusher->flush();
+        $this->flusher->flush($gunslinger);
 
         $this->eventDispatcher->dispatch(new GunslingerEvent($gunslinger), GunslingerEvent::SHOT_HIMSELF);
 
