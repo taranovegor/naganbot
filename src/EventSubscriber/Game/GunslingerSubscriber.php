@@ -87,6 +87,14 @@ class GunslingerSubscriber implements EventSubscriberInterface
     {
         $gunslinger = $event->getGunslinger();
 
+        if ($gunslinger->getGame()->isPlayed()) {
+            $this->logger->info('event_subscriber.game.gunslinger.send_message_when_joined_to_game.ignored_game_already_played', [
+                'gunslinger.id' => $event->getGunslinger()->getId()->toString(),
+            ]);
+
+            return;
+        }
+
         if ($gunslinger->getUser()->isEquals($gunslinger->getGame()->getOwner())) {
             $this->logger->info('event_subscriber.game.gunslinger.send_message_when_joined_to_game.ignored_gunslinger_is_owner', [
                 'gunslinger.id' => $event->getGunslinger()->getId()->toString(),
