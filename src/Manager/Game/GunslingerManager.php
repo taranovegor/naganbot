@@ -70,7 +70,7 @@ class GunslingerManager
      */
     public function create(Game $game, User $user): Gunslinger
     {
-        if ($game->getPlayedAt() && $game->isCreatedToday()) {
+        if ($game->isPlayed() && $game->isCreatedToday()) {
             throw new AlreadyPlayedException();
         }
 
