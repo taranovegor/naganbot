@@ -6,6 +6,10 @@ services:
         autowire: true
         autoconfigure: true
 
+    _instanceof:
+        App\Twig\Strategy\Escaper\EscaperStrategyInterface:
+            tags: ['app.twig.strategy.escaper']
+
     App\:
         resource: '../src/'
         exclude:
@@ -19,3 +23,8 @@ services:
     App\Manager\Game\GameManager:
         arguments:
             $numberOfPlayers: '%app.game.number_of_players%'
+
+    App\DependencyInjection\Configurator\Twig\EnvironmentConfigurator:
+        decorates: 'twig.configurator.environment'
+        arguments:
+            $strategiesGenerators: [!tagged app.twig.strategy.escaper]
