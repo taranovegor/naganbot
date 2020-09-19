@@ -23,7 +23,8 @@
     "twig/twig": "^2.12|^3.0"
   },
   "require-dev": {
-    "escapestudios/symfony2-coding-standard": "3.x-dev"
+    "escapestudios/symfony2-coding-standard": "3.x-dev",
+    "symfony/phpunit-bridge": "^5.1"
   },
   "config": {
     "preferred-install": {
