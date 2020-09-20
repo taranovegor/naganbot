@@ -53,7 +53,7 @@ class GameMessageBuilder
      */
     public function buildCreate(): string
     {
-        return $this->twig->render('Game/create.md.twig', [
+        return $this->twig->render('Game/Game/create.md.twig', [
             'command' => JoinCommand::NAME,
         ]);
     }
@@ -69,7 +69,7 @@ class GameMessageBuilder
      */
     public function buildJoined(Game $game): string
     {
-        return $this->twig->render('Game/joined.md.twig', [
+        return $this->twig->render('Game/Game/joined.md.twig', [
             'game' => $game,
         ]);
     }
@@ -86,7 +86,7 @@ class GameMessageBuilder
         $variation = rand(0, 5);
 
         for ($step = 0; $step <= 1; $step++) {
-            yield $this->twig->render('Game/play.md.twig', [
+            yield $this->twig->render('Game/Game/play.md.twig', [
                 'variation' => $variation,
                 'step' => $step,
             ]);
