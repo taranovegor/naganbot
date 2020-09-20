@@ -53,7 +53,7 @@ class ChatMessageBuilder
      */
     public function buildTop(array $statistics): string
     {
-        return $this->twig->render('Chat/top.md.twig', [
+        return $this->twig->render('Telegram/Chat/top.md.twig', [
             'amount' => count($statistics),
             'users_chat_statistics' => $statistics,
         ]);

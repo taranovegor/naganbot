@@ -51,7 +51,7 @@ class GunslingerMessageBuilder
      */
     public function buildJoin(): string
     {
-        return $this->twig->render('Gunslinger/join.md.twig');
+        return $this->twig->render('Game/Gunslinger/join.md.twig');
     }
 
     /**
@@ -65,7 +65,7 @@ class GunslingerMessageBuilder
      */
     public function buildShotHimself(Gunslinger $gunslinger): string
     {
-        return $this->twig->render('Gunslinger/shot_himself.md.twig', [
+        return $this->twig->render('Game/Gunslinger/shot_himself.md.twig', [
             'gunslinger' => $gunslinger,
         ]);
     }

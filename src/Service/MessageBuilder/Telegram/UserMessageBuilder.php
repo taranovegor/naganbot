@@ -53,7 +53,7 @@ class UserMessageBuilder
      */
     public function buildMe(UserChatStatistic $statistic): string
     {
-        return $this->twig->render('User/me.md.twig', [
+        return $this->twig->render('Telegram/User/me.md.twig', [
             'user_chat_statistic' => $statistic,
         ]);
     }
