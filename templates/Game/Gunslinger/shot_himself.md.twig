@@ -1,1 +1,7 @@
-{{ 'gunslinger.shot_himself'|trans({'%variation%': random(0, 6), '%username%': gunslinger.user.username.mention|escape('markdown')}) }}
+{{ 'gunslinger.shot_himself'|trans(
+    intl_rand_variation_params('gunslinger.shot_himself', {
+        'variation': null
+    })|merge({
+        '%username%': gunslinger.user.username.mention|escape('markdown')
+    })
+) }}

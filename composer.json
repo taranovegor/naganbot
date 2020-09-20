@@ -7,6 +7,7 @@
     "ext-iconv": "*",
     "ext-json": "*",
     "ext-zip": "*",
+    "ext-intl": "*",
     "boshurik/telegram-bot-bundle": "^4.0",
     "ramsey/uuid": "^3.9",
     "ramsey/uuid-doctrine": "^1.5",

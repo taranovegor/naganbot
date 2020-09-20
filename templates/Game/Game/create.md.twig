@@ -1,2 +1,8 @@
-{{ 'game.create.title'|trans({'%variation%': random(0, 2)}) }}
-{{ 'game.create.subtitle'|trans({'%command%': command}) }}
+{{ 'game.create.title'|trans(
+    intl_rand_variation_params('game.create.title', {
+        'variation': null
+    })
+) }}
+{{ 'game.create.subtitle'|trans({
+    '%command%': constant('App\Telegram\Command\JoinCommand::NAME')
+}) }}

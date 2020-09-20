@@ -28,3 +28,8 @@ services:
         decorates: 'twig.configurator.environment'
         arguments:
             $strategiesGenerators: [!tagged app.twig.strategy.escaper]
+
+    App\Service\Translation\Intl\IntlMessageVariationsProvider:
+        arguments:
+            $translator: '@translator'
+            $cache: '@cache.app'

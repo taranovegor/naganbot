@@ -63,3 +63,8 @@ Check Symfony code style
 ```
 sh checkstyle.sh
 ```
+
+Run PHPUnit
+```
+sh phpunit.sh
+```

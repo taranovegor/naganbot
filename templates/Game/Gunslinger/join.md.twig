@@ -1,1 +1,5 @@
-{{ 'gunslinger.join'|trans({'%variation%': random(0, 9)}) }}
+{{ 'gunslinger.join'|trans(
+    intl_rand_variation_params('gunslinger.join', {
+        'variation': null
+    })
+) }}

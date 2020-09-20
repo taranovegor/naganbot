@@ -20,8 +20,11 @@
 namespace App\Service\MessageBuilder\Game;
 
 use App\Entity\Game\Game;
-use App\Telegram\Command\JoinCommand;
+use App\Exception\Translation\MessagePatternIsInvalidException;
+use App\Service\Translation\Intl\IntlMessageVariationsProvider;
+use App\Service\Translation\Intl\IntlMessageVariationsRandomizer;
 use Iterator;
+use Psr\Cache\InvalidArgumentException;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -34,14 +37,22 @@ class GameMessageBuilder
 {
     private Environment $twig;
 
+    private IntlMessageVariationsProvider $variationsProvider;
+
+    private IntlMessageVariationsRandomizer $variationsRandomizer;
+
     /**
      * GameMessageBuilder constructor.
      *
-     * @param Environment $twig
+     * @param Environment                     $twig
+     * @param IntlMessageVariationsProvider   $variationsProvider
+     * @param IntlMessageVariationsRandomizer $variationsRandomizer
      */
-    public function __construct(Environment $twig)
+    public function __construct(Environment $twig, IntlMessageVariationsProvider $variationsProvider, IntlMessageVariationsRandomizer $variationsRandomizer)
     {
         $this->twig = $twig;
+        $this->variationsProvider = $variationsProvider;
+        $this->variationsRandomizer = $variationsRandomizer;
     }
 
     /**
@@ -53,9 +64,7 @@ class GameMessageBuilder
      */
     public function buildCreate(): string
     {
-        return $this->twig->render('Game/Game/create.md.twig', [
-            'command' => JoinCommand::NAME,
-        ]);
+        return $this->twig->render('Game/Game/create.md.twig');
     }
 
     /**
@@ -77,18 +86,25 @@ class GameMessageBuilder
     /**
      * @return string[]|Iterator
      *
+     * @throws InvalidArgumentException
      * @throws LoaderError
+     * @throws MessagePatternIsInvalidException
      * @throws RuntimeError
      * @throws SyntaxError
      */
     public function buildPlay(): Iterator
     {
-        $variation = rand(0, 5);
+        $variation = $this->variationsProvider->provide('game.play')->getVariation(
+            $this->variationsRandomizer->rand(
+                'game.play',
+                ['variation' => null]
+            )['variation']
+        );
 
-        for ($step = 0; $step <= 1; $step++) {
+        foreach ($variation->getContent() as $step) {
             yield $this->twig->render('Game/Game/play.md.twig', [
-                'variation' => $variation,
-                'step' => $step,
+                'variation' => $variation->getSelector(),
+                'step' => $step->getSelector(),
             ]);
         }
     }
