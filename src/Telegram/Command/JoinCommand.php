@@ -101,7 +101,7 @@ class JoinCommand extends AbstractCommand implements PublicCommandInterface
         $chat = $this->chatManager->get($update->getMessage()->getChat()->getId());
 
         try {
-            $game = $this->gameManager->getLatestByChat($chat);
+            $game = $this->gameManager->getActiveOrCreatedTodayByChat($chat);
         } catch (EntityNotFoundException $e) {
             throw new ActiveNotFoundException();
         }

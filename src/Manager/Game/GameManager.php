@@ -74,6 +74,7 @@ class GameManager
      * @param User $owner
      *
      * @return Game
+     *
      * @throws AlreadyCreatedException
      * @throws AlreadyJoinedToGameException
      * @throws AlreadyPlayedException
@@ -132,6 +133,23 @@ class GameManager
     public function getLatestActiveByChat(Chat $chat): Game
     {
         $game = $this->repository->findLatestActiveByChat($chat);
+        if (!$game instanceof Game) {
+            throw new EntityNotFoundException();
+        }
+
+        return $game;
+    }
+
+    /**
+     * @param Chat $chat
+     *
+     * @return Game
+     *
+     * @throws EntityNotFoundException
+     */
+    public function getActiveOrCreatedTodayByChat(Chat $chat): Game
+    {
+        $game = $this->repository->findActiveOrCreatedTodayByChat($chat);
         if (!$game instanceof Game) {
             throw new EntityNotFoundException();
         }
