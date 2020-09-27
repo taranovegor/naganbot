@@ -21,7 +21,6 @@ namespace App\Repository\Game;
 
 use App\Entity\Game\Game;
 use App\Entity\Telegram\Chat;
-use App\Exception\Common\EntityNotFoundException;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\ORMException;
@@ -60,41 +59,6 @@ class GameRepository extends ServiceEntityRepository
     /**
      * @param Chat $chat
      *
-     * @return Game
-     *
-     * @throws EntityNotFoundException
-     */
-    public function getActiveOrCreatedTodayByChat(Chat $chat): Game
-    {
-        $from = (new DateTime())->setTime(0, 0, 0);
-        $to = (new DateTime())->setTime(23, 59, 59);
-
-        ($qb = $this->createQueryBuilder('gt'))
-            ->where($qb->expr()->eq('gt.chat', ':chat'))
-            ->andWhere($qb->expr()->orX(
-                $qb->expr()->between('gt.createdAt', ':time_from', ':time_to'),
-                $qb->expr()->isNull('gt.playedAt')
-            ))
-            ->setParameters([
-                'chat' => $chat->getId(),
-                'time_from' => $from,
-                'time_to' => $to,
-            ])
-            ->setFirstResult(0)
-            ->setMaxResults(1)
-        ;
-
-        $object = $qb->getQuery()->getResult()[0] ?? null;
-        if (!$object instanceof Game) {
-            throw new EntityNotFoundException();
-        }
-
-        return $object;
-    }
-
-    /**
-     * @param Chat $chat
-     *
      * @return Game|null
      */
     public function findLatestByChat(Chat $chat): ?Game
@@ -122,5 +86,32 @@ class GameRepository extends ServiceEntityRepository
         ;
 
         return $qb->getQuery()->getOneOrNullResult();
+    }
+
+    /**
+     * @param Chat $chat
+     *
+     * @return Game
+     */
+    public function findActiveOrCreatedTodayByChat(Chat $chat): ?Game
+    {
+        ($qb = $this->createQueryBuilder('g'))
+            ->where($qb->expr()->eq('g.chat', ':chat'))
+            ->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->between('g.createdAt', ':time_from', ':time_to'),
+                    $qb->expr()->isNull('g.playedAt')
+                )
+            )
+            ->setParameters([
+                'chat' => $chat,
+                'time_from' => new DateTime('today midnight'),
+                'time_to' => new DateTime('1 second ago tomorrow midnight'),
+            ])
+            ->setFirstResult(0)
+            ->setMaxResults(1)
+        ;
+
+        return $qb->getQuery()->getResult()[0] ?? null;
     }
 }
