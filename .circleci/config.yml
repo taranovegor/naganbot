@@ -1,0 +1,67 @@
+version: 2
+jobs:
+    build:
+        machine:
+            image: ubuntu-1604:202007-01
+            environment:
+                UID: $(id -u ${WHOAMI})
+                GID: $(id -g ${WHOAMI})
+        steps:
+            - checkout
+            - run:
+                name: Prepearing workspace
+                command: |
+                    cp .env.test .env.local
+                    mkdir -p ~/reports
+                    docker pull cytopia/phpcs:3
+                    docker pull phpstan/phpstan:latest
+            - run:
+                name: Building docker containers
+                command: |
+                    docker-compose build \
+                        --parallel \
+                        --build-arg \
+                            UID=$UID
+                            GID=$GID
+            - run:
+                name: Launching docker containers
+                command: docker-compose up -d
+            - run:
+                name: Installing application dependencies
+                command: docker-compose exec php composer install --no-ansi
+            - run:
+                name: Executing database migrations
+                command: |
+                    docker-compose exec php php bin/console \
+                        doctrine:migrations:migrate \
+                        --allow-no-migration \
+                        --no-interaction
+            - run:
+                name: Executing PHP CodeSniffer
+                command: |
+                    mkdir -p ~/reports/phpcs
+                    docker run --rm -v $(pwd):/data cytopia/phpcs:3 \
+                        --standard=phpcs.xml.dist \
+                        --report=junit \
+                        > ~/reports/phpcs/junit.xml
+            - run:
+                name: Executing PHPStan
+                command: |
+                    mkdir -p ~/reports/phpstan
+                    docker run --rm -v $(pwd):/app phpstan/phpstan:latest \
+                        analyse \
+                        -l 1 -c /app/phpstan.neon /app/src \
+                        --error-format=junit \
+                        --no-progress \
+                        --no-interaction \
+                        > ~/reports/phpstan/junit.xml
+            - run:
+                name: Unit testing execution
+                command: |
+                    docker-compose exec php php bin/phpunit \
+                        --log-junit /var/www/html/reports/phpunit/junit.xml \
+                        tests
+            - store_test_results:
+                    path: ~/reports
+            - store_artifacts:
+                    path: ~/reports
