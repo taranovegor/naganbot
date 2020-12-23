@@ -71,3 +71,10 @@ gunslinger:
             5       {Дыра в форме пули заняла место в голове {username}}
             other   {{username} прострелил себе голову}
         }
+
+user:
+    force: >-
+        {variation, select,
+            0       {{username} решил покончить с собой}
+            other   {{username} не выдержал и прострелил себе голову}
+        }
