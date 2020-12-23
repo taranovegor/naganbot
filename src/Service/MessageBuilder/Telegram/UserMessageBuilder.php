@@ -19,6 +19,7 @@
 
 namespace App\Service\MessageBuilder\Telegram;
 
+use App\Entity\Telegram\User;
 use App\ValueObject\Telegram\User\UserChatStatistic;
 use Twig\Environment;
 use Twig\Error\LoaderError;
@@ -55,6 +56,22 @@ class UserMessageBuilder
     {
         return $this->twig->render('Telegram/User/me.md.twig', [
             'user_chat_statistic' => $statistic,
+        ]);
+    }
+
+    /**
+     * @param User $user
+     *
+     * @return string
+     *
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    public function buildForce(User $user): string
+    {
+        return $this->twig->render('Telegram/User/force.md.twig', [
+            'user' => $user,
         ]);
     }
 }

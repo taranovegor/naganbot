@@ -19,18 +19,22 @@
 
 namespace App\Telegram\Command;
 
+use App\Constant\Telegram\ParseMode;
 use App\Exception\Common\EntityNotFoundException;
-use App\Exception\Game\AlreadyPlayedException;
-use App\Exception\Game\FailedToShuffleArrayException;
-use App\Exception\Game\GunslingerNotFoundException;
-use App\Exception\Game\NotEnoughGunslingersException;
-use App\Manager\Game\GameManager;
 use App\Manager\Telegram\ChatManager;
+use App\Manager\Telegram\UserManager;
+use App\Service\MessageBuilder\Telegram\UserMessageBuilder;
+use App\Service\Telegram\UserKicker;
 use BoShurik\TelegramBotBundle\Telegram\Command\AbstractCommand;
 use BoShurik\TelegramBotBundle\Telegram\Command\PublicCommandInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use TelegramBot\Api\BotApi;
+use TelegramBot\Api\Exception;
+use TelegramBot\Api\InvalidArgumentException;
 use TelegramBot\Api\Types\Update;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 /**
  * Class ForceCommand
@@ -41,22 +45,30 @@ class ForceCommand extends AbstractCommand implements PublicCommandInterface
 
     private TranslatorInterface $translator;
 
-    private GameManager $gameManager;
+    private UserManager $userManager;
 
     private ChatManager $chatManager;
+
+    private UserKicker $kicker;
+
+    private UserMessageBuilder $messageBuilder;
 
     /**
      * ForceCommand constructor.
      *
      * @param TranslatorInterface $translator
-     * @param GameManager         $gameManager
+     * @param UserManager         $userManager
      * @param ChatManager         $chatManager
+     * @param UserKicker          $kicker
+     * @param UserMessageBuilder  $messageBuilder
      */
-    public function __construct(TranslatorInterface $translator, GameManager $gameManager, ChatManager $chatManager)
+    public function __construct(TranslatorInterface $translator, UserManager $userManager, ChatManager $chatManager, UserKicker $kicker, UserMessageBuilder $messageBuilder)
     {
         $this->translator = $translator;
-        $this->gameManager = $gameManager;
+        $this->userManager = $userManager;
         $this->chatManager = $chatManager;
+        $this->kicker = $kicker;
+        $this->messageBuilder = $messageBuilder;
     }
 
     /**
@@ -79,17 +91,34 @@ class ForceCommand extends AbstractCommand implements PublicCommandInterface
      * @param BotApi $api
      * @param Update $update
      *
-     * @throws GunslingerNotFoundException
      * @throws EntityNotFoundException
-     * @throws FailedToShuffleArrayException
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function execute(BotApi $api, Update $update)
     {
-        try {
-            $chat = $this->chatManager->get($update->getMessage()->getChat()->getId());
-            $game = $this->gameManager->getLatestByChat($chat);
-            $this->gameManager->play($game);
-        } catch (NotEnoughGunslingersException | AlreadyPlayedException $e) {
+        $chat = $this->chatManager->get($update->getMessage()->getChat()->getId());
+        $user = $this->userManager->get($update->getMessage()->getFrom()->getId());
+
+        $kicked = $this->kicker->kick($chat, $user);
+
+        if ($kicked) {
+            $api->sendMessage(
+                $chat->getId(),
+                $this->messageBuilder->buildForce($user),
+                ParseMode::MARKDOWN
+            );
+        } else {
+            try {
+                $api->deleteMessage(
+                    $update->getMessage()->getChat()->getId(),
+                    $update->getMessage()->getMessageId()
+                );
+            } catch (Exception $e) {
+            }
         }
     }
 }

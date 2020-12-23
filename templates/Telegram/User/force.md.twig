@@ -1,0 +1,7 @@
+{{ 'user.force'|trans(
+    intl_rand_variation_params('user.force', {
+        'variation': null
+    })|merge({
+        '%username%': user.username.mention|escape('markdown')
+    })
+) }}

@@ -27,4 +27,5 @@ class Channel
     public const GAME = 'game';
     public const GUNSLINGER = 'gunslinger';
     public const UPDATE_HANDLER = 'update_handler';
+    public const USER = 'user';
 }

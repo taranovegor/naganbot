@@ -25,6 +25,7 @@ use App\Event\Game\GunslingerEvent;
 use App\Exception\Game\GunslingerWasNotKickedException;
 use App\Service\Common\LoggerFactory;
 use App\Service\MessageBuilder\Game\GunslingerMessageBuilder;
+use App\Service\Telegram\UserKicker;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use TelegramBot\Api\BotApi;
@@ -45,18 +46,22 @@ class GunslingerSubscriber implements EventSubscriberInterface
 
     private LoggerInterface $logger;
 
+    private UserKicker $kicker;
+
     /**
      * GunslingerSubscriber constructor.
      *
      * @param GunslingerMessageBuilder $messageBuilder
      * @param BotApi                   $api
      * @param LoggerFactory            $loggerFactory
+     * @param UserKicker               $kicker
      */
-    public function __construct(GunslingerMessageBuilder $messageBuilder, BotApi $api, LoggerFactory $loggerFactory)
+    public function __construct(GunslingerMessageBuilder $messageBuilder, BotApi $api, LoggerFactory $loggerFactory, UserKicker $kicker)
     {
         $this->messageBuilder = $messageBuilder;
         $this->api = $api;
         $this->logger = $loggerFactory->create(Channel::GUNSLINGER);
+        $this->kicker = $kicker;
     }
 
     /**
@@ -126,34 +131,33 @@ class GunslingerSubscriber implements EventSubscriberInterface
      */
     public function sendMessageWhenShotHimself(GunslingerEvent $event): void
     {
+        $gunslinger = $event->getGunslinger();
+
         $this->api->sendMessage(
-            $event->getGunslinger()->getGame()->getChat()->getId(),
-            $this->messageBuilder->buildShotHimself($event->getGunslinger()),
+            $gunslinger->getGame()->getChat()->getId(),
+            $this->messageBuilder->buildShotHimself($gunslinger),
             ParseMode::MARKDOWN
         );
 
+        $kicked = $this->kicker->kick(
+            $gunslinger->getGame()->getChat(),
+            $gunslinger->getUser()
+        );
+
         try {
-            $this->api->kickChatMember(
-                $event->getGunslinger()->getGame()->getChat()->getId(),
-                $event->getGunslinger()->getUser()->getId()
-            );
+            if ($kicked) {
+                $this->logger->info('event_subscriber.game.gunslinger.send_message_when_shot_himself.was_kicked', [
+                    'gunslinger.id' => $event->getGunslinger()->getId()->toString(),
+                    'user.id' => $event->getGunslinger()->getUser()->getId(),
+                ]);
+            } else {
+                $this->logger->info('event_subscriber.game.gunslinger.send_message_when_shot_himself.was_not_kicked', [
+                    'gunslinger.id' => $event->getGunslinger()->getId()->toString(),
+                    'user.id' => $event->getGunslinger()->getUser()->getId(),
+                ]);
 
-            $this->api->unbanChatMember(
-                $event->getGunslinger()->getGame()->getChat()->getId(),
-                $event->getGunslinger()->getUser()->getId()
-            );
-
-            $this->logger->info('event_subscriber.game.gunslinger.send_message_when_shot_himself.was_kicked', [
-                'gunslinger.id' => $event->getGunslinger()->getId()->toString(),
-                'user.id' => $event->getGunslinger()->getUser()->getId(),
-            ]);
-        } catch (Exception $e) {
-            $this->logger->info('event_subscriber.game.gunslinger.send_message_when_shot_himself.was_not_kicked', [
-                'gunslinger.id' => $event->getGunslinger()->getId()->toString(),
-                'user.id' => $event->getGunslinger()->getUser()->getId(),
-            ]);
-
-            throw new GunslingerWasNotKickedException();
+                throw new GunslingerWasNotKickedException();
+            }
         } finally {
             $this->logger->info('event_subscriber.game.gunslinger.send_message_when_shot_himself', [
                 'gunslinger.id' => $event->getGunslinger()->getId()->toString(),
