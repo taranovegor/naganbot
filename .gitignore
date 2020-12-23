@@ -30,3 +30,7 @@ gen
 .phpunit.result.cache
 /phpunit.xml
 ###< symfony/phpunit-bridge ###
+
+###> Vagrant ###
+.vagrant
+###< Vagrant ###

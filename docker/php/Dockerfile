@@ -12,7 +12,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN rm -rf /var/lib/{apk}/
 
-RUN usermod -u $UID www-data && groupmod -g $GID www-data
+RUN usermod -u $UID www-data && groupmod --non-unique -g $GID www-data
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

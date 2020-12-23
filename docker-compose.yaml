@@ -5,9 +5,9 @@ services:
             context: ./docker/php
             target: production
             args:
-                - TZ
-                - UID
-                - GID
+                - DOCKER_TZ
+                - DOCKER_UID
+                - DOCKER_GID
         container_name: nagan_bot_php
         restart: always
         volumes:
@@ -17,14 +17,18 @@ services:
             - mysql
 
     mysql:
-        image: mariadb:10.5
+        build:
+            context: ./docker/mysql
+            args:
+                - DOCKER_TZ
+                - DOCKER_UID
+                - DOCKER_GID
         container_name: nagan_bot_mysql
         restart: always
         volumes:
             - ./docker/mysql/conf.d:/etc/mysql/conf.d:ro
             - ./docker/mysql/database:/var/lib/mysql
         environment:
-            - TZ
             - MYSQL_USER
             - MYSQL_PASSWORD
             - MYSQL_ROOT_PASSWORD

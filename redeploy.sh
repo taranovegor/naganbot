@@ -1,31 +1,41 @@
 #!/bin/sh
 
-if [ -f .env.local ]; then
-    export $(cat .env.local | sed "s/#.*//g")
+if [ -f "/sys/class/dmi/id/product_name" ]; then
+  SYS_NAME=$(cat /sys/class/dmi/id/product_name)
+else
+  SYS_NAME="unknown"
+fi
+
+if [ $(command -v vagrant) ]; then
+  VAGRANT_SUPPORT=true
+else
+  VAGRANT_SUPPORT=false
 fi
 
 STOP=false
 DOWN=false
 KILL=false
 PROD=false
+VAGRANT=false
 DOCKER_COMPOSE_FILES="-f docker-compose.yaml"
 
-while getopts ":sdkp" OPTION; do
-    case $OPTION in
-        s)
-            STOP=true
-            ;;
-        d)
-            DOWN=true
-            ;;
-        k)
-            KILL=true
-            ;;
-        p)
-            PROD=true
-            ;;
-    esac
+for ARG in "$@"; do
+  case $ARG in
+    -s)
+      STOP=true;
+      ;;
+  esac
 done
+exit;
+
+if [ $VAGRANT = true ]; then
+    vagrant ssh -c "cd /home/vagrant/workspace && sh redeploy.sh $@"
+    exit
+fi
+
+if [ -f .env.local ]; then
+    export $(cat .env.local | sed "s/#.*//g")
+fi
 
 if [ $PROD = false ]; then
     DOCKER_COMPOSE_FILES="$DOCKER_COMPOSE_FILES -f docker-compose.dev.yaml"
