@@ -20,6 +20,7 @@
 namespace App\Telegram\Command;
 
 use App\Constant\Telegram\ParseMode;
+use App\Exception\Chat\TopUnavailableForSelectedYearException;
 use App\Exception\Common\EntityNotFoundException;
 use App\Manager\Telegram\ChatManager;
 use App\Service\MessageBuilder\Telegram\ChatMessageBuilder;
@@ -87,17 +88,30 @@ class TopCommand extends AbstractCommand implements PublicCommandInterface
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
+     * @throws TopUnavailableForSelectedYearException
      */
     public function execute(BotApi $api, Update $update)
     {
         $chat = $this->chatManager->get($update->getMessage()->getChat()->getId());
 
-        $statistics = $this->chatManager->getUserChatStatisticForEachMemberInChat($chat);
-
-        $api->sendMessage(
-            $chat->getId(),
-            $this->messageBuilder->buildTop($statistics),
-            ParseMode::MARKDOWN
+        preg_match(
+            sprintf('#^%s\s([2][0-9]{3})$#usi', self::getName()),
+            $update->getMessage()->getText(),
+            $matches
         );
+        $year = $matches[1] ?: null;
+        if (null === $year) {
+            $statistics = $this->chatManager->getUserChatStatisticForEachMemberInChat($chat);
+            $message = $this->messageBuilder->buildTop($statistics);
+        } else {
+            $statistics = $this->chatManager->getUserChatStatisticForEachMemberInChatByYear($chat, $year);
+            if (0 === count($statistics)) {
+                throw new TopUnavailableForSelectedYearException();
+            }
+
+            $message = $this->messageBuilder->buildTopOfYear($statistics, $year);
+        }
+
+        $api->sendMessage($chat->getId(), $message, ParseMode::MARKDOWN);
     }
 }

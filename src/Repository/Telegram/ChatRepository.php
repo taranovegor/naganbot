@@ -27,6 +27,7 @@ use App\Exception\Common\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -85,7 +86,37 @@ class ChatRepository extends ServiceEntityRepository
      */
     public function numberOfWinsForEachChatMemberInChat(Chat $chat, int $limit = 10): array
     {
-        ($qb = $this->createQueryBuilder('_chat'))
+        $qb = $this->getQueryBuilderNumberOfWinsForEachChatMemberInChat($chat, $limit);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @param Chat $chat
+     * @param int  $year
+     * @param int  $limit
+     *
+     * @return array
+     */
+    public function numberOfWinsForEachChatMemberInChatByYear(Chat $chat, int $year, int $limit = 10): array
+    {
+        ($qb = $this->getQueryBuilderNumberOfWinsForEachChatMemberInChat($chat, $limit))
+            ->andWhere($qb->expr()->eq('YEAR(_game.createdAt)', ':year'))
+            ->setParameter('year', $year)
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @param Chat $chat
+     * @param int  $limit
+     *
+     * @return QueryBuilder
+     */
+    private function getQueryBuilderNumberOfWinsForEachChatMemberInChat(Chat $chat, int $limit): QueryBuilder
+    {
+        return ($qb = $this->createQueryBuilder('_chat'))
             ->select(sprintf('_user AS user, %s AS number_of_wins', $qb->expr()->count('_user.id')))
             ->innerJoin(
                 Game::class,
@@ -116,7 +147,5 @@ class ChatRepository extends ServiceEntityRepository
                 'shot_himself' => true,
             ])
         ;
-
-        return $qb->getQuery()->getResult();
     }
 }

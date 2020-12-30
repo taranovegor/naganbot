@@ -54,7 +54,24 @@ class ChatMessageBuilder
     public function buildTop(array $statistics): string
     {
         return $this->twig->render('Telegram/Chat/top.md.twig', [
-            'amount' => count($statistics),
+            'users_chat_statistics' => $statistics,
+        ]);
+    }
+
+    /**
+     * @param array $statistics
+     * @param int   $year
+     *
+     * @return string
+     *
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    public function buildTopOfYear(array $statistics, int $year): string
+    {
+        return $this->twig->render('Telegram/Chat/top_of_year.md.twig', [
+            'year' => $year,
             'users_chat_statistics' => $statistics,
         ]);
     }

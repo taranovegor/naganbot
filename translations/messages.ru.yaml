@@ -27,3 +27,7 @@ chat:
         title: 'Топ-%count% выбывших игроков:'
         user:
             prepend: '%num%. %username%'
+    top_of_year:
+        title: 'Топ-%count% выбывших игроков %year% года:'
+        user:
+            prepend: '%num%. %username%'
