@@ -12,3 +12,5 @@ game:
     not_enough_gunslingers: 'Боюсь, что для начала игры нам нужно больше игроков'
 telegram:
     available_only_in_group: 'Вы можете использовать бота только в чате'
+chat:
+    top_unavailable_for_selected_year: 'Топ недоступен для указанного года'

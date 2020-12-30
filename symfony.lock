@@ -1,4 +1,7 @@
 {
+    "beberlei/doctrineextensions": {
+        "version": "v1.3.0"
+    },
     "boshurik/telegram-bot-bundle": {
         "version": "3.1",
         "recipe": {

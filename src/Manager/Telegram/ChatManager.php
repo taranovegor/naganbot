@@ -126,4 +126,19 @@ class ChatManager
             $this->repository->numberOfWinsForEachChatMemberInChat($chat, $limit)
         );
     }
+
+    /**
+     * @param Chat $chat
+     * @param int  $year
+     * @param int  $limit
+     *
+     * @return UserChatStatistic[]
+     */
+    public function getUserChatStatisticForEachMemberInChatByYear(Chat $chat, int $year, int $limit = 10): array
+    {
+        return array_map(
+            fn(array $r) => new UserChatStatistic($r['user'], $r['number_of_wins']),
+            $this->repository->numberOfWinsForEachChatMemberInChatByYear($chat, $year, $limit)
+        );
+    }
 }
