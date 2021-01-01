@@ -5,7 +5,6 @@ game:
     already_joined_to_game: 'Вы уже в игре'
     failed_to_shuffle_array: 'Кажется, у нас заклинило барабан'
     already_played: 'Дабы нас не разоблачили, нужно затаиться. Мы сможем начать игру %remaining_time%'
-    gunslinger_was_not_kicked: 'Какая жалость, но ранение оказалось лишь поверхностным'
     active_not_found: 'Ещё никто не начал игру, начать? %command%'
     gunslinger_escaped: 'Эй, этот ублюдок сбежал, ловите его!'
     gunslinger_not_found: 'Наган дал осечку'

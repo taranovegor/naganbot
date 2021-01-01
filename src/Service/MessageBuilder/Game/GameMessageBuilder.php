@@ -92,9 +92,9 @@ class GameMessageBuilder
      * @throws RuntimeError
      * @throws SyntaxError
      */
-    public function buildPlay(): Iterator
+    public function buildReadyToPlay(): Iterator
     {
-        $variation = $this->variationsProvider->provide('game.play')->getVariation(
+        $variation = $this->variationsProvider->provide('game.ready_to_play')->getVariation(
             $this->variationsRandomizer->rand(
                 'game.play',
                 ['variation' => null]
@@ -102,10 +102,22 @@ class GameMessageBuilder
         );
 
         foreach ($variation->getContent() as $step) {
-            yield $this->twig->render('Game/Game/play.md.twig', [
+            yield $this->twig->render('Game/Game/ready_to_play.md.twig', [
                 'variation' => $variation->getSelector(),
                 'step' => $step->getSelector(),
             ]);
         }
+    }
+
+    /**
+     * @return string
+     *
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    public function buildPlayedWithNuclearBullet(): string
+    {
+        return $this->twig->render('Game/Game/played_with_nuclear_bullet.md.twig');
     }
 }

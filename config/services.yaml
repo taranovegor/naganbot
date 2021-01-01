@@ -20,16 +20,33 @@ services:
             - '../src/ValueObject/'
             - '../src/Kernel.php'
 
-    App\Manager\Game\GameManager:
+    #> Common
+
+    App\Service\Translation\Intl\IntlMessageVariationsProvider:
         arguments:
-            $numberOfPlayers: '%app.game.number_of_players%'
+            $translator: '@translator'
+            $cache: '@cache.app'
+
+    #< Common
+
+    #> Dependency Injection
 
     App\DependencyInjection\Configurator\Twig\EnvironmentConfigurator:
         decorates: 'twig.configurator.environment'
         arguments:
             $strategiesGenerators: [!tagged app.twig.strategy.escaper]
 
-    App\Service\Translation\Intl\IntlMessageVariationsProvider:
+    #< Dependency Injection
+
+    #> Game
+
+    App\Manager\Game\GameManager:
         arguments:
-            $translator: '@translator'
-            $cache: '@cache.app'
+            $numberOfPlayers: '%app.game.number_of_players%'
+
+    App\Service\Game\NuclearBulletChecker:
+        arguments:
+            $min: '%app.game.nuclear_bullet.randomizer.min%'
+            $max: '%app.game.nuclear_bullet.randomizer.max%'
+
+    #< Game

@@ -8,6 +8,7 @@ game:
             information:
                 owner: 'владелец'
                 shot_himself: 'убит'
+    played_with_nuclear_bullet: 'В нагане оказалась атомная пуля, никто из участников не остался в живых'
 
 command:
     create: 'Создать игру'
