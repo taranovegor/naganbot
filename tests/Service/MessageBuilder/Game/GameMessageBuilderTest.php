@@ -18,7 +18,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 class GameMessageBuilderTest extends WebTestCase
 {
-    public function testBuildPlay()
+    public function testBuildReadyToPlay()
     {
         self::bootKernel();
 
@@ -33,13 +33,13 @@ class GameMessageBuilderTest extends WebTestCase
             $randomizer
         );
 
-        foreach ($provider->provide('game.play') as $variation) {
+        foreach ($provider->provide('game.ready_to_play') as $variation) {
             $randomizer
                 ->method('rand')
                 ->willReturn(['variation' => $variation->getSelector()])
             ;
 
-            $built = $builder->buildPlay();
+            $built = $builder->buildReadyToPlay();
             $this->assertIsIterable($built, 'Built message not iterable');
             $steps = 0;
             $prevStep = null;

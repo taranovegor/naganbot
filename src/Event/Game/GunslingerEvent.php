@@ -28,7 +28,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 class GunslingerEvent extends Event
 {
     public const JOINED_TO_GAME = 'gunslinger.joined_to_game';
-    public const SHOT_HIMSELF = 'gunslinger.shot_himself';
+    public const DIED = 'gunslinger.died';
 
     /**
      * @var Gunslinger

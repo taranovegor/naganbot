@@ -6,7 +6,7 @@ game:
                 1       {Я вижу ты не из трусливых, что насчёт остальных?}
                 other   {Вы опять за старое? Так уж и быть}
             }
-    play: >-
+    ready_to_play: >-
         {variation, select,
             0 {
                 {step, select,

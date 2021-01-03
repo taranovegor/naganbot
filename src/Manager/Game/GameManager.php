@@ -34,6 +34,7 @@ use App\Exception\Game\NotEnoughGunslingersException;
 use App\Repository\Game\GameRepository;
 use App\Service\Common\EventDispatcher;
 use App\Service\Common\Flusher;
+use App\Service\Game\NuclearBulletChecker;
 use Doctrine\ORM\ORMException;
 
 /**
@@ -49,23 +50,27 @@ class GameManager
 
     private GunslingerManager $gunslingerManager;
 
+    private NuclearBulletChecker $nuclearBulletChecker;
+
     private int $numberOfPlayers;
 
     /**
      * GameManager constructor.
      *
-     * @param GameRepository    $gameTableRepository
-     * @param Flusher           $flusher
-     * @param EventDispatcher   $eventDispatcher
-     * @param GunslingerManager $gunslingerManager
-     * @param int               $numberOfPlayers
+     * @param GameRepository       $gameTableRepository
+     * @param Flusher              $flusher
+     * @param EventDispatcher      $eventDispatcher
+     * @param GunslingerManager    $gunslingerManager
+     * @param NuclearBulletChecker $nuclearBulletChecker
+     * @param int                  $numberOfPlayers
      */
-    public function __construct(GameRepository $gameTableRepository, Flusher $flusher, EventDispatcher $eventDispatcher, GunslingerManager $gunslingerManager, int $numberOfPlayers)
+    public function __construct(GameRepository $gameTableRepository, Flusher $flusher, EventDispatcher $eventDispatcher, GunslingerManager $gunslingerManager, NuclearBulletChecker $nuclearBulletChecker, int $numberOfPlayers)
     {
         $this->repository = $gameTableRepository;
         $this->flusher = $flusher;
         $this->eventDispatcher = $eventDispatcher;
         $this->gunslingerManager = $gunslingerManager;
+        $this->nuclearBulletChecker = $nuclearBulletChecker;
         $this->numberOfPlayers = $numberOfPlayers;
     }
 
@@ -160,14 +165,14 @@ class GameManager
     /**
      * @param Game $game
      *
-     * @return Gunslinger
+     * @return Game
      *
-     * @throws FailedToShuffleArrayException
      * @throws AlreadyPlayedException
-     * @throws NotEnoughGunslingersException
+     * @throws FailedToShuffleArrayException
      * @throws GunslingerNotFoundException
+     * @throws NotEnoughGunslingersException
      */
-    public function play(Game $game): Gunslinger
+    public function play(Game $game): Game
     {
         if ($game->isPlayed()) {
             throw new AlreadyPlayedException();
@@ -176,6 +181,42 @@ class GameManager
             throw new NotEnoughGunslingersException();
         }
 
+        $this->eventDispatcher->dispatch(new GameEvent($game), GameEvent::READY_TO_PLAY);
+
+        if ($this->nuclearBulletChecker->isNuclearBullet($game)) {
+            $game = $this->playWithNuclearBullet($game);
+        } else {
+            $game = $this->playWithRegularBullet($game);
+        }
+
+        $game->markAsPlayed();
+        $this->flusher->flush();
+
+        $this->eventDispatcher->dispatch(new GameEvent($game), GameEvent::PLAYED);
+
+        return $game;
+    }
+
+    /**
+     * @param Game $game
+     *
+     * @return bool
+     */
+    public function isEnoughPlayers(Game $game): bool
+    {
+        return $this->gunslingerManager->getByGame($game)->count() >= $this->numberOfPlayers;
+    }
+
+    /**
+     * @param Game $game
+     *
+     * @return Game
+     *
+     * @throws FailedToShuffleArrayException
+     * @throws GunslingerNotFoundException
+     */
+    private function playWithRegularBullet(Game $game): Game
+    {
         $gunslingers = $this->gunslingerManager->getByGame($game);
 
         $drum = array_fill(0, $gunslingers->count(), 0);
@@ -190,23 +231,25 @@ class GameManager
             throw new GunslingerNotFoundException();
         }
 
-        $game->markAsPlayed();
-        $this->flusher->flush();
-
-        $this->eventDispatcher->dispatch(new GameEvent($game), GameEvent::PLAYED);
-
         $this->gunslingerManager->shot($gunslinger);
 
-        return $gunslinger;
+        return $game;
     }
 
     /**
      * @param Game $game
      *
-     * @return bool
+     * @return Game
      */
-    public function isEnoughPlayers(Game $game): bool
+    private function playWithNuclearBullet(Game $game): Game
     {
-        return $this->gunslingerManager->getByGame($game)->count() >= $this->numberOfPlayers;
+        $game->markAsPlayedWithNuclearBullet();
+
+        $gunslingers = $this->gunslingerManager->getByGame($game);
+        foreach ($gunslingers as $gunslinger) {
+            $this->gunslingerManager->shot($gunslinger);
+        }
+
+        return $game;
     }
 }
