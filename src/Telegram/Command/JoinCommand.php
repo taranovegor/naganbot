@@ -20,7 +20,7 @@
 namespace App\Telegram\Command;
 
 use App\Exception\Common\EntityNotFoundException;
-use App\Exception\Game\ActiveNotFoundException;
+use App\Exception\Game\AlreadyCreatedException;
 use App\Exception\Game\AlreadyJoinedToGameException;
 use App\Exception\Game\AlreadyPlayedException;
 use App\Manager\Game\GameManager;
@@ -72,7 +72,7 @@ class JoinCommand extends AbstractCommand implements PublicCommandInterface
     /**
      * @inheritDoc
      */
-    public function getName()
+    public function getName(): string
     {
         return self::NAME;
     }
@@ -80,7 +80,7 @@ class JoinCommand extends AbstractCommand implements PublicCommandInterface
     /**
      * @inheritDoc
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->translator->trans('command.join');
     }
@@ -89,13 +89,13 @@ class JoinCommand extends AbstractCommand implements PublicCommandInterface
      * @param BotApi $api
      * @param Update $update
      *
-     * @throws ActiveNotFoundException
-     * @throws AlreadyPlayedException
      * @throws EntityNotFoundException
      * @throws ORMException
+     * @throws AlreadyCreatedException
      * @throws AlreadyJoinedToGameException
+     * @throws AlreadyPlayedException
      */
-    public function execute(BotApi $api, Update $update)
+    public function execute(BotApi $api, Update $update): void
     {
         $user = $this->userManager->get($update->getMessage()->getFrom()->getId());
         $chat = $this->chatManager->get($update->getMessage()->getChat()->getId());
@@ -103,7 +103,9 @@ class JoinCommand extends AbstractCommand implements PublicCommandInterface
         try {
             $game = $this->gameManager->getActiveOrCreatedTodayByChat($chat);
         } catch (EntityNotFoundException $e) {
-            throw new ActiveNotFoundException();
+            $this->gameManager->create($chat, $user);
+
+            return;
         }
 
         $this->gunslingerManager->create($game, $user);
