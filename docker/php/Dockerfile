@@ -1,4 +1,4 @@
-FROM php:7.4-fpm-alpine AS build
+FROM php:7.4-fpm-alpine3.13 AS build
 
 ARG TZ=UTC
 ARG UID=1000
