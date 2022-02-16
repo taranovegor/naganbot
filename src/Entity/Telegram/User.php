@@ -36,7 +36,7 @@ class User
 {
     /**
      * @ORM\Id()
-     * @ORM\Column(name="id", type="integer")
+     * @ORM\Column(name="id", type="bigint")
      */
     private int $id;
 
