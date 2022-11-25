@@ -5,4 +5,4 @@ parameters:
 
     app.telegram.route.secret: '%env(TELEGRAM_BOT_TOKEN)%'
 
-    app.game.number_of_players: 7
+    app.game.number_of_players: 6
