@@ -3,21 +3,26 @@ Shoot yourself in Russian roulette
 
 ## Set up
 ### Requirements
-- Go 1.20 or higher
+- Docker, docker-compose
+- MySQL 8/MariaDB 11
 
 ### Configuration
 Copy an instance of the environment file and save it as a file `.env`
 ```shell
 cp .env.dist .env
 ```
-... and configure as you need. All configuration instructions are given in the configuration example
+... and configure as you need. Environment variables are described in comments
+
+Build or pull docker images of application
+```shell
+make container-build
+```
+```shell
+make container-pull
+```
 
 ### Launch
-
-Install the dependencies in the vendor directory and run the application
+Run the application using the Make tool
 ```shell
-go mod vendor
-go build -v ./...
-go run -v ./...
+make start
 ```
-Enjoy!

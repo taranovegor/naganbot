@@ -2,36 +2,28 @@ package command
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"time"
+	"github.com/taranovegor/naganbot/service"
 )
 
-type Force struct {
-	Command
-	bot *tgbotapi.BotAPI
+type ForceHandler struct {
+	Handler
+	bot *service.Bot
 }
 
-func NewForce(
-	bot *tgbotapi.BotAPI,
-) *Force {
-	return &Force{
+func NewForceHandler(
+	bot *service.Bot,
+) Handler {
+	return &ForceHandler{
 		bot: bot,
 	}
 }
 
-func (cmd Force) Name() string {
+func (hdlr ForceHandler) Name() string {
 	return "force"
 }
 
-func (cmd Force) Execute(msg *tgbotapi.Message) error {
-	_, err := cmd.bot.Request(tgbotapi.BanChatMemberConfig{
-		ChatMemberConfig: tgbotapi.ChatMemberConfig{
-			ChatID: msg.Chat.ID,
-			UserID: msg.From.ID,
-		},
-		UntilDate: time.Now().Add(time.Minute * 1).Unix(),
-	})
-
-	cmd.bot.Request(tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID))
-
-	return err
+func (hdlr ForceHandler) Execute(msg *tgbotapi.Message) {
+	chatID := msg.Chat.ID
+	hdlr.bot.Kick(chatID, msg.From.ID)
+	hdlr.bot.DeleteMessage(chatID, msg.MessageID)
 }

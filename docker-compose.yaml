@@ -1,8 +1,9 @@
 version: '3.7'
 services:
     app:
-        build:
-            context: .
-            dockerfile: Dockerfile
+        image: taranovegor/naganbot:latest
         container_name: naganbot_app
         restart: on-failure
+        environment:
+            - TELEGRAM_BOT_TOKEN
+            - DATABASE_DSN
