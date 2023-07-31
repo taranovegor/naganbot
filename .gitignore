@@ -18,4 +18,4 @@
 /vendor/
 
 # Project files
-.env
+/.env
