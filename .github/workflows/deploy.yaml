@@ -1,0 +1,66 @@
+name: Deploy
+
+on:
+    workflow_run:
+        workflows: ['Publish']
+        types: ['completed']
+
+env:
+    ENV: prod
+    WORKING_DIRECTORY: ~/workspace/naganbot
+
+jobs:
+    checkout:
+        runs-on: ubuntu-22.04
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Copy application files
+              uses: appleboy/scp-action@v0.1.4
+              with:
+                  host: ${{ secrets.DEPLOY_HOST }}
+                  username: ${{ secrets.DEPLOY_USERNAME }}
+                  key: ${{ secrets.DEPLOY_RSA_KEY }}
+                  proxy_host: ${{ secrets.DEPLOY_PROXY_HOST }}
+                  proxy_username: ${{ secrets.DEPLOY_USERNAME }}
+                  proxy_key: ${{ secrets.DEPLOY_RSA_KEY }}
+                  source: .env.dist,docker-compose.yaml,Makefile
+                  target: ${{ env.WORKING_DIRECTORY }}
+    start:
+        needs: checkout
+        runs-on: ubuntu-22.04
+        steps:
+            - uses: oNaiPs/secrets-to-env-action@v1
+              with:
+                  secrets: ${{ toJSON(secrets) }}
+            - name: Start application
+              uses: appleboy/ssh-action@v1.0.0
+              with:
+                  host: ${{ secrets.DEPLOY_HOST }}
+                  username: ${{ secrets.DEPLOY_USERNAME }}
+                  key: ${{ secrets.DEPLOY_RSA_KEY }}
+                  proxy_host: ${{ secrets.DEPLOY_PROXY_HOST }}
+                  proxy_username: ${{ secrets.DEPLOY_USERNAME }}
+                  proxy_key: ${{ secrets.DEPLOY_RSA_KEY }}
+                  envs: ENV,TELEGRAM_BOT_TOKEN,DATABASE_DSN
+                  script: |
+                      cd ${{ env.WORKING_DIRECTORY }}
+                      make dotenv-dump src=.env.dist dest=.env
+                      make container-pull
+                      make start
+    cleanup:
+        needs: start
+        runs-on: ubuntu-22.04
+        steps:
+            - name: Build & Deploy
+              uses: appleboy/ssh-action@v1.0.0
+              with:
+                  host: ${{ secrets.DEPLOY_HOST }}
+                  username: ${{ secrets.DEPLOY_USERNAME }}
+                  key: ${{ secrets.DEPLOY_RSA_KEY }}
+                  proxy_host: ${{ secrets.DEPLOY_PROXY_HOST }}
+                  proxy_username: ${{ secrets.DEPLOY_USERNAME }}
+                  proxy_key: ${{ secrets.DEPLOY_RSA_KEY }}
+                  script: |
+                      rm -rf ${{ env.WORKING_DIRECTORY }}
