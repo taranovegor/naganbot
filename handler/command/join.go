@@ -70,7 +70,7 @@ func (hdlr JoinHandler) Execute(msg *tgbotapi.Message) {
 		}
 	}
 
-	if activeGame.IsPlayed() || len(activeGame.Gunslingers) < 6 {
+	if activeGame.IsPlayed() || len(activeGame.Gunslingers) < 2 {
 		hdlr.bot.SendMessage(chatID, message)
 
 		return
@@ -82,22 +82,30 @@ func (hdlr JoinHandler) Execute(msg *tgbotapi.Message) {
 		time.Sleep(time.Second)
 	}
 
-	gunslinger := hdlr.nagan.Shot(activeGame.Gunslingers)
-	gunslinger.MarkAsShotHimself()
-	hdlr.gunslinger.Update(gunslinger)
-	activeGame.MarkAsPlayed()
-	hdlr.game.Update(&activeGame)
-
-	message = hdlr.trans.Get("gunslinger killed", translator.Config{
-		Args: map[string]string{"%gunslinger": gunslinger.Player.Mention()},
-	})
-	hdlr.bot.SendMessage(chatID, message)
-
-	err = hdlr.bot.Kick(chatID, gunslinger.PlayerID)
-	if err == nil {
-		return
+	report := hdlr.nagan.Shoot(activeGame.Gunslingers)
+	for _, gunslinger := range report.Gunslingers {
+		gunslinger.MarkAsShotHimself()
+		hdlr.gunslinger.Update(gunslinger)
 	}
 
-	message = hdlr.trans.Get("player is not kicked", translator.Config{})
-	hdlr.bot.SendMessage(chatID, message)
+	activeGame.MarkAsPlayed(report.BulletType)
+	hdlr.game.Update(&activeGame)
+
+	if service.BulletAtomicType == report.BulletType {
+		message = hdlr.trans.Get("killed by atomic bullet", translator.Config{})
+		hdlr.bot.SendMessage(chatID, message)
+	}
+
+	for _, gunslinger := range report.Gunslingers {
+		message = hdlr.trans.Get("gunslinger killed", translator.Config{
+			Args: map[string]string{"%gunslinger": gunslinger.Player.Mention()},
+		})
+		hdlr.bot.SendMessage(chatID, message)
+
+		err = hdlr.bot.Kick(chatID, gunslinger.PlayerID)
+		if err != nil && service.BulletAtomicType != report.BulletType {
+			message = hdlr.trans.Get("player is not kicked", translator.Config{})
+			hdlr.bot.SendMessage(chatID, message)
+		}
+	}
 }
