@@ -16,7 +16,7 @@ type JoinHandler struct {
 	trans      *translator.Translator
 	game       domain.GameRepository
 	gunslinger domain.GunslingerRepository
-	nagan      *service.Nagan
+	croupier   *service.Croupier
 }
 
 func NewJoinHandler(
@@ -24,14 +24,14 @@ func NewJoinHandler(
 	trans *translator.Translator,
 	gameRepository domain.GameRepository,
 	gunslingerRepository domain.GunslingerRepository,
-	nagan *service.Nagan,
+	croupier *service.Croupier,
 ) Handler {
 	return &JoinHandler{
 		bot:        bot,
 		trans:      trans,
 		game:       gameRepository,
 		gunslinger: gunslingerRepository,
-		nagan:      nagan,
+		croupier:   croupier,
 	}
 }
 
@@ -78,22 +78,5 @@ func (hdlr JoinHandler) Execute(msg *tgbotapi.Message) {
 		time.Sleep(time.Second)
 	}
 
-	gunslinger := hdlr.nagan.Shot(activeGame.Gunslingers)
-	gunslinger.MarkAsShotHimself()
-	hdlr.gunslinger.Update(gunslinger)
-	activeGame.MarkAsPlayed()
-	hdlr.game.Update(&activeGame)
-
-	message = hdlr.trans.Get("gunslinger killed", translator.Config{
-		Args: map[string]string{"%gunslinger": gunslinger.Player.Mention()},
-	})
-	hdlr.bot.SendMessage(chatID, message)
-
-	err = hdlr.bot.Kick(chatID, gunslinger.PlayerID)
-	if err == nil {
-		return
-	}
-
-	message = hdlr.trans.Get("player is not kicked", translator.Config{})
-	hdlr.bot.SendMessage(chatID, message)
+	hdlr.croupier.Play(&activeGame)
 }

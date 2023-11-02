@@ -23,7 +23,10 @@ const (
 	CommandRegistry      = "command_registry"
 	CommandStat          = "command_stat"
 	CommandTop           = "command_top"
-	Nagan                = "nagan"
+	Croupier             = "croupier"
+	NaganRegular         = "nagan_regular"
+	NaganAtomic          = "nagan_atomic"
+	NaganFactory         = "nagan_factory"
 	ORM                  = "orm"
 	RepositoryChat       = "repository_chat"
 	RepositoryGame       = "repository_game"
@@ -102,7 +105,7 @@ func buildHandlerCommand(builder *di.Builder) {
 				ctn.Get(Translator).(*translator.Translator),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
-				ctn.Get(Nagan).(*service.Nagan),
+				ctn.Get(Croupier).(*service.Croupier),
 			), nil
 		},
 	})
@@ -217,9 +220,45 @@ func buildService(builder *di.Builder) {
 	})
 
 	builder.Add(di.Def{
-		Name: Nagan,
+		Name: NaganRegular,
 		Build: func(ctn di.Container) (interface{}, error) {
-			return service.NewNagan(), nil
+			return service.NewRegularNagan(
+				ctn.Get(Translator).(*translator.Translator),
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
+		Name: NaganAtomic,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return service.NewAtomicNagan(
+				ctn.Get(Translator).(*translator.Translator),
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
+		Name: NaganFactory,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return service.NewNaganFactory(
+				[]service.NaganFactoryModel{
+					{95, ctn.Get(NaganAtomic).(service.Nagan)},
+					{5, ctn.Get(NaganRegular).(service.Nagan)},
+				},
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
+		Name: Croupier,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return service.NewCroupier(
+				ctn.Get(NaganFactory).(*service.NaganFactory),
+				ctn.Get(Bot).(*service.Bot),
+				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(RepositoryGame).(domain.GameRepository),
+				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
+			), nil
 		},
 	})
 }
