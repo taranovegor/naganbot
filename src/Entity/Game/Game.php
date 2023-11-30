@@ -64,6 +64,11 @@ class Game
     private Collection $gunslingers;
 
     /**
+     * @ORM\Column(name="played_with_nuclear_bullet", type="boolean")
+     */
+    private bool $playedWithNuclearBullet;
+
+    /**
      * @ORM\Column(name="created_at", type="datetime")
      */
     private DateTime $createdAt;
@@ -85,6 +90,7 @@ class Game
         $this->chat = $chat;
         $this->owner = $owner;
         $this->gunslingers = new ArrayCollection();
+        $this->playedWithNuclearBullet = false;
         $this->createdAt = new DateTime();
         $this->playedAt = null;
     }
@@ -130,6 +136,26 @@ class Game
     {
         if (!$this->gunslingers->contains($gunslinger)) {
             $this->gunslingers->add($gunslinger);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPlayedWithNuclearBullet(): bool
+    {
+        return $this->playedWithNuclearBullet;
+    }
+
+    /**
+     * @return Game
+     */
+    public function markAsPlayedWithNuclearBullet(): Game
+    {
+        if (!$this->isPlayed()) {
+            $this->playedWithNuclearBullet = true;
         }
 
         return $this;

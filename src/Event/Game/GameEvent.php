@@ -28,6 +28,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 class GameEvent extends Event
 {
     public const CREATED = 'game.created';
+    public const READY_TO_PLAY = 'game.ready_to_play';
     public const PLAYED = 'game.played';
 
     /**

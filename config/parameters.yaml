@@ -6,3 +6,6 @@ parameters:
     app.telegram.route.secret: '%env(TELEGRAM_BOT_TOKEN)%'
 
     app.game.number_of_players: 6
+
+    app.game.nuclear_bullet.randomizer.min: 0
+    app.game.nuclear_bullet.randomizer.max: 30

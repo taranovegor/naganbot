@@ -27,6 +27,7 @@ use App\Exception\Game\AlreadyPlayedException;
 use App\Exception\Game\FailedToShuffleArrayException;
 use App\Exception\Game\GunslingerNotFoundException;
 use App\Exception\Game\NotEnoughGunslingersException;
+use App\Exception\Translation\MessagePatternIsInvalidException;
 use App\Manager\Game\GameManager;
 use App\Service\Common\LoggerFactory;
 use App\Service\MessageBuilder\Game\GameMessageBuilder;
@@ -77,11 +78,14 @@ class GameSubscriber implements EventSubscriberInterface
             GameEvent::CREATED => [
                 ['sendMessageWhenCreated', 0],
             ],
-            GameEvent::PLAYED => [
-                ['sendMessageWhenPlayed', 0],
-            ],
             GunslingerEvent::JOINED_TO_GAME => [
                 ['checkPossibilityToPlay', 0],
+            ],
+            GameEvent::READY_TO_PLAY => [
+                ['sendMessageWhenReadyToPlay', 0],
+            ],
+            GameEvent::PLAYED => [
+                ['sendMessageWhenPlayedWithNuclearBullet', 0],
             ],
         ];
     }
@@ -104,31 +108,6 @@ class GameSubscriber implements EventSubscriberInterface
         );
 
         $this->logger->info('event_subscriber.game.game.send_message_when_created', [
-            'game.id' => $event->getGame()->getId()->toString(),
-        ]);
-    }
-
-    /**
-     * @param GameEvent $event
-     *
-     * @throws Exception
-     * @throws InvalidArgumentException
-     * @throws LoaderError
-     * @throws RuntimeError
-     * @throws SyntaxError
-     */
-    public function sendMessageWhenPlayed(GameEvent $event): void
-    {
-        foreach ($this->messageBuilder->buildPlay() as $message) {
-            $this->api->sendMessage(
-                $event->getGame()->getChat()->getId(),
-                $message,
-                ParseMode::MARKDOWN
-            );
-            sleep(1);
-        }
-
-        $this->logger->info('event_subscriber.game.game.send_message_when_played', [
             'game.id' => $event->getGame()->getId()->toString(),
         ]);
     }
@@ -157,6 +136,59 @@ class GameSubscriber implements EventSubscriberInterface
 
         $this->logger->info('event_subscriber.game.game.check_possibility_to_play', [
             'game.id' => $event->getGunslinger()->getGame()->getId()->toString(),
+        ]);
+    }
+
+    /**
+     * @param GameEvent $event
+     *
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws MessagePatternIsInvalidException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function sendMessageWhenReadyToPlay(GameEvent $event): void
+    {
+        foreach ($this->messageBuilder->buildReadyToPlay() as $message) {
+            $this->api->sendMessage(
+                $event->getGame()->getChat()->getId(),
+                $message,
+                ParseMode::MARKDOWN
+            );
+            sleep(1);
+        }
+
+        $this->logger->info('event_subscriber.game.game.send_message_when_ready_to_play', [
+            'game.id' => $event->getGame()->getId()->toString(),
+        ]);
+    }
+
+    /**
+     * @param GameEvent $event
+     *
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    public function sendMessageWhenPlayedWithNuclearBullet(GameEvent $event): void
+    {
+        if (!$event->getGame()->isPlayedWithNuclearBullet()) {
+            return;
+        }
+
+        $this->api->sendMessage(
+            $event->getGame()->getChat()->getId(),
+            $this->messageBuilder->buildPlayedWithNuclearBullet(),
+            ParseMode::MARKDOWN
+        );
+
+        $this->logger->info('event_subscriber.game.game.send_message_when_played_with_nuclear_bullet', [
+            'game.id' => $event->getGame()->getId()->toString(),
         ]);
     }
 }

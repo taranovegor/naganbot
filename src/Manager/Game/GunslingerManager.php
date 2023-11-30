@@ -128,7 +128,7 @@ class GunslingerManager
         $gunslinger->shot();
         $this->flusher->flush();
 
-        $this->eventDispatcher->dispatch(new GunslingerEvent($gunslinger), GunslingerEvent::SHOT_HIMSELF);
+        $this->eventDispatcher->dispatch(new GunslingerEvent($gunslinger), GunslingerEvent::DIED);
 
         return $gunslinger;
     }
