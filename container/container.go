@@ -88,7 +88,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		Name: CommandForce,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewForceHandler(
-				ctn.Get(Bot).(*service.Bot),
+				ctn.Get(Bot).(service.Bot),
 			), nil
 		},
 	})
@@ -97,12 +97,12 @@ func buildHandlerCommand(builder *di.Builder) {
 		Name: CommandJoin,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewJoinHandler(
-				ctn.Get(Bot).(*service.Bot),
-				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(Bot).(service.Bot),
+				ctn.Get(Translator).(translator.Translator),
 				ctn.Get(RepositoryUser).(domain.UserRepository),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
-				ctn.Get(Nagan).(*service.Nagan),
+				ctn.Get(Nagan).(service.Nagan),
 			), nil
 		},
 	})
@@ -111,8 +111,8 @@ func buildHandlerCommand(builder *di.Builder) {
 		Name: CommandJoined,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewJoinedHandler(
-				ctn.Get(Bot).(*service.Bot),
-				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(Bot).(service.Bot),
+				ctn.Get(Translator).(translator.Translator),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 			), nil
 		},
@@ -122,8 +122,8 @@ func buildHandlerCommand(builder *di.Builder) {
 		Name: CommandTop,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewTopHandler(
-				ctn.Get(Bot).(*service.Bot),
-				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(Bot).(service.Bot),
+				ctn.Get(Translator).(translator.Translator),
 				ctn.Get(RepositoryUser).(domain.UserRepository),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
 			), nil
@@ -134,8 +134,8 @@ func buildHandlerCommand(builder *di.Builder) {
 		Name: CommandStat,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewStatHandler(
-				ctn.Get(Bot).(*service.Bot),
-				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(Bot).(service.Bot),
+				ctn.Get(Translator).(translator.Translator),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
 			), nil
 		},

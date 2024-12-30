@@ -10,15 +10,15 @@ import (
 
 type TopHandler struct {
 	Handler
-	bot        *service.Bot
-	trans      *translator.Translator
+	bot        service.Bot
+	trans      translator.Translator
 	user       domain.UserRepository
 	gunslinger domain.GunslingerRepository
 }
 
 func NewTopHandler(
-	bot *service.Bot,
-	trans *translator.Translator,
+	bot service.Bot,
+	trans translator.Translator,
 	user domain.UserRepository,
 	gunslinger domain.GunslingerRepository,
 ) Handler {
@@ -38,7 +38,7 @@ func (hdlr TopHandler) Execute(msg *tgbotapi.Message) {
 	var players []domain.GunslingerTopShotPlayer
 	chatID := msg.Chat.ID
 	if year, err := strconv.Atoi(msg.CommandArguments()); err == nil {
-		players, err = hdlr.gunslinger.GetTopShopPlayersByYearInChat(chatID, year)
+		players, err = hdlr.gunslinger.GetTopShotPlayersByYearInChat(chatID, year)
 	} else {
 		players, err = hdlr.gunslinger.GetTopShotPlayersInChat(chatID)
 	}

@@ -10,14 +10,14 @@ import (
 
 type StatHandler struct {
 	Handler
-	bot        *service.Bot
-	trans      *translator.Translator
+	bot        service.Bot
+	trans      translator.Translator
 	gunslinger domain.GunslingerRepository
 }
 
 func NewStatHandler(
-	bot *service.Bot,
-	trans *translator.Translator,
+	bot service.Bot,
+	trans translator.Translator,
 	gunslinger domain.GunslingerRepository,
 ) Handler {
 	return &StatHandler{

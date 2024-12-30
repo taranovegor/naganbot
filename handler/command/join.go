@@ -12,21 +12,21 @@ import (
 
 type JoinHandler struct {
 	Handler
-	bot        *service.Bot
-	trans      *translator.Translator
+	bot        service.Bot
+	trans      translator.Translator
 	user       domain.UserRepository
 	game       domain.GameRepository
 	gunslinger domain.GunslingerRepository
-	nagan      *service.Nagan
+	nagan      service.Nagan
 }
 
 func NewJoinHandler(
-	bot *service.Bot,
-	trans *translator.Translator,
+	bot service.Bot,
+	trans translator.Translator,
 	userRepository domain.UserRepository,
 	gameRepository domain.GameRepository,
 	gunslingerRepository domain.GunslingerRepository,
-	nagan *service.Nagan,
+	nagan service.Nagan,
 ) Handler {
 	return &JoinHandler{
 		bot:        bot,

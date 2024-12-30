@@ -39,10 +39,10 @@ func main() {
 		panic(err)
 	}
 
-	trans := sc.Get(container.Translator).(*translator.Translator)
+	trans := sc.Get(container.Translator).(translator.Translator)
 	chatRepository := sc.Get(container.RepositoryChat).(domain.ChatRepository)
 	userRepository := sc.Get(container.RepositoryUser).(domain.UserRepository)
-	bot := sc.Get(container.Bot).(*service.Bot)
+	bot := sc.Get(container.Bot).(service.Bot)
 	botApi := sc.Get(container.BotTelegram).(*tgbotapi.BotAPI)
 	registry := sc.Get(container.CommandRegistry).(*command.Registry)
 

@@ -21,7 +21,12 @@ type oneOf struct {
 	allOf   []oneOf
 }
 
-type Translator struct {
+type Translator interface {
+	Get(str string, cfg Config) string
+	GetMany(str string, cfg Config) []string
+}
+
+type translator struct {
 	defaultLocale string
 	translations  translations
 }
@@ -61,8 +66,8 @@ func (one oneOf) allOfLen() int {
 func NewTranslator(
 	defaultLocale string,
 	storage ...translations,
-) *Translator {
-	trans := &Translator{
+) Translator {
+	trans := &translator{
 		defaultLocale: defaultLocale,
 		translations:  make(translations),
 	}
@@ -76,7 +81,7 @@ func NewTranslator(
 	return trans
 }
 
-func (trans Translator) getTranslation(str string, locale string) (translation, error) {
+func (trans translator) getTranslation(str string, locale string) (translation, error) {
 	if len(locale) == 0 {
 		locale = trans.defaultLocale
 	}
@@ -93,7 +98,7 @@ func (trans Translator) getTranslation(str string, locale string) (translation, 
 	return translation{}, errors.New("translation not found")
 }
 
-func (trans Translator) getOneOf(translated translation, cfg Config) (oneOf, error) {
+func (trans translator) getOneOf(translated translation, cfg Config) (oneOf, error) {
 	var oneOfMany int
 	if 0 == cfg.OneOfMany {
 		oneOfMany = rand.Intn(translated.oneOfLen())
@@ -108,7 +113,7 @@ func (trans Translator) getOneOf(translated translation, cfg Config) (oneOf, err
 	return translated.oneOf[oneOfMany], nil
 }
 
-func (trans Translator) Get(str string, cfg Config) string {
+func (trans translator) Get(str string, cfg Config) string {
 	translated, err := trans.getTranslation(str, cfg.Locale)
 	if err != nil {
 		return str
@@ -140,7 +145,7 @@ func (trans Translator) Get(str string, cfg Config) string {
 	return msg.format(cfg.Args)
 }
 
-func (trans Translator) GetMany(str string, cfg Config) []string {
+func (trans translator) GetMany(str string, cfg Config) []string {
 	translated, err := trans.getTranslation(str, cfg.Locale)
 	if err != nil || !translated.isOneOf() {
 		return []string{str}

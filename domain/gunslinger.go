@@ -25,7 +25,7 @@ type GunslingerRepository interface {
 	Update(*Gunslinger) error
 	IsPlayerExistsInGame(userID int64, gameID uuid.UUID) bool
 	GetTopShotPlayersInChat(int64) ([]GunslingerTopShotPlayer, error)
-	GetTopShopPlayersByYearInChat(chatID int64, year int) ([]GunslingerTopShotPlayer, error)
+	GetTopShotPlayersByYearInChat(chatID int64, year int) ([]GunslingerTopShotPlayer, error)
 	CountNumberOfPlayerGamesInChat(userID int64, chatID int64) int64
 	CountNumberOfSelfShotsInChat(userID int64, chatID int64) int64
 }

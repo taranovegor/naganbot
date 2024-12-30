@@ -7,11 +7,11 @@ import (
 
 type ForceHandler struct {
 	Handler
-	bot *service.Bot
+	bot service.Bot
 }
 
 func NewForceHandler(
-	bot *service.Bot,
+	bot service.Bot,
 ) Handler {
 	return &ForceHandler{
 		bot: bot,

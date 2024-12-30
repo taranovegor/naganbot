@@ -5,13 +5,18 @@ import (
 	"math/rand"
 )
 
-type Nagan struct {
+type Nagan interface {
+	Shot(gunslingers []*domain.Gunslinger) *domain.Gunslinger
 }
 
-func NewNagan() *Nagan {
-	return &Nagan{}
+type nagan struct {
+	Nagan
 }
 
-func (ng Nagan) Shot(gunslingers []*domain.Gunslinger) *domain.Gunslinger {
+func NewNagan() Nagan {
+	return &nagan{}
+}
+
+func (ng *nagan) Shot(gunslingers []*domain.Gunslinger) *domain.Gunslinger {
 	return gunslingers[rand.Intn(len(gunslingers))]
 }

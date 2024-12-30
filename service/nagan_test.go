@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func newTestNagan() *Nagan {
+func newTestNagan() Nagan {
 	return NewNagan()
 }
 
