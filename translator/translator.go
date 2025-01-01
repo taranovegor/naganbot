@@ -4,14 +4,71 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 )
 
-type Message string
+type Message interface {
+	format(args map[string]string, count int) string
+}
+
+type SimpleMessage string
+
+type PluralMessage struct {
+	one  string
+	few  string
+	many string
+}
+
+func (msg SimpleMessage) format(args map[string]string, count int) string {
+	str := string(msg)
+	for key, value := range args {
+		str = strings.ReplaceAll(str, key, value)
+	}
+	return str
+}
+
+func (msg PluralMessage) format(args map[string]string, count int) string {
+	var text string
+	if count%100 >= 11 && count%100 <= 14 {
+		text = msg.many
+	} else {
+		switch count % 10 {
+		case 1:
+			text = msg.one
+		case 2, 3, 4:
+			text = msg.few
+		default:
+			text = msg.many
+		}
+	}
+
+	args["%count"] = strconv.Itoa(count)
+	for key, value := range args {
+		text = strings.ReplaceAll(text, key, value)
+	}
+	return text
+}
 
 type translation struct {
 	message Message
 	oneOf   []oneOf
+}
+
+func (trans translation) isOneOf() bool {
+	return trans.oneOf != nil && len(trans.oneOf) > 0
+}
+
+func (trans translation) oneOfLen() int {
+	return len(trans.oneOf)
+}
+
+func (one oneOf) isAllOf() bool {
+	return one.allOf != nil && len(one.allOf) > 0
+}
+
+func (one oneOf) allOfLen() int {
+	return len(one.allOf)
 }
 
 type translations map[string]map[string]translation
@@ -31,31 +88,7 @@ type Config struct {
 	Args      map[string]string
 	OneOfMany int
 	OneOfAll  int
-}
-
-func (msg Message) format(args map[string]string) string {
-	str := string(msg)
-	for key, value := range args {
-		str = strings.Replace(str, key, value, -1)
-	}
-
-	return str
-}
-
-func (trans translation) isOneOf() bool {
-	return trans.oneOf != nil && len(trans.oneOf) > 0
-}
-
-func (trans translation) oneOfLen() int {
-	return len(trans.oneOf)
-}
-
-func (one oneOf) isAllOf() bool {
-	return one.allOf != nil && len(one.allOf) > 0
-}
-
-func (one oneOf) allOfLen() int {
-	return len(one.allOf)
+	Count     int
 }
 
 func NewTranslator(
@@ -95,7 +128,7 @@ func (trans Translator) getTranslation(str string, locale string) (translation, 
 
 func (trans Translator) getOneOf(translated translation, cfg Config) (oneOf, error) {
 	var oneOfMany int
-	if 0 == cfg.OneOfMany {
+	if cfg.OneOfMany == 0 {
 		oneOfMany = rand.Intn(translated.oneOfLen())
 	} else {
 		oneOfMany = cfg.OneOfMany - 1
@@ -114,7 +147,7 @@ func (trans Translator) Get(str string, cfg Config) string {
 		return str
 	}
 
-	msg := Message(str)
+	msg := translated.message
 	if translated.isOneOf() {
 		oneOfTranslated, err := trans.getOneOf(translated, cfg)
 		if err != nil {
@@ -133,11 +166,9 @@ func (trans Translator) Get(str string, cfg Config) string {
 		} else {
 			msg = oneOfTranslated.message
 		}
-	} else {
-		msg = translated.message
 	}
 
-	return msg.format(cfg.Args)
+	return msg.format(cfg.Args, cfg.Count)
 }
 
 func (trans Translator) GetMany(str string, cfg Config) []string {
