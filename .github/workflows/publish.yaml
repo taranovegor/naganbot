@@ -2,7 +2,7 @@ name: Publish
 
 on:
     push:
-        branches: ['tec-13']
+        branches: ['master']
     release:
         types: ['published']
 
