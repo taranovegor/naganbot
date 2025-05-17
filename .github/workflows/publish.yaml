@@ -53,6 +53,13 @@ jobs:
                   platform=${{ matrix.platform }}
                   echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
 
+                  if [[ $GITHUB_REF == refs/tags/* ]]; then
+                    BUILD_VERSION=${GITHUB_REF#refs/tags/}
+                  else
+                    BUILD_VERSION=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+                  fi
+                  echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+
             - name: Docker meta
               id: meta
               uses: docker/metadata-action@v5
@@ -78,6 +85,8 @@ jobs:
                   platforms: ${{ matrix.platform }}
                   labels: ${{ steps.meta.outputs.labels }}
                   tags: ${{ env.REGISTRY_IMAGE }}
+                  build-args: |
+                      VERSION=${{ env.BUILD_VERSION }}
                   outputs: type=image,push-by-digest=true,name-canonical=true,push=true
 
             - name: Export digest
