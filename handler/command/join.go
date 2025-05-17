@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
@@ -60,18 +61,11 @@ func (h *JoinHandler) Execute(msg *tgbotapi.Message) {
 		h.bot.SendMessage(chatID, h.trans.Get("game creation", translator.Config{}))
 	}
 
-	loser, err := h.playGameUC.Execute(game.ID)
+	hitReport, err := h.playGameUC.Execute(game.ID)
 	if err != nil {
+		fmt.Println(err)
 		if game.Owner.ID != userID && errors.Is(err, usecase.ErrNotEnoughPlayers) {
 			h.bot.SendMessage(chatID, h.trans.Get("joining the game", translator.Config{}))
-		}
-		return
-	}
-
-	err = h.bot.Kick(chatID, loser.PlayerID)
-	if err == nil {
-		if errors.Is(err, usecase.ErrPlayerAlreadyInGame) {
-			h.bot.SendMessage(chatID, h.trans.Get("player already in game", translator.Config{}))
 		}
 		return
 	}
@@ -81,12 +75,22 @@ func (h *JoinHandler) Execute(msg *tgbotapi.Message) {
 		time.Sleep(time.Second)
 	}
 
-	h.bot.SendMessage(chatID, h.trans.Get("gunslinger killed", translator.Config{
-		Args: map[string]string{"%gunslinger": loser.Player.Mention()},
-	}))
+	isAtomic := hitReport.BulletType == service.BulletAtomicType
 
-	err = h.bot.Kick(chatID, loser.PlayerID)
-	if err != nil {
-		h.bot.SendMessage(chatID, h.trans.Get("player is not kicked", translator.Config{}))
+	if isAtomic {
+		h.bot.SendMessage(chatID, h.trans.Get("killed by atomic bullet", translator.Config{}))
+	}
+
+	for _, victim := range hitReport.Victims {
+		if !isAtomic {
+			h.bot.SendMessage(chatID, h.trans.Get("gunslinger killed", translator.Config{
+				Args: map[string]string{"%gunslinger": victim.Player.Mention()},
+			}))
+		}
+
+		err = h.bot.Kick(chatID, victim.PlayerID)
+		if err != nil && !isAtomic {
+			h.bot.SendMessage(chatID, h.trans.Get("player is not kicked", translator.Config{}))
+		}
 	}
 }

@@ -76,8 +76,8 @@ func (f *BulletFactory) Create() Bullet {
 }
 
 type HitReport struct {
-	Gunslingers []*domain.Gunslinger
-	BulletType  string
+	Victims    []*domain.Gunslinger
+	BulletType string
 }
 
 type Nagan struct {
@@ -94,7 +94,7 @@ func (ng *Nagan) Shoot(gunslingers []*domain.Gunslinger) *HitReport {
 	bullet := ng.bulletFactory.Create()
 	gunslingers = bullet.Hit(gunslingers)
 	return &HitReport{
-		Gunslingers: gunslingers,
-		BulletType:  bullet.Type(),
+		Victims:    gunslingers,
+		BulletType: bullet.Type(),
 	}
 }

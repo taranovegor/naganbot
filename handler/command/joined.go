@@ -43,6 +43,9 @@ func (hdlr JoinedHandler) Execute(msg *tgbotapi.Message) {
 		message = hdlr.trans.Get("joined the game", translator.Config{
 			Args: map[string]string{"%date": game.CreatedAt.Format(config.DateFormat)},
 		})
+		if game.IsPlayed() && game.BulletType == service.BulletAtomicType {
+			message = "☢️ " + message
+		}
 		for i, gunslinger := range game.Gunslingers {
 			message += "\n" + hdlr.trans.Get("game join list item", translator.Config{
 				Args: map[string]string{"%num": strconv.Itoa(i + 1), "%gunslinger": gunslinger.Player.Name()},

@@ -88,7 +88,7 @@ func TestNagan_Shoot(t *testing.T) {
 		t.Errorf("expected bullet type %s, got %s", BulletAtomicType, report.BulletType)
 	}
 
-	if len(report.Gunslingers) != 3 {
-		t.Errorf("expected 3 gunslingers to be hit, got %d", len(report.Gunslingers))
+	if len(report.Victims) != 3 {
+		t.Errorf("expected 3 gunslingers to be hit, got %d", len(report.Victims))
 	}
 }
