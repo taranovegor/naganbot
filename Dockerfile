@@ -1,22 +1,18 @@
-FROM golang:1.21 AS build
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
-COPY ./ /app
-
+COPY go.mod go.sum ./
 RUN go mod download
 
+COPY . .
+
 ARG VERSION
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w -X 'main.Version=${VERSION}'" -o /bin/naganbot
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-X 'main.Version=${VERSION}'" -o bin
+FROM scratch
 
-FROM debian:12-slim
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /bin/naganbot /naganbot
 
-RUN apt-get update && apt-get install -y \
-    ca-certificates
-
-WORKDIR /naganbot
-
-COPY --from=build /app/bin bin
-
-ENTRYPOINT ["/naganbot/bin"]
+ENTRYPOINT ["/naganbot"]
