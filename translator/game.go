@@ -67,7 +67,7 @@ var GameTranslations = translations{
 				{
 					allOf: []oneOf{
 						{message: SimpleMessage("Время узнать, кто сегодня проиграл.")},
-						{message: SimpleMessage("Щёлк...")},
+						{message: SimpleMessage("Палец на спусковом курке...")},
 					},
 				},
 				{
@@ -81,10 +81,16 @@ var GameTranslations = translations{
 						{message: SimpleMessage("Сейчас всё решит один выстрел.")},
 						{message: SimpleMessage("Тишина перед бурей...")},
 					},
-				},
+				}},
+		},
+		"gunslinger killed": {message: SimpleMessage("%gunslinger прострелил себе голову")},
+		"killed by atomic bullet": {
+			oneOf: []oneOf{
+				{message: SimpleMessage("Щёлк — и внезапно комната превратилась в эпицентр ядерного гриба. В револьере оказалась атомная пуля")},
+				{message: SimpleMessage("...от группы смельчаков остался только радиоактивный след. Видимо, кто-то подсунул в барабан не ту пулю")},
+				{message: SimpleMessage("Ккомната наполнилась ярким светом... Все игроки мгновенно испарились. Кто-то явно жульничал с боеприпасами")},
 			},
 		},
-		"gunslinger killed":     {message: SimpleMessage("%gunslinger прострелил себе голову")},
 		"joined the game":       {message: SimpleMessage("Участники игры %date")},
 		"game join list item":   {message: SimpleMessage("%num. %gunslinger")},
 		"owner of the game":     {message: SimpleMessage("владелец")},

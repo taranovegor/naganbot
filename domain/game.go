@@ -15,6 +15,7 @@ type Game struct {
 	Gunslingers []*Gunslinger
 	CreatedAt   time.Time
 	PlayedAt    sql.NullTime
+	BulletType  string
 }
 
 type GameRepository interface {
@@ -47,8 +48,9 @@ func (g *Game) IsPlayed() bool {
 	return g.PlayedAt.Valid == true
 }
 
-func (g *Game) MarkAsPlayed() {
+func (g *Game) MarkAsPlayed(withBullet string) {
 	if !g.IsPlayed() {
 		g.PlayedAt = sql.NullTime{Time: time.Now(), Valid: true}
+		g.BulletType = withBullet
 	}
 }

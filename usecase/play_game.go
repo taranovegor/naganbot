@@ -37,7 +37,7 @@ func NewPlayGameUseCase(
 	}
 }
 
-func (uc *PlayGameUseCase) Execute(gameID uuid.UUID) (*domain.Gunslinger, error) {
+func (uc *PlayGameUseCase) Execute(gameID uuid.UUID) (*service.HitReport, error) {
 	locker := uc.locker.LockFor(fmt.Sprintf("play-game-%d", gameID.ID()))
 	if !locker.TryLock() {
 		return nil, service.ErrLockFailed
@@ -62,17 +62,19 @@ func (uc *PlayGameUseCase) Execute(gameID uuid.UUID) (*domain.Gunslinger, error)
 		return nil, ErrNotEnoughPlayers
 	}
 
-	loser := uc.nagan.Shot(gunslingers)
-	loser.MarkAsShotHimself()
+	report := uc.nagan.Shoot(gunslingers)
+	for _, victim := range report.Victims {
+		victim.MarkAsShotHimself()
+	}
 
-	game.MarkAsPlayed()
+	game.MarkAsPlayed(report.BulletType)
 	if err := uc.gameRepo.Update(game); err != nil {
 		return nil, err
 	}
 
-	if err := uc.gunslingerRepo.Update(loser); err != nil {
+	if err := uc.gunslingerRepo.Update(report.Victims); err != nil {
 		return nil, err
 	}
 
-	return loser, nil
+	return report, nil
 }

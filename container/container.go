@@ -24,6 +24,7 @@ const (
 	CommandRegistry      = "command_registry"
 	CommandStat          = "command_stat"
 	CommandTop           = "command_top"
+	BulletFactory        = "bullet_factory"
 	Nagan                = "nagan"
 	ORM                  = "orm"
 	RepositoryChat       = "repository_chat"
@@ -211,6 +212,16 @@ func buildService(builder *di.Builder) {
 	})
 
 	builder.Add(di.Def{
+		Name: BulletFactory,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return service.NewBulletFactory(
+				service.NewLeadBullet(),
+				service.WeightedBullet{Chance: 8, Bullet: service.NewAtomicBullet()},
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
 		Name: ServiceLocker,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return service.NewLocker(), nil
@@ -220,7 +231,9 @@ func buildService(builder *di.Builder) {
 	builder.Add(di.Def{
 		Name: Nagan,
 		Build: func(ctn di.Container) (interface{}, error) {
-			return service.NewNagan(), nil
+			return service.NewNagan(
+				ctn.Get(BulletFactory).(*service.BulletFactory),
+			), nil
 		},
 	})
 }

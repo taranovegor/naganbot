@@ -18,7 +18,7 @@ func TestGunslinger_MarkAsShotHimself_InNotPlayedGame(t *testing.T) {
 
 func TestGunslinger_MarkAsShotHimself_InPlayedGame(t *testing.T) {
 	game := NewGame(0, 0)
-	game.MarkAsPlayed()
+	game.MarkAsPlayed("lead")
 
 	gunslinger := game.Gunslingers[0]
 	if gunslinger.ShotHimself {

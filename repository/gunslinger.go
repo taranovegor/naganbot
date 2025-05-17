@@ -23,8 +23,13 @@ func (repo GunslingerRepository) Store(gunslinger *domain.Gunslinger) error {
 	return repo.orm.Create(gunslinger).Error
 }
 
-func (repo GunslingerRepository) Update(gunslinger *domain.Gunslinger) error {
-	return repo.orm.Updates(gunslinger).Error
+// Update todo: optimize query
+func (repo GunslingerRepository) Update(gunslingers []*domain.Gunslinger) error {
+	orm := repo.orm
+	for _, gunslinger := range gunslingers {
+		orm.Updates(gunslinger)
+	}
+	return orm.Error
 }
 
 func (repo GunslingerRepository) GetByGameID(gameID uuid.UUID) ([]*domain.Gunslinger, error) {
