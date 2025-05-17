@@ -63,6 +63,7 @@ func (hdlr TopHandler) Execute(msg *tgbotapi.Message) {
 					"%user":  user.Name(),
 					"%times": strconv.Itoa(player.Times),
 				},
+				Count: player.Times,
 			})
 		}
 	}

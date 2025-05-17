@@ -27,6 +27,19 @@ func (repo GunslingerRepository) Update(gunslinger *domain.Gunslinger) error {
 	return repo.orm.Updates(gunslinger).Error
 }
 
+func (repo GunslingerRepository) GetByGameID(gameID uuid.UUID) ([]*domain.Gunslinger, error) {
+	var gunslingers []*domain.Gunslinger
+	err := repo.orm.
+		Preload("Game").
+		Preload("Player").
+		Where("game_id = ?", gameID).
+		Order("joined_at ASC").
+		Find(&gunslingers).
+		Error
+
+	return gunslingers, err
+}
+
 func (repo GunslingerRepository) IsPlayerExistsInGame(userID int64, gameID uuid.UUID) bool {
 	var counter int64
 	repo.orm.Model(&domain.Gunslinger{}).

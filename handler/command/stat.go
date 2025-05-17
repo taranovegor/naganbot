@@ -42,5 +42,6 @@ func (hdlr StatHandler) Execute(msg *tgbotapi.Message) {
 			"%games": strconv.FormatInt(numberOfGames, 10),
 			"%shots": strconv.FormatInt(numberOfShotHimself, 10),
 		},
+		Count: int(numberOfShotHimself),
 	}))
 }

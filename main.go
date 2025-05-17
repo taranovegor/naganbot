@@ -13,7 +13,7 @@ import (
 	"log"
 )
 
-const Version = "2.2.0"
+var Version = "development"
 
 func main() {
 	fmt.Println(fmt.Sprintf("Nagan bot! Version: %s", Version))
