@@ -12,6 +12,7 @@ import (
 	"github.com/taranovegor/naganbot/usecase"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"strconv"
 )
 
 const (
@@ -262,11 +263,17 @@ func buildUseCase(builder *di.Builder) {
 	builder.Add(di.Def{
 		Name: UseCasePlayGame,
 		Build: func(ctn di.Container) (interface{}, error) {
+			drumCapacity, err := strconv.Atoi(config.GetEnv(config.DrumCapacity))
+			if err != nil {
+				return nil, err
+			}
+
 			return usecase.NewPlayGameUseCase(
 				ctn.Get(ServiceLocker).(service.Locker),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
 				ctn.Get(Nagan).(*service.Nagan),
+				drumCapacity,
 			), nil
 		},
 	})
