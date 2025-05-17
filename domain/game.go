@@ -18,8 +18,9 @@ type Game struct {
 }
 
 type GameRepository interface {
-	GetLatestForChat(int64) (Game, error)
-	GetActiveForChat(int64) (Game, error)
+	GetByID(uuid.UUID) (*Game, error)
+	GetLatestForChat(int64) (*Game, error)
+	GetActiveForChat(int64) (*Game, error)
 	Store(*Game) error
 	Update(*Game) error
 	HasActiveOrCreatedTodayInChat(id int64) bool
