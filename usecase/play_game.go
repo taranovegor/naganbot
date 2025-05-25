@@ -18,7 +18,6 @@ type PlayGameUseCase struct {
 	gameRepo       domain.GameRepository
 	gunslingerRepo domain.GunslingerRepository
 	nagan          *service.Nagan
-	drumCapacity   int
 }
 
 func NewPlayGameUseCase(
@@ -26,14 +25,12 @@ func NewPlayGameUseCase(
 	gameRepo domain.GameRepository,
 	gunslingerRepo domain.GunslingerRepository,
 	nagan *service.Nagan,
-	drumCapacity int,
 ) *PlayGameUseCase {
 	return &PlayGameUseCase{
 		locker:         locker,
 		gameRepo:       gameRepo,
 		gunslingerRepo: gunslingerRepo,
 		nagan:          nagan,
-		drumCapacity:   drumCapacity,
 	}
 }
 
@@ -58,7 +55,7 @@ func (uc *PlayGameUseCase) Execute(gameID uuid.UUID) (*service.HitReport, error)
 		return nil, err
 	}
 
-	if len(gunslingers) < uc.drumCapacity {
+	if len(gunslingers) < game.PlayersCount {
 		return nil, ErrNotEnoughPlayers
 	}
 

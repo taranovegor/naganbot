@@ -168,6 +168,14 @@ func (trans Translator) Get(str string, cfg Config) string {
 		}
 	}
 
+	if cfg.Args == nil {
+		cfg.Args = make(map[string]string)
+	}
+
+	if _, exists := cfg.Args["%i"]; !exists {
+		cfg.Args["%i"] = strconv.Itoa(cfg.Count)
+	}
+
 	return msg.format(cfg.Args, cfg.Count)
 }
 

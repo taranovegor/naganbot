@@ -6,6 +6,9 @@ type Chat struct {
 	ID       int64 `gorm:"primary_key;auto_increment:false"`
 	Title    sql.NullString
 	Username sql.NullString
+	Settings struct {
+		RequiredPlayers int `gorm:"not null;default:6"`
+	} `gorm:"embedded"`
 }
 
 type ChatRepository interface {
