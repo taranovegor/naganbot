@@ -7,4 +7,3 @@ services:
         environment:
             - TELEGRAM_BOT_TOKEN
             - DATABASE_DSN
-            - DRUM_CAPACITY

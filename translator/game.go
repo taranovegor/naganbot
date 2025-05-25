@@ -2,6 +2,7 @@ package translator
 
 var GameTranslations = translations{
 	"ru": {
+		"something went wrong": {message: SimpleMessage("Наган заклинило. Мы уже вызвали оружейника.")},
 		"game creation": {
 			oneOf: []oneOf{
 				{message: SimpleMessage("Мы играем чтобы пощекотать нервы, хочешь тоже?")},
@@ -151,7 +152,18 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Смерть пока занята другими")},
 			},
 		},
-		"active game not found": {message: SimpleMessage("Ещё никто не начал игру")},
-		"user game statistics":  {message: SimpleMessage("Вы участвовали в %games игре(-ах) и проиграли %shots раз(а)")},
+		"active game not found":                  {message: SimpleMessage("Ещё никто не начал игру")},
+		"user game statistics":                   {message: SimpleMessage("Вы участвовали в %games игре(-ах) и проиграли %shots раз(а)")},
+		"available settings below":               {message: SimpleMessage("Персонализируйте игру используя перечисленные ниже опции")},
+		"settings can be changed only by admins": {message: SimpleMessage("Изменять настройки игры могут только администраторы чата")},
+		"4 shot revolver":                        {message: SimpleMessage("Colt Cloverleaf - 4 игрока")},
+		"6 shot revolver":                        {message: SimpleMessage("Colt Python - 6 игроков")},
+		"7 shot revolver":                        {message: SimpleMessage("Наган - 7 игроков")},
+		"revolver has been replaced": {message: PluralMessage{
+			one:  "Теперь в игре может участвовать %i игрок",
+			few:  "Теперь в игре могут участвовать %i игрока",
+			many: "Теперь в игре могут участвовать %i игроков",
+		}},
+		"settings will be applied for next games": {message: SimpleMessage("Изменения вступят в силу со следующего раунда")},
 	},
 }

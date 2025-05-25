@@ -16,19 +16,22 @@ var (
 
 type CreateGameUseCase struct {
 	locker   service.Locker
+	chatRepo domain.ChatRepository
 	gameRepo domain.GameRepository
 	userRepo domain.UserRepository
 }
 
 func NewCreateGameUseCase(
 	locker service.Locker,
+	chatRepo domain.ChatRepository,
 	gameRepo domain.GameRepository,
 	userRepo domain.UserRepository,
 ) *CreateGameUseCase {
 	return &CreateGameUseCase{
+		locker:   locker,
+		chatRepo: chatRepo,
 		gameRepo: gameRepo,
 		userRepo: userRepo,
-		locker:   locker,
 	}
 }
 
@@ -53,12 +56,18 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 		return nil, err
 	}
 
+	chat, err := uc.chatRepo.Get(chatID)
+	if err != nil {
+		return nil, err
+	}
+
 	game := &domain.Game{
-		ID:        uuid.New(),
-		ChatID:    chatID,
-		OwnerID:   ownerID,
-		Owner:     owner,
-		CreatedAt: time.Now(),
+		ID:           uuid.New(),
+		ChatID:       chatID,
+		OwnerID:      ownerID,
+		Owner:        owner,
+		CreatedAt:    time.Now(),
+		PlayersCount: chat.Settings.RequiredPlayers,
 	}
 
 	if err := uc.gameRepo.Store(game); err != nil {

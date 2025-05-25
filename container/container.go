@@ -5,6 +5,7 @@ import (
 	"github.com/sarulabs/di"
 	"github.com/taranovegor/naganbot/config"
 	"github.com/taranovegor/naganbot/domain"
+	"github.com/taranovegor/naganbot/handler/callback"
 	"github.com/taranovegor/naganbot/handler/command"
 	"github.com/taranovegor/naganbot/repository"
 	"github.com/taranovegor/naganbot/service"
@@ -12,30 +13,32 @@ import (
 	"github.com/taranovegor/naganbot/usecase"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"strconv"
 )
 
 const (
-	Bot                  = "bot"
-	BotTelegram          = "bot_telegram"
-	CommandForce         = "command_force"
-	CommandJoin          = "command_join"
-	CommandJoined        = "command_joined"
-	CommandRegistry      = "command_registry"
-	CommandStat          = "command_stat"
-	CommandTop           = "command_top"
-	BulletFactory        = "bullet_factory"
-	Nagan                = "nagan"
-	ORM                  = "orm"
-	RepositoryChat       = "repository_chat"
-	RepositoryGame       = "repository_game"
-	RepositoryGunslinger = "repository_gunslinger"
-	RepositoryUser       = "repository_user"
-	ServiceLocker        = "service_locker"
-	Translator           = "translator"
-	UseCaseCreateGame    = "use_case_create_game"
-	UseCaseJoinGame      = "use_case_join_game"
-	UseCasePlayGame      = "use_case_play_game"
+	Bot                     = "bot"
+	BotTelegram             = "bot_telegram"
+	CallbackRegistry        = "callback_registry"
+	CallbackRequiredPlayers = "callback_required_players"
+	CommandForce            = "command_force"
+	CommandJoin             = "command_join"
+	CommandJoined           = "command_joined"
+	CommandSettings         = "command_settings"
+	CommandRegistry         = "command_registry"
+	CommandStat             = "command_stat"
+	CommandTop              = "command_top"
+	BulletFactory           = "bullet_factory"
+	Nagan                   = "nagan"
+	ORM                     = "orm"
+	RepositoryChat          = "repository_chat"
+	RepositoryGame          = "repository_game"
+	RepositoryGunslinger    = "repository_gunslinger"
+	RepositoryUser          = "repository_user"
+	ServiceLocker           = "service_locker"
+	Translator              = "translator"
+	UseCaseCreateGame       = "use_case_create_game"
+	UseCaseJoinGame         = "use_case_join_game"
+	UseCasePlayGame         = "use_case_play_game"
 )
 
 type ServiceContainer struct {
@@ -88,7 +91,30 @@ func buildThirdParty(builder *di.Builder) {
 }
 
 func buildHandler(builder *di.Builder) {
+	buildHandlerCallback(builder)
 	buildHandlerCommand(builder)
+}
+
+func buildHandlerCallback(builder *di.Builder) {
+	builder.Add(di.Def{
+		Name: CallbackRegistry,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return callback.NewRegistry(
+				ctn.Get(CallbackRequiredPlayers).(callback.Handler),
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
+		Name: CallbackRequiredPlayers,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return callback.NewRequiredPlayers(
+				ctn.Get(RepositoryChat).(domain.ChatRepository),
+				ctn.Get(Bot).(*service.Bot),
+				ctn.Get(Translator).(*translator.Translator),
+			), nil
+		},
+	})
 }
 
 func buildHandlerCommand(builder *di.Builder) {
@@ -126,6 +152,17 @@ func buildHandlerCommand(builder *di.Builder) {
 	})
 
 	builder.Add(di.Def{
+		Name: CommandSettings,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return command.NewSettingsHandler(
+				ctn.Get(RepositoryChat).(domain.ChatRepository),
+				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(Bot).(*service.Bot),
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
 		Name: CommandTop,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewTopHandler(
@@ -156,6 +193,7 @@ func buildHandlerCommand(builder *di.Builder) {
 				ctn.Get(CommandForce).(command.Handler),
 				ctn.Get(CommandJoin).(command.Handler),
 				ctn.Get(CommandJoined).(command.Handler),
+				ctn.Get(CommandSettings).(command.Handler),
 				ctn.Get(CommandTop).(command.Handler),
 				ctn.Get(CommandStat).(command.Handler),
 			), nil
@@ -256,6 +294,7 @@ func buildUseCase(builder *di.Builder) {
 		Build: func(ctn di.Container) (interface{}, error) {
 			return usecase.NewCreateGameUseCase(
 				ctn.Get(ServiceLocker).(service.Locker),
+				ctn.Get(RepositoryChat).(domain.ChatRepository),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 				ctn.Get(RepositoryUser).(domain.UserRepository),
 			), nil
@@ -276,17 +315,11 @@ func buildUseCase(builder *di.Builder) {
 	builder.Add(di.Def{
 		Name: UseCasePlayGame,
 		Build: func(ctn di.Container) (interface{}, error) {
-			drumCapacity, err := strconv.Atoi(config.GetEnv(config.DrumCapacity))
-			if err != nil {
-				return nil, err
-			}
-
 			return usecase.NewPlayGameUseCase(
 				ctn.Get(ServiceLocker).(service.Locker),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
 				ctn.Get(Nagan).(*service.Nagan),
-				drumCapacity,
 			), nil
 		},
 	})

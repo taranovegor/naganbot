@@ -7,15 +7,16 @@ import (
 )
 
 type Game struct {
-	ID          uuid.UUID `gorm:"primary_key;size:36;<-:create"`
-	ChatID      int64
-	Chat        Chat
-	OwnerID     int64
-	Owner       User
-	Gunslingers []*Gunslinger
-	CreatedAt   time.Time
-	PlayedAt    sql.NullTime
-	BulletType  string
+	ID           uuid.UUID `gorm:"primary_key;size:36;<-:create"`
+	ChatID       int64
+	Chat         Chat
+	OwnerID      int64
+	Owner        User
+	Gunslingers  []*Gunslinger
+	CreatedAt    time.Time
+	PlayedAt     sql.NullTime
+	BulletType   string
+	PlayersCount int `gorm:"->;<-:create;not null;default:6"`
 }
 
 type GameRepository interface {
@@ -27,17 +28,18 @@ type GameRepository interface {
 	HasActiveOrCreatedTodayInChat(id int64) bool
 }
 
-func NewGame(chatID int64, ownerID int64) *Game {
+func NewGame(chatID int64, ownerID int64, playersCount int) *Game {
 	ID := uuid.New()
 	gunslinger := NewGunslinger(ID, ownerID)
 
 	game := &Game{
-		ID:          ID,
-		ChatID:      chatID,
-		OwnerID:     ownerID,
-		Gunslingers: []*Gunslinger{gunslinger},
-		CreatedAt:   time.Now(),
-		PlayedAt:    sql.NullTime{Time: time.Now()},
+		ID:           ID,
+		ChatID:       chatID,
+		OwnerID:      ownerID,
+		Gunslingers:  []*Gunslinger{gunslinger},
+		CreatedAt:    time.Now(),
+		PlayedAt:     sql.NullTime{Time: time.Now()},
+		PlayersCount: playersCount,
 	}
 	gunslinger.Game = game
 
