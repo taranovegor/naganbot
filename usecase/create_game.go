@@ -3,35 +3,29 @@ package usecase
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/service"
 	"gorm.io/gorm"
-	"time"
-)
-
-var (
-	ErrGameCooldown = errors.New("game cooldown")
 )
 
 type CreateGameUseCase struct {
-	locker   service.Locker
-	chatRepo domain.ChatRepository
-	gameRepo domain.GameRepository
-	userRepo domain.UserRepository
+	locker         service.Locker
+	chatRepo       domain.ChatRepository
+	gameRepo       domain.GameRepository
+	gunslingerRepo domain.GunslingerRepository
 }
 
 func NewCreateGameUseCase(
 	locker service.Locker,
 	chatRepo domain.ChatRepository,
 	gameRepo domain.GameRepository,
-	userRepo domain.UserRepository,
+	gunslingerRepo domain.GunslingerRepository,
 ) *CreateGameUseCase {
 	return &CreateGameUseCase{
-		locker:   locker,
-		chatRepo: chatRepo,
-		gameRepo: gameRepo,
-		userRepo: userRepo,
+		locker:         locker,
+		chatRepo:       chatRepo,
+		gameRepo:       gameRepo,
+		gunslingerRepo: gunslingerRepo,
 	}
 }
 
@@ -42,18 +36,17 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 	}
 	defer locker.Unlock()
 
-	if uc.gameRepo.HasActiveOrCreatedTodayInChat(chatID) {
-		game, err := uc.gameRepo.GetActiveForChat(chatID)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrGameCooldown
+	game, err := uc.gameRepo.GetActiveInChat(chatID)
+	if err == nil {
+		if uc.gunslingerRepo.IsUserInGame(ownerID, game.ID) {
+			return nil, ErrUserAlreadyInGame
 		}
-
-		return game, nil
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
 	}
 
-	owner, err := uc.userRepo.Get(ownerID)
-	if err != nil {
-		return nil, err
+	if uc.gunslingerRepo.HasPlayedToday(ownerID) {
+		return nil, ErrAlreadyPlayedToday
 	}
 
 	chat, err := uc.chatRepo.Get(chatID)
@@ -61,14 +54,11 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 		return nil, err
 	}
 
-	game := &domain.Game{
-		ID:           uuid.New(),
-		ChatID:       chatID,
-		OwnerID:      ownerID,
-		Owner:        owner,
-		CreatedAt:    time.Now(),
-		PlayersCount: chat.Settings.RequiredPlayers,
-	}
+	game = domain.NewGame(
+		chatID,
+		ownerID,
+		chat.Settings.RequiredPlayers,
+	)
 
 	if err := uc.gameRepo.Store(game); err != nil {
 		return nil, err

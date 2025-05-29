@@ -9,6 +9,9 @@ import (
 
 const parseMode = tgbotapi.ModeHTML
 
+type KeyboardRow map[string]string
+type InlineKeyboard []KeyboardRow
+
 type Bot struct {
 	api *tgbotapi.BotAPI
 	Api *tgbotapi.BotAPI
@@ -55,25 +58,20 @@ func (bot Bot) Kick(chatID int64, userID int64) error {
 	return bot.Ban(chatID, userID, time.Now().Add(time.Minute).Unix())
 }
 
-func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard []map[string]string) error {
-	var rows [][]tgbotapi.InlineKeyboardButton
-	for _, row := range keyboard {
-		var cols []tgbotapi.InlineKeyboardButton
-		for _, col := range reflect.ValueOf(row).MapKeys() {
-			key := col.String()
-			cols = append(cols, tgbotapi.NewInlineKeyboardButtonData(row[key], key))
-		}
-		rows = append(rows, tgbotapi.NewInlineKeyboardRow(cols...))
-	}
-
-	_, err := bot.api.Send(tgbotapi.MessageConfig{
+func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard InlineKeyboard) error {
+	cfg := tgbotapi.MessageConfig{
 		BaseChat: tgbotapi.BaseChat{
-			ChatID:      chatID,
-			ReplyMarkup: tgbotapi.NewInlineKeyboardMarkup(rows...),
+			ChatID: chatID,
 		},
 		ParseMode: parseMode,
 		Text:      text,
-	})
+	}
+
+	if len(keyboard) > 0 {
+		cfg.ReplyMarkup = bot.buildInlineKeyboardMarkup(keyboard)
+	}
+
+	_, err := bot.api.Send(cfg)
 
 	return err
 }
@@ -110,4 +108,37 @@ func (bot Bot) IsAdmin(chatID int64, userID int64) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (bot Bot) EditMessage(chatID int64, messageID int, text string, keyboard InlineKeyboard) error {
+	cfg := tgbotapi.EditMessageTextConfig{
+		BaseEdit: tgbotapi.BaseEdit{
+			ChatID:    chatID,
+			MessageID: messageID,
+		},
+		ParseMode: parseMode,
+		Text:      text,
+	}
+
+	if len(keyboard) > 0 {
+		markup := bot.buildInlineKeyboardMarkup(keyboard)
+		cfg.ReplyMarkup = &markup
+	}
+
+	_, err := bot.api.Send(cfg)
+
+	return err
+}
+
+func (bot Bot) buildInlineKeyboardMarkup(keyboard InlineKeyboard) tgbotapi.InlineKeyboardMarkup {
+	var rows [][]tgbotapi.InlineKeyboardButton
+	for _, row := range keyboard {
+		var cols []tgbotapi.InlineKeyboardButton
+		for _, col := range reflect.ValueOf(row).MapKeys() {
+			key := col.String()
+			cols = append(cols, tgbotapi.NewInlineKeyboardButtonData(row[key], key))
+		}
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(cols...))
+	}
+	return tgbotapi.NewInlineKeyboardMarkup(rows...)
 }

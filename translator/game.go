@@ -142,14 +142,15 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Кто-то подложил холостой патрон")},
 			},
 		},
-		"wait for game timeout": {
+		"player already played today": {
 			oneOf: []oneOf{
-				{message: SimpleMessage("Дайте барабану остыть после последнего выстрела")},
-				{message: SimpleMessage("Смерть тоже любит делать перерывы, не спешите")},
-				{message: SimpleMessage("Подождите, пока духи прошлых игроков разойдутся")},
-				{message: SimpleMessage("Дайте нам время замести следы от прошлой игры")},
-				{message: SimpleMessage("Мы наделали слишком много шума, пока нам нужно залечь на дно")},
-				{message: SimpleMessage("Смерть пока занята другими")},
+				{message: SimpleMessage("Сегодня ты уже играл. Смерть не торопится - завтра будет новый шанс.")},
+				{message: SimpleMessage("Ты сегодня уже ходил по краю.")},
+				{message: SimpleMessage("Смерть сегодня уже видела тебя.")},
+				{message: SimpleMessage("Ты уже сегодня играл в рулетку. Не хочешь дожить до завтра?")},
+				{message: SimpleMessage("Один шанс в день - таковы правила этой игры.")},
+				{message: SimpleMessage("Сегодня ты уже крутил барабан.")},
+				{message: SimpleMessage("Смерть сегодня уже брала свою дань с тебя.")},
 			},
 		},
 		"active game not found":                  {message: SimpleMessage("Ещё никто не начал игру")},

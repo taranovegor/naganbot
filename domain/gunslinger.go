@@ -24,11 +24,12 @@ type GunslingerRepository interface {
 	Store(*Gunslinger) error
 	Update([]*Gunslinger) error
 	GetByGameID(uuid.UUID) ([]*Gunslinger, error)
-	IsPlayerExistsInGame(userID int64, gameID uuid.UUID) bool
+	IsUserInGame(userID int64, gameID uuid.UUID) bool
 	GetTopShotPlayersInChat(int64) ([]GunslingerTopShotPlayer, error)
 	GetTopShopPlayersByYearInChat(chatID int64, year int) ([]GunslingerTopShotPlayer, error)
 	CountNumberOfPlayerGamesInChat(userID int64, chatID int64) int64
 	CountNumberOfSelfShotsInChat(userID int64, chatID int64) int64
+	HasPlayedToday(userID int64) bool
 }
 
 func NewGunslinger(gameID uuid.UUID, playerID int64) *Gunslinger {

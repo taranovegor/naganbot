@@ -2,7 +2,6 @@ package command
 
 import (
 	"errors"
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
@@ -43,16 +42,20 @@ func (h *JoinHandler) Execute(msg *tgbotapi.Message) {
 	chatID, userID := msg.Chat.ID, msg.From.ID
 	game, err := h.createGameUC.Execute(chatID, userID)
 	if err != nil {
-		if errors.Is(err, usecase.ErrGameCooldown) {
-			h.bot.SendMessage(chatID, h.trans.Get("wait for game timeout", translator.Config{}))
+		if errors.Is(err, usecase.ErrUserAlreadyInGame) {
+			h.bot.SendMessage(chatID, h.trans.Get("player already in game", translator.Config{}))
+		} else if errors.Is(err, usecase.ErrAlreadyPlayedToday) {
+			h.bot.SendMessage(chatID, h.trans.Get("player already played today", translator.Config{}))
 		}
 		return
 	}
 
 	_, err = h.joinGameUC.Execute(game.ID, msg.From.ID)
 	if err != nil {
-		if errors.Is(err, usecase.ErrPlayerAlreadyInGame) {
+		if errors.Is(err, usecase.ErrUserAlreadyInGame) {
 			h.bot.SendMessage(chatID, h.trans.Get("player already in game", translator.Config{}))
+		} else if errors.Is(err, usecase.ErrAlreadyPlayedToday) {
+			h.bot.SendMessage(chatID, h.trans.Get("player already played today", translator.Config{}))
 		}
 		return
 	}
@@ -63,7 +66,6 @@ func (h *JoinHandler) Execute(msg *tgbotapi.Message) {
 
 	hitReport, err := h.playGameUC.Execute(game.ID)
 	if err != nil {
-		fmt.Println(err)
 		if game.Owner.ID != userID && errors.Is(err, usecase.ErrNotEnoughPlayers) {
 			h.bot.SendMessage(chatID, h.trans.Get("joining the game", translator.Config{}))
 		}

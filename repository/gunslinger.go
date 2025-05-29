@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
 	"gorm.io/gorm"
+	"time"
 )
 
 type GunslingerRepository struct {
@@ -45,7 +46,7 @@ func (repo GunslingerRepository) GetByGameID(gameID uuid.UUID) ([]*domain.Gunsli
 	return gunslingers, err
 }
 
-func (repo GunslingerRepository) IsPlayerExistsInGame(userID int64, gameID uuid.UUID) bool {
+func (repo GunslingerRepository) IsUserInGame(userID int64, gameID uuid.UUID) bool {
 	var counter int64
 	repo.orm.Model(&domain.Gunslinger{}).
 		Where("player_id = ?", userID).
@@ -89,6 +90,16 @@ func (repo GunslingerRepository) CountNumberOfSelfShotsInChat(userID int64, chat
 		Count(&counter)
 
 	return counter
+}
+
+func (repo GunslingerRepository) HasPlayedToday(userID int64) bool {
+	var counter int64
+	repo.orm.Model(&domain.Gunslinger{}).
+		Where("player_id = ?", userID).
+		Where("DATE(joined_at) = DATE(?)", time.Now()).
+		Count(&counter)
+
+	return counter > 0
 }
 
 func (repo GunslingerRepository) getQueryTopShotPlayersInChat(chatID int64) *gorm.DB {

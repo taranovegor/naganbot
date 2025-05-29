@@ -22,10 +22,12 @@ type Game struct {
 type GameRepository interface {
 	GetByID(uuid.UUID) (*Game, error)
 	GetLatestForChat(int64) (*Game, error)
-	GetActiveForChat(int64) (*Game, error)
+	GetActiveInChat(int64) (*Game, error)
 	Store(*Game) error
 	Update(*Game) error
-	HasActiveOrCreatedTodayInChat(id int64) bool
+	HasPendingInChat(chatID int64) bool
+	GetPrevInChatBeforeID(uuid.UUID) (*Game, error)
+	GetNextInChatAfterID(id uuid.UUID) (*Game, error)
 }
 
 func NewGame(chatID int64, ownerID int64, playersCount int) *Game {
@@ -36,7 +38,6 @@ func NewGame(chatID int64, ownerID int64, playersCount int) *Game {
 		ID:           ID,
 		ChatID:       chatID,
 		OwnerID:      ownerID,
-		Gunslingers:  []*Gunslinger{gunslinger},
 		CreatedAt:    time.Now(),
 		PlayedAt:     sql.NullTime{Time: time.Now()},
 		PlayersCount: playersCount,

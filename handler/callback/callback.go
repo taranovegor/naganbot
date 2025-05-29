@@ -9,6 +9,7 @@ import (
 
 const (
 	RequiredPlayers Pattern = "required-players"
+	PaginateJoined  Pattern = "paginate-joined"
 )
 
 type Pattern string

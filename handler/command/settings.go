@@ -42,15 +42,15 @@ func (hdlr *settingsHandler) Execute(msg *tgbotapi.Message) {
 	settings := chat.Settings
 
 	message := hdlr.trans.Get("available settings below", translator.Config{})
-	var keyboard []map[string]string
+	var keyboard service.InlineKeyboard
 	for _, shotNum := range []int{4, 6, 7} {
 		shotStr := strconv.Itoa(shotNum)
-		arg := callback.RequiredPlayers.SetArgs(shotStr).ToString()
+		arg := callback.RequiredPlayers.SetArgs(shotStr)
 		txt := hdlr.trans.Get(fmt.Sprintf("%s shot revolver", shotStr), translator.Config{})
 		if settings.RequiredPlayers == shotNum {
 			txt = fmt.Sprintf("🔫 %s", txt)
 		}
-		keyboard = append(keyboard, map[string]string{arg: txt})
+		keyboard = append(keyboard, service.KeyboardRow{arg.ToString(): txt})
 	}
 
 	hdlr.bot.SendInlineKeyboard(msg.Chat.ID, message, keyboard)

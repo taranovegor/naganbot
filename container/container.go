@@ -11,6 +11,7 @@ import (
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
 	"github.com/taranovegor/naganbot/usecase"
+	"github.com/taranovegor/naganbot/view"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -19,6 +20,7 @@ const (
 	Bot                     = "bot"
 	BotTelegram             = "bot_telegram"
 	CallbackRegistry        = "callback_registry"
+	CallbackPaginateJoined  = "callback_paginate_joined"
 	CallbackRequiredPlayers = "callback_required_players"
 	CommandForce            = "command_force"
 	CommandJoin             = "command_join"
@@ -39,6 +41,7 @@ const (
 	UseCaseCreateGame       = "use_case_create_game"
 	UseCaseJoinGame         = "use_case_join_game"
 	UseCasePlayGame         = "use_case_play_game"
+	ViewJoinedMessage       = "view_joined_message"
 )
 
 type ServiceContainer struct {
@@ -67,6 +70,7 @@ func build(builder *di.Builder) di.Container {
 	buildService(builder)
 	buildTranslator(builder)
 	buildUseCase(builder)
+	buildView(builder)
 
 	return builder.Build()
 }
@@ -100,7 +104,20 @@ func buildHandlerCallback(builder *di.Builder) {
 		Name: CallbackRegistry,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return callback.NewRegistry(
+				ctn.Get(CallbackPaginateJoined).(callback.Handler),
 				ctn.Get(CallbackRequiredPlayers).(callback.Handler),
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
+		Name: CallbackPaginateJoined,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return callback.NewPaginateJoined(
+				ctn.Get(RepositoryGame).(domain.GameRepository),
+				ctn.Get(Bot).(*service.Bot),
+				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(ViewJoinedMessage).(*view.JoinedMessageFactory),
 			), nil
 		},
 	})
@@ -147,6 +164,7 @@ func buildHandlerCommand(builder *di.Builder) {
 				ctn.Get(Bot).(*service.Bot),
 				ctn.Get(Translator).(*translator.Translator),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
+				ctn.Get(ViewJoinedMessage).(*view.JoinedMessageFactory),
 			), nil
 		},
 	})
@@ -254,7 +272,7 @@ func buildService(builder *di.Builder) {
 		Build: func(ctn di.Container) (interface{}, error) {
 			return service.NewBulletFactory(
 				service.NewLeadBullet(),
-				service.WeightedBullet{Chance: 8, Bullet: service.NewAtomicBullet()},
+				service.WeightedBullet{Chance: 25, Bullet: service.NewAtomicBullet()},
 			), nil
 		},
 	})
@@ -296,7 +314,7 @@ func buildUseCase(builder *di.Builder) {
 				ctn.Get(ServiceLocker).(service.Locker),
 				ctn.Get(RepositoryChat).(domain.ChatRepository),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
-				ctn.Get(RepositoryUser).(domain.UserRepository),
+				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
 			), nil
 		},
 	})
@@ -307,7 +325,6 @@ func buildUseCase(builder *di.Builder) {
 			return usecase.NewJoinGameUseCase(
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
-				ctn.Get(RepositoryUser).(domain.UserRepository),
 			), nil
 		},
 	})
@@ -320,6 +337,17 @@ func buildUseCase(builder *di.Builder) {
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
 				ctn.Get(Nagan).(*service.Nagan),
+			), nil
+		},
+	})
+}
+
+func buildView(builder *di.Builder) {
+	builder.Add(di.Def{
+		Name: ViewJoinedMessage,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return view.NewJoinedMessageFactory(
+				ctn.Get(Translator).(*translator.Translator),
 			), nil
 		},
 	})

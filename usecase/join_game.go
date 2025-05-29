@@ -4,50 +4,44 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
-	"time"
 )
 
 var (
-	ErrPlayerAlreadyInGame = errors.New("player already in game")
+	ErrUserAlreadyInGame  = errors.New("player already in game")
+	ErrAlreadyPlayedToday = errors.New("player already played today")
 )
 
 type JoinGameUseCase struct {
 	gameRepo       domain.GameRepository
 	gunslingerRepo domain.GunslingerRepository
-	userRepo       domain.UserRepository
 }
 
 func NewJoinGameUseCase(
 	gameRepo domain.GameRepository,
 	gunslingerRepo domain.GunslingerRepository,
-	userRepo domain.UserRepository,
 ) *JoinGameUseCase {
 	return &JoinGameUseCase{
 		gameRepo:       gameRepo,
 		gunslingerRepo: gunslingerRepo,
-		userRepo:       userRepo,
 	}
 }
 
 func (uc *JoinGameUseCase) Execute(gameID uuid.UUID, userID int64) (*domain.Gunslinger, error) {
-	if uc.gunslingerRepo.IsPlayerExistsInGame(userID, gameID) {
-		return nil, ErrPlayerAlreadyInGame
+	if uc.gunslingerRepo.IsUserInGame(userID, gameID) {
+		return nil, ErrUserAlreadyInGame
 	}
 
-	user, err := uc.userRepo.Get(userID)
+	if uc.gunslingerRepo.HasPlayedToday(userID) {
+		return nil, ErrAlreadyPlayedToday
+	}
+
+	gunslinger := domain.NewGunslinger(
+		gameID,
+		userID,
+	)
+
+	err := uc.gunslingerRepo.Store(gunslinger)
 	if err != nil {
-		return nil, err
-	}
-
-	gunslinger := &domain.Gunslinger{
-		ID:       uuid.New(),
-		GameID:   gameID,
-		PlayerID: userID,
-		Player:   user,
-		JoinedAt: time.Now(),
-	}
-
-	if err := uc.gunslingerRepo.Store(gunslinger); err != nil {
 		return nil, err
 	}
 
