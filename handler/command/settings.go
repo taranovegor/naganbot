@@ -35,7 +35,7 @@ func (hdlr *settingsHandler) Name() string {
 func (hdlr *settingsHandler) Execute(msg *tgbotapi.Message) {
 	chat, err := hdlr.chatRepo.Get(msg.Chat.ID)
 	if err != nil {
-		hdlr.bot.SendMessage(chat.ID, hdlr.trans.Get("something went wrong", translator.Config{}))
+		hdlr.bot.SendMessage(msg.Chat.ID, hdlr.trans.Get("something went wrong", translator.Config{}))
 
 		return
 	}

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
 	"github.com/taranovegor/naganbot/container"
@@ -11,10 +13,18 @@ import (
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
 	"gorm.io/gorm"
-	"log"
 )
 
 var Version = "development"
+
+func safeExecute(fn func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("recovered from panic: %v", r)
+		}
+	}()
+	fn()
+}
 
 func main() {
 	fmt.Println(fmt.Sprintf("Nagan bot! Version: %s", Version))
@@ -77,9 +87,13 @@ func main() {
 
 			domainChat := domain.NewChat(chat.ID, chat.Title, chat.UserName)
 			if chatRepository.Exists(chat.ID) {
-				chatRepository.Update(domainChat)
+				if err := chatRepository.Update(domainChat); err != nil {
+					log.Printf("failed to update chat %d: %v", chat.ID, err)
+				}
 			} else {
-				chatRepository.Store(domainChat)
+				if err := chatRepository.Store(domainChat); err != nil {
+					log.Printf("failed to store chat %d: %v", chat.ID, err)
+				}
 			}
 		}
 
@@ -87,9 +101,13 @@ func main() {
 		if from != nil {
 			domainUser := domain.NewUser(from.ID, from.FirstName, from.LastName, from.UserName)
 			if userRepository.Exists(from.ID) {
-				userRepository.Update(domainUser)
+				if err := userRepository.Update(domainUser); err != nil {
+					log.Printf("failed to update user %d: %v", from.ID, err)
+				}
 			} else {
-				userRepository.Store(domainUser)
+				if err := userRepository.Store(domainUser); err != nil {
+					log.Printf("failed to store user %d: %v", from.ID, err)
+				}
 			}
 		}
 
@@ -101,7 +119,7 @@ func main() {
 			name := msg.Command()
 			cmd, err := cmdRegistry.Find(name)
 			if err == nil {
-				go cmd.Execute(msg)
+				go safeExecute(func() { cmd.Execute(msg) })
 			} else {
 				log.Println(err.Error())
 			}
@@ -110,7 +128,7 @@ func main() {
 			query := callback.Pattern(callbackQuery.Data)
 			hdlr, err := clbRegistry.Find(query)
 			if err == nil {
-				go hdlr.Execute(callbackQuery)
+				go safeExecute(func() { hdlr.Execute(callbackQuery) })
 			} else {
 				log.Println(err.Error())
 			}

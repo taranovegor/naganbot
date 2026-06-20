@@ -44,8 +44,12 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 
 	if uc.gameRepo.HasActiveOrCreatedTodayInChat(chatID) {
 		game, err := uc.gameRepo.GetActiveForChat(chatID)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrGameCooldown
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, ErrGameCooldown
+			}
+
+			return nil, err
 		}
 
 		return game, nil
