@@ -16,10 +16,9 @@ type User struct {
 type UserRepository interface {
 	Exists(int64) bool
 	Get(int64) (User, error)
+	GetByIDs([]int64) ([]User, error)
 	Store(*User) error
 	Update(*User) error
-	GetTopShotUsersInChat(chatID int64) ([]*User, error)
-	GetTopShotUsersInChatByYear(chatID int64, year int) ([]*User, error)
 }
 
 func NewUser(id int64, firstName string, lastName string, username string) *User {

@@ -20,7 +20,7 @@ func NewUserRepository(
 
 func (repo UserRepository) Exists(id int64) bool {
 	var counter int64
-	repo.orm.Find(&domain.User{}, id).Count(&counter)
+	repo.orm.Model(&domain.User{}).Where(id).Count(&counter)
 
 	return counter > 0
 }
@@ -34,10 +34,19 @@ func (repo UserRepository) Get(id int64) (domain.User, error) {
 	return user, nil
 }
 
-func (repo UserRepository) Store(chat *domain.User) error {
-	return repo.orm.Create(chat).Error
+func (repo UserRepository) GetByIDs(ids []int64) ([]domain.User, error) {
+	var users []domain.User
+	if err := repo.orm.Where("id IN ?", ids).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
-func (repo UserRepository) Update(chat *domain.User) error {
-	return repo.orm.Updates(chat).Error
+func (repo UserRepository) Store(user *domain.User) error {
+	return repo.orm.Create(user).Error
+}
+
+func (repo UserRepository) Update(user *domain.User) error {
+	return repo.orm.Updates(user).Error
 }

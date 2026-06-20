@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"reflect"
 	"time"
 )
 
@@ -11,7 +10,6 @@ const parseMode = tgbotapi.ModeHTML
 
 type Bot struct {
 	api *tgbotapi.BotAPI
-	Api *tgbotapi.BotAPI
 }
 
 func NewBot(
@@ -19,7 +17,6 @@ func NewBot(
 ) *Bot {
 	return &Bot{
 		api: api,
-		Api: api,
 	}
 }
 
@@ -59,9 +56,8 @@ func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard []map[stri
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, row := range keyboard {
 		var cols []tgbotapi.InlineKeyboardButton
-		for _, col := range reflect.ValueOf(row).MapKeys() {
-			key := col.String()
-			cols = append(cols, tgbotapi.NewInlineKeyboardButtonData(row[key], key))
+		for key, val := range row {
+			cols = append(cols, tgbotapi.NewInlineKeyboardButtonData(val, key))
 		}
 		rows = append(rows, tgbotapi.NewInlineKeyboardRow(cols...))
 	}
