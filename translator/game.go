@@ -86,7 +86,7 @@ var GameTranslations = translations{
 		},
 		"gunslinger killed": {
 			oneOf: []oneOf{
-				{message: SimpleMessage("Раздался выстрел — и %gunslinger больше с нами")},
+				{message: SimpleMessage("Раздался выстрел — и %gunslinger больше не с нами")},
 				{message: SimpleMessage("Барабан провернулся, курок щёлкнул... %gunslinger выбывает")},
 				{message: SimpleMessage("Пуля нашла свою жертву — это был %gunslinger")},
 				{message: SimpleMessage("Кровь, порох и тишина... %gunslinger проиграл")},
@@ -105,7 +105,7 @@ var GameTranslations = translations{
 			oneOf: []oneOf{
 				{message: SimpleMessage("Щёлк — и внезапно комната превратилась в эпицентр ядерного гриба. В револьере оказалась атомная пуля")},
 				{message: SimpleMessage("...от группы смельчаков остался только радиоактивный след. Видимо, кто-то подсунул в барабан не ту пулю")},
-				{message: SimpleMessage("Ккомната наполнилась ярким светом... Все игроки мгновенно испарились. Кто-то явно жульничал с боеприпасами")},
+				{message: SimpleMessage("Комната наполнилась ярким светом... Все игроки мгновенно испарились. Кто-то явно жульничал с боеприпасами")},
 			},
 		},
 		"joined the game":       {message: SimpleMessage("Участники игры %date")},
