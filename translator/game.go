@@ -17,6 +17,11 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Один выстрел — и ты в истории.")},
 				{message: SimpleMessage("Судьба любит смелых. Или нет?")},
 				{message: SimpleMessage("На кону жизнь. Ну, почти.")},
+				{message: SimpleMessage("Ну что, кто сегодня испытывает удачу?")},
+				{message: SimpleMessage("Барабан пуст... Пока что.")},
+				{message: SimpleMessage("Ставки сделаны. Осталось нажать на курок.")},
+				{message: SimpleMessage("Сейчас выясним, кто любимчик удачи.")},
+				{message: SimpleMessage("Открываем сезон плохих решений.")},
 			},
 		},
 		"joining the game": {
@@ -37,6 +42,11 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Ты либо выйдешь победителем, либо станешь уроком для остальных.")},
 				{message: SimpleMessage("Ну что, готов к своему последнему клику?")},
 				{message: SimpleMessage("Судьба улыбается... или нет?")},
+				{message: SimpleMessage("Ещё один доброволец.")},
+				{message: SimpleMessage("Смелость или отсутствие инстинкта самосохранения?")},
+				{message: SimpleMessage("Стул свободен, револьвер тоже.")},
+				{message: SimpleMessage("Похоже, статистика сегодня пополнится.")},
+				{message: SimpleMessage("Добро пожаловать. Назад только вперёд ногами.")},
 			},
 		},
 		"play the game": {
@@ -82,7 +92,26 @@ var GameTranslations = translations{
 						{message: SimpleMessage("Сейчас всё решит один выстрел.")},
 						{message: SimpleMessage("Тишина перед бурей...")},
 					},
-				}},
+				},
+				{
+					allOf: []oneOf{
+						{message: SimpleMessage("Ну что ж, время делать плохие выборы.")},
+						{message: SimpleMessage("Барабан медленно вращается...")},
+					},
+				},
+				{
+					allOf: []oneOf{
+						{message: SimpleMessage("Возможности передумать нет.")},
+						{message: SimpleMessage("Щёлк...")},
+					},
+				},
+				{
+					allOf: []oneOf{
+						{message: SimpleMessage("Все готовы? Тогда судьба начинает отсчёт.")},
+						{message: SimpleMessage("Револьвер идёт по кругу...")},
+					},
+				},
+			},
 		},
 		"gunslinger killed": {
 			oneOf: []oneOf{
@@ -99,6 +128,12 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Игра окончена для %gunslinger")},
 				{message: SimpleMessage("Момент истины для %gunslinger оказался последним")},
 				{message: SimpleMessage("%gunslinger получил билет в один конец.")},
+				{message: SimpleMessage("Удача отвернулась от %gunslinger.")},
+				{message: SimpleMessage("Сегодня револьвер выбрал %gunslinger.")},
+				{message: SimpleMessage("Не повезло. Совсем не повезло. Особенно %gunslinger.")},
+				{message: SimpleMessage("Статистика пополнилась именем %gunslinger.")},
+				{message: SimpleMessage("%gunslinger оказался не тем счастливчиком.")},
+				{message: SimpleMessage("Похоже, шанс 1 к N всё-таки сработал для %gunslinger.")},
 			},
 		},
 		"killed by atomic bullet": {
@@ -106,6 +141,10 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Щёлк — и внезапно комната превратилась в эпицентр ядерного гриба. В револьере оказалась атомная пуля")},
 				{message: SimpleMessage("...от группы смельчаков остался только радиоактивный след. Видимо, кто-то подсунул в барабан не ту пулю")},
 				{message: SimpleMessage("Комната наполнилась ярким светом... Все игроки мгновенно испарились. Кто-то явно жульничал с боеприпасами")},
+				{message: SimpleMessage("Кто-то перепутал револьвер с оружием массового поражения. Выживших нет. Добиты.")},
+				{message: SimpleMessage("Кажется, это была не совсем обычная пуля. Совсем не обычная.")},
+				{message: SimpleMessage("Револьвер неожиданно стал причиной локального апокалипсиса.")},
+				{message: SimpleMessage("Победителей нет. Только радиоактивный пепел.")},
 			},
 		},
 		"joined the game":       {message: SimpleMessage("Участники игры %date")},
@@ -131,6 +170,9 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Ты уже в игре, не торопи смерть")},
 				{message: SimpleMessage("Один раз в игре - достаточно для проверки удачи")},
 				{message: SimpleMessage("Ты уже в списке потенциальных покойников")},
+				{message: SimpleMessage("Не волнуйся, про тебя никто не забыл.")},
+				{message: SimpleMessage("Ты уже держишь место в очереди к револьверу.")},
+				{message: SimpleMessage("Одного билета в эту игру вполне достаточно.")},
 			},
 		},
 		"player is not kicked": {
@@ -140,6 +182,11 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Смерть сегодня капризничает. Кое-кто временно неуязвим")},
 				{message: SimpleMessage("Казнь откладывается — технические неполадки.")},
 				{message: SimpleMessage("Кто-то подложил холостой патрон")},
+				{message: SimpleMessage("Сегодня удача оформила кому-то отпуск от смерти.")},
+				{message: SimpleMessage("Револьвер недовольно щёлкнул и передумал.")},
+				{message: SimpleMessage("Похоже, сегодня судьба решила дать отсрочку.")},
+				{message: SimpleMessage("Даже смерть иногда промахивается.")},
+				{message: SimpleMessage("Не сегодня.")},
 			},
 		},
 		"wait for game timeout": {
@@ -150,6 +197,9 @@ var GameTranslations = translations{
 				{message: SimpleMessage("Дайте нам время замести следы от прошлой игры")},
 				{message: SimpleMessage("Мы наделали слишком много шума, пока нам нужно залечь на дно")},
 				{message: SimpleMessage("Смерть пока занята другими")},
+				{message: SimpleMessage("Следующая партия скоро начнётся. Терпим.")},
+				{message: SimpleMessage("Фортуна ушла на перекур.")},
+				{message: SimpleMessage("Револьвер пока на техническом обслуживании.")},
 			},
 		},
 		"active game not found":                  {message: SimpleMessage("Ещё никто не начал игру")},
