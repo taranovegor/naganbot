@@ -23,13 +23,15 @@ func (repo GunslingerRepository) Store(gunslinger *domain.Gunslinger) error {
 	return repo.orm.Create(gunslinger).Error
 }
 
-// Update todo: optimize query
 func (repo GunslingerRepository) Update(gunslingers []*domain.Gunslinger) error {
-	orm := repo.orm
-	for _, gunslinger := range gunslingers {
-		orm.Updates(gunslinger)
-	}
-	return orm.Error
+	return repo.orm.Transaction(func(tx *gorm.DB) error {
+		for _, gunslinger := range gunslingers {
+			if err := tx.Updates(gunslinger).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (repo GunslingerRepository) GetByGameID(gameID uuid.UUID) ([]*domain.Gunslinger, error) {
@@ -64,7 +66,7 @@ func (repo GunslingerRepository) GetTopShotPlayersInChat(chatID int64) ([]domain
 	return players, err
 }
 
-func (repo GunslingerRepository) GetTopShopPlayersByYearInChat(chatID int64, year int) ([]domain.GunslingerTopShotPlayer, error) {
+func (repo GunslingerRepository) GetTopShotPlayersByYearInChat(chatID int64, year int) ([]domain.GunslingerTopShotPlayer, error) {
 	var players []domain.GunslingerTopShotPlayer
 	err := repo.getQueryTopShotPlayersInChat(chatID).
 		Where("EXTRACT(YEAR FROM games.created_at) = ?", year).
