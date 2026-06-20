@@ -38,6 +38,7 @@ func (repo GameRepository) GetLatestForChat(chatID int64) (*domain.Game, error) 
 func (repo GameRepository) GetActiveForChat(chatID int64) (*domain.Game, error) {
 	var game domain.Game
 	err := repo.getQueryByChat(chatID).
+		Preload("Owner").
 		Where("played_at IS NULL").
 		First(&game).
 		Error
@@ -68,6 +69,5 @@ func (repo GameRepository) getQueryByChat(chatID int64) *gorm.DB {
 			return db.Order("joined_at ASC")
 		}).
 		Preload("Gunslingers.Player").
-		Preload("Gunslingers.Game").
 		Where("chat_id = ?", chatID)
 }
