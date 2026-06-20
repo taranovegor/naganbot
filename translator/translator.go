@@ -1,7 +1,6 @@
 package translator
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -123,7 +122,7 @@ func (trans Translator) getTranslation(str string, locale string) (translation, 
 		return trans.getTranslation(str, trans.defaultLocale)
 	}
 
-	return translation{}, errors.New("translation not found")
+	return translation{}, fmt.Errorf("translation not found")
 }
 
 func (trans Translator) getOneOf(translated translation, cfg Config) (oneOf, error) {
@@ -135,7 +134,7 @@ func (trans Translator) getOneOf(translated translation, cfg Config) (oneOf, err
 	}
 
 	if oneOfMany < 0 || oneOfMany >= translated.oneOfLen() {
-		return oneOf{}, errors.New(fmt.Sprintf("OneOf with index %d not found", oneOfMany))
+		return oneOf{}, fmt.Errorf("OneOf with index %d not found", oneOfMany)
 	}
 
 	return translated.oneOf[oneOfMany], nil

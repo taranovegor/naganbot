@@ -1,8 +1,8 @@
 package command
 
 import (
-	"errors"
 	"fmt"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -34,7 +34,7 @@ func NewRegistry(
 func (reg Registry) Find(name string) (Handler, error) {
 	hdlr, exists := reg.handlers[name]
 	if !exists {
-		return nil, errors.New(fmt.Sprintf("command %s not found", name))
+		return nil, fmt.Errorf("command %s not found", name)
 	}
 
 	return hdlr, nil

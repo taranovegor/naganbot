@@ -1,10 +1,10 @@
 package callback
 
 import (
-	"errors"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
@@ -60,7 +60,7 @@ func NewRegistry(
 func (reg Registry) Find(query Pattern) (Handler, error) {
 	hdlr, exists := reg.handlers[query.Name()]
 	if !exists {
-		return nil, errors.New(fmt.Sprintf("handler %s for query %s not found", query.Name(), query))
+		return nil, fmt.Errorf("handler %s for query %s not found", query.Name(), query)
 	}
 
 	return hdlr, nil
