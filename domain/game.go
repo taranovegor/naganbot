@@ -38,7 +38,7 @@ func NewGame(chatID int64, ownerID int64, playersCount int) *Game {
 		OwnerID:      ownerID,
 		Gunslingers:  []*Gunslinger{gunslinger},
 		CreatedAt:    time.Now(),
-		PlayedAt:     sql.NullTime{Time: time.Now()},
+		PlayedAt:     sql.NullTime{},
 		PlayersCount: playersCount,
 	}
 	gunslinger.Game = game
@@ -47,7 +47,7 @@ func NewGame(chatID int64, ownerID int64, playersCount int) *Game {
 }
 
 func (g *Game) IsPlayed() bool {
-	return g.PlayedAt.Valid == true
+	return g.PlayedAt.Valid
 }
 
 func (g *Game) MarkAsPlayed(withBullet string) {

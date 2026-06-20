@@ -22,11 +22,11 @@ func NewChat(id int64, title string, username string) *Chat {
 	chat := &Chat{ID: id}
 
 	if len(title) > 0 {
-		chat.Title = sql.NullString{String: title}
+		chat.Title = sql.NullString{String: title, Valid: true}
 	}
 
 	if len(username) > 0 {
-		chat.Username = sql.NullString{String: username}
+		chat.Username = sql.NullString{String: username, Valid: true}
 	}
 
 	return chat
