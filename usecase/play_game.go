@@ -1,8 +1,10 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/service"
@@ -34,7 +36,7 @@ func NewPlayGameUseCase(
 	}
 }
 
-func (uc *PlayGameUseCase) Execute(gameID uuid.UUID) (*service.HitReport, error) {
+func (uc *PlayGameUseCase) Execute(ctx context.Context, gameID uuid.UUID) (*service.HitReport, error) {
 	locker := uc.locker.LockFor(fmt.Sprintf("play-game-%d", gameID.ID()))
 	if !locker.TryLock() {
 		return nil, service.ErrLockFailed
@@ -59,12 +61,15 @@ func (uc *PlayGameUseCase) Execute(gameID uuid.UUID) (*service.HitReport, error)
 		return nil, ErrNotEnoughPlayers
 	}
 
-	report := uc.nagan.Shoot(gunslingers)
+	report, err := uc.nagan.Shoot(ctx, game.ID, gunslingers)
+	if err != nil {
+		return nil, err
+	}
 	for _, victim := range report.Victims {
 		victim.MarkAsShotHimself()
 	}
 
-	game.MarkAsPlayed(report.BulletType)
+	game.MarkAsPlayed(report.BulletType, report.ProofURL)
 	if err := uc.gameRepo.Update(game); err != nil {
 		return nil, err
 	}

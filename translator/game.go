@@ -215,6 +215,7 @@ var GameTranslations = translations{
 			many: "Теперь в игре могут участвовать %i игроков",
 		}},
 		"settings will be applied for next games": {message: SimpleMessage("Изменения вступят в силу со следующего раунда")},
+		"proof link":      {message: SimpleMessage("<a href=\"%url\">🔐 Источник случайности</a>")},
 		"game log header": {message: SimpleMessage("Последние %number игр:")},
 		"game log item":   {message: SimpleMessage("%date - %username")},
 	},

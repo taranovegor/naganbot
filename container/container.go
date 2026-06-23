@@ -7,6 +7,7 @@ import (
 	"github.com/sarulabs/di"
 	"github.com/taranovegor/naganbot/config"
 	"github.com/taranovegor/naganbot/domain"
+	"github.com/taranovegor/naganbot/drand"
 	"github.com/taranovegor/naganbot/handler/callback"
 	"github.com/taranovegor/naganbot/handler/command"
 	"github.com/taranovegor/naganbot/repository"
@@ -32,6 +33,7 @@ const (
 	CommandStat             = "command_stat"
 	CommandTop              = "command_top"
 	BulletFactory           = "bullet_factory"
+	DrandClient             = "drand_client"
 	Nagan                   = "nagan"
 	ORM                     = "orm"
 	RepositoryChat          = "repository_chat"
@@ -284,6 +286,13 @@ func buildService(builder *di.Builder) {
 	})
 
 	builder.Add(di.Def{
+		Name: DrandClient,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return drand.NewClient(), nil
+		},
+	})
+
+	builder.Add(di.Def{
 		Name: ServiceLocker,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return service.NewLocker(), nil
@@ -295,6 +304,7 @@ func buildService(builder *di.Builder) {
 		Build: func(ctn di.Container) (interface{}, error) {
 			return service.NewNagan(
 				ctn.Get(BulletFactory).(*service.BulletFactory),
+				ctn.Get(DrandClient).(*drand.Client),
 			), nil
 		},
 	})

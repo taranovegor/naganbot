@@ -22,9 +22,10 @@ func NewBot(
 
 func (bot Bot) SendMessage(chatID int64, text string) error {
 	_, err := bot.api.Send(tgbotapi.MessageConfig{
-		BaseChat:  tgbotapi.BaseChat{ChatID: chatID},
-		ParseMode: parseMode,
-		Text:      text,
+		BaseChat:              tgbotapi.BaseChat{ChatID: chatID},
+		ParseMode:             parseMode,
+		Text:                  text,
+		DisableWebPagePreview: true,
 	})
 
 	return err

@@ -16,6 +16,7 @@ type Game struct {
 	CreatedAt    time.Time
 	PlayedAt     sql.NullTime
 	BulletType   string
+	ProofURL     string
 	PlayersCount int `gorm:"->;<-:create;not null;default:6"`
 }
 
@@ -51,9 +52,10 @@ func (g *Game) IsPlayed() bool {
 	return g.PlayedAt.Valid
 }
 
-func (g *Game) MarkAsPlayed(withBullet string) {
+func (g *Game) MarkAsPlayed(withBullet string, proofURL string) {
 	if !g.IsPlayed() {
 		g.PlayedAt = sql.NullTime{Time: time.Now(), Valid: true}
 		g.BulletType = withBullet
+		g.ProofURL = proofURL
 	}
 }

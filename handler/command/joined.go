@@ -1,12 +1,13 @@
 package command
 
 import (
+	"strconv"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/config"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
-	"strconv"
 )
 
 type JoinedHandler struct {
@@ -62,6 +63,12 @@ func (hdlr JoinedHandler) Execute(msg *tgbotapi.Message) {
 
 				message += " " + hdlr.trans.Get("shot in game", translator.Config{})
 			}
+		}
+
+		if game.IsPlayed() && game.ProofURL != "" {
+			message += "\n\n" + hdlr.trans.Get("proof link", translator.Config{
+				Args: map[string]string{"%url": game.ProofURL},
+			})
 		}
 	}
 

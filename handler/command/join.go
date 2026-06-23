@@ -1,13 +1,15 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
 	"github.com/taranovegor/naganbot/usecase"
-	"time"
 )
 
 type JoinHandler struct {
@@ -61,11 +63,13 @@ func (h *JoinHandler) Execute(msg *tgbotapi.Message) {
 		h.bot.SendMessage(chatID, h.trans.Get("game creation", translator.Config{}))
 	}
 
-	hitReport, err := h.playGameUC.Execute(game.ID)
+	hitReport, err := h.playGameUC.Execute(context.TODO(), game.ID)
 	if err != nil {
 		fmt.Println(err)
 		if game.Owner.ID != userID && errors.Is(err, usecase.ErrNotEnoughPlayers) {
 			h.bot.SendMessage(chatID, h.trans.Get("joining the game", translator.Config{}))
+		} else if !errors.Is(err, usecase.ErrNotEnoughPlayers) {
+			h.bot.SendMessage(chatID, h.trans.Get("something went wrong", translator.Config{}))
 		}
 		return
 	}

@@ -1,10 +1,15 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
-	"math/rand"
-	"testing"
+	"github.com/taranovegor/naganbot/drand"
 )
 
 func createGunslingers(n int) []*domain.Gunslinger {
@@ -16,23 +21,22 @@ func createGunslingers(n int) []*domain.Gunslinger {
 }
 
 func TestLeadBullet_Hit(t *testing.T) {
-	rand.Seed(1)
 	b := NewLeadBullet()
 	gunslingers := createGunslingers(5)
-	result := b.Hit(gunslingers)
+	result := b.Hit(gunslingers, 2)
 
 	if len(result) != 1 {
 		t.Fatalf("expected 1 gunslinger hit, got %d", len(result))
 	}
-	if result[0] == nil {
-		t.Fatal("expected valid gunslinger, got nil")
+	if result[0] != gunslingers[2] {
+		t.Fatal("expected gunslinger at index 2")
 	}
 }
 
 func TestAtomicBullet_Hit(t *testing.T) {
 	b := NewAtomicBullet()
 	gunslingers := createGunslingers(3)
-	result := b.Hit(gunslingers)
+	result := b.Hit(gunslingers, 0)
 
 	if len(result) != len(gunslingers) {
 		t.Fatalf("expected %d gunslingers hit, got %d", len(gunslingers), len(result))
@@ -45,18 +49,16 @@ func TestAtomicBullet_Hit(t *testing.T) {
 }
 
 func TestBulletFactory_Create_Default(t *testing.T) {
-	rand.Seed(99)
 	defaultBullet := NewLeadBullet()
 	factory := NewBulletFactory(defaultBullet)
 
-	bullet := factory.Create()
+	bullet := factory.Create(50)
 	if bullet.Type() != BulletLeadType {
 		t.Errorf("expected default bullet type %s, got %s", BulletLeadType, bullet.Type())
 	}
 }
 
 func TestBulletFactory_Create_Special(t *testing.T) {
-	rand.Seed(1)
 	defaultBullet := NewLeadBullet()
 	specialBullet := NewAtomicBullet()
 
@@ -65,30 +67,43 @@ func TestBulletFactory_Create_Special(t *testing.T) {
 		Bullet: specialBullet,
 	})
 
-	bullet := factory.Create()
+	bullet := factory.Create(0)
 	if bullet.Type() != BulletAtomicType {
 		t.Errorf("expected special bullet type %s, got %s", BulletAtomicType, bullet.Type())
 	}
 }
 
 func TestNagan_Shoot(t *testing.T) {
-	rand.Seed(1)
-	gunslingers := createGunslingers(3)
-	defaultBullet := NewLeadBullet()
-	specialBullet := NewAtomicBullet()
-	factory := NewBulletFactory(defaultBullet, WeightedBullet{
-		Chance: 100,
-		Bullet: specialBullet,
-	})
-	nagan := NewNagan(factory)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(drand.Beacon{
+			Round:      12345,
+			Randomness: "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+			Signature:  "sig",
+		})
+	}))
+	defer server.Close()
 
-	report := nagan.Shoot(gunslingers)
+	client := drand.NewClientWithURL(server.URL)
+	gunslingers := createGunslingers(6)
+	gameID := uuid.New()
 
-	if report.BulletType != BulletAtomicType {
-		t.Errorf("expected bullet type %s, got %s", BulletAtomicType, report.BulletType)
+	factory := NewBulletFactory(NewLeadBullet(), WeightedBullet{Chance: 3, Bullet: NewAtomicBullet()})
+	nagan := NewNagan(factory, client)
+
+	report, err := nagan.Shoot(context.Background(), gameID, gunslingers)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(report.Victims) != 3 {
-		t.Errorf("expected 3 gunslingers to be hit, got %d", len(report.Victims))
+	if report.BulletType == "" {
+		t.Error("expected bullet type to be set")
+	}
+
+	if len(report.Victims) == 0 {
+		t.Error("expected at least one victim")
+	}
+
+	if report.ProofURL == "" {
+		t.Error("expected proof URL to be set")
 	}
 }
