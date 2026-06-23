@@ -53,6 +53,31 @@ func (bot Bot) SendMessage(chatID int64, text string) {
 	}
 }
 
+func (bot Bot) ReplyMessage(chatID int64, messageID int, text string) {
+	_, err := bot.api.Send(tgbotapi.MessageConfig{
+		BaseChat: tgbotapi.BaseChat{
+			ChatID:           chatID,
+			ReplyToMessageID: messageID,
+		},
+		ParseMode:             parseMode,
+		Text:                  text,
+		DisableWebPagePreview: true,
+	})
+	if err != nil {
+		log.Printf("failed to reply to message %d in chat %d: %v", messageID, chatID, err)
+	}
+}
+
+func (bot Bot) EditMessageText(chatID int64, messageID int, text string) {
+	msg := tgbotapi.NewEditMessageText(chatID, messageID, text)
+	msg.ParseMode = parseMode
+	msg.DisableWebPagePreview = true
+	_, err := bot.api.Request(msg)
+	if err != nil {
+		log.Printf("failed to edit message %d text in chat %d: %v", messageID, chatID, err)
+	}
+}
+
 func (bot Bot) DeleteMessage(chatID int64, messageID int) {
 	_, err := bot.api.Request(tgbotapi.NewDeleteMessage(chatID, messageID))
 	if err != nil {
@@ -105,6 +130,32 @@ func (bot Bot) AnswerCallback(callbackQueryID string, text string) {
 	if err != nil {
 		log.Printf("failed to answer callback %s: %v", callbackQueryID, err)
 	}
+}
+
+func (bot Bot) IsBot(chatID int64, userID int64) bool {
+	member, err := bot.api.GetChatMember(tgbotapi.GetChatMemberConfig{
+		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
+			ChatID: chatID,
+			UserID: userID,
+		},
+	})
+	if err != nil {
+		return false
+	}
+	return member.User.IsBot
+}
+
+func (bot Bot) IsChatMember(chatID int64, userID int64) bool {
+	member, err := bot.api.GetChatMember(tgbotapi.GetChatMemberConfig{
+		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
+			ChatID: chatID,
+			UserID: userID,
+		},
+	})
+	if err != nil {
+		return false
+	}
+	return !member.HasLeft() && !member.WasKicked()
 }
 
 func (bot Bot) IsAdmin(chatID int64, userID int64) (bool, error) {

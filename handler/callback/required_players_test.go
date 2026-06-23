@@ -216,3 +216,7 @@ func TestRequiredPlayersExecuteUpdatesSettingsAndEditsTheKeyboardOnSuccess(t *te
 		t.Fatalf("expected keyboard %+v, got %+v", wantKeyboard, *bot.editedKeyboard)
 	}
 }
+
+func (b *fakeMessenger) EditMessageText(int64, int, string) {}
+func (b *fakeMessenger) ReplyMessage(int64, int, string)    {}
+func (b *fakeMessenger) Kick(int64, int64) error            { return nil }

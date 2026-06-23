@@ -12,6 +12,7 @@ import (
 const (
 	RequiredPlayers Pattern = "required-players"
 	GameMode        Pattern = "game-mode"
+	DuelResponse    Pattern = "duel-response"
 )
 
 type Pattern string
@@ -45,6 +46,9 @@ type messenger interface {
 	AnswerCallback(callbackQueryID string, text string)
 	EditMessageReplyMarkup(chatID int64, messageID int, keyboard service.Keyboard)
 	IsAdmin(chatID int64, userID int64) (bool, error)
+	EditMessageText(chatID int64, messageID int, text string)
+	ReplyMessage(chatID int64, messageID int, text string)
+	Kick(chatID int64, userID int64) error
 }
 
 type Registry struct {

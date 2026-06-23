@@ -15,6 +15,7 @@ type User struct {
 
 type UserRepository interface {
 	Get(int64) (User, error)
+	GetByUsername(string) (User, error)
 	GetByIDs([]int64) ([]User, error)
 	Save(*User) error
 }

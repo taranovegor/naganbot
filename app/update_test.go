@@ -283,3 +283,4 @@ func TestHandleUpdatePropagatesTheCallerContextToTheCommandHandler(t *testing.T)
 		t.Fatalf("expected the handler to receive the caller's cancelled context, got err %v", handler.capturedCtx.Err())
 	}
 }
+func (r *fakeUserRepo) GetByUsername(string) (domain.User, error) { return domain.User{}, nil }
