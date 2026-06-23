@@ -1,13 +1,11 @@
 package command
 
 import (
-	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/handler/callback"
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
-	"strconv"
 )
 
 type settingsHandler struct {
@@ -42,16 +40,6 @@ func (hdlr *settingsHandler) Execute(msg *tgbotapi.Message) {
 	settings := chat.Settings
 
 	message := hdlr.trans.Get("available settings below", translator.Config{})
-	var keyboard []map[string]string
-	for _, shotNum := range []int{4, 5, 6, 7, 8, 9} {
-		shotStr := strconv.Itoa(shotNum)
-		arg := callback.RequiredPlayers.SetArgs(shotStr).ToString()
-		txt := hdlr.trans.Get(fmt.Sprintf("%s shot revolver", shotStr), translator.Config{})
-		if settings.RequiredPlayers == shotNum {
-			txt = fmt.Sprintf("🔫 %s", txt)
-		}
-		keyboard = append(keyboard, map[string]string{arg: txt})
-	}
-
+	keyboard := callback.RevolverKeyboard(settings.RequiredPlayers, hdlr.trans)
 	hdlr.bot.SendInlineKeyboard(msg.Chat.ID, message, keyboard)
 }

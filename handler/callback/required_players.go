@@ -9,6 +9,22 @@ import (
 	"strconv"
 )
 
+var revolverOptions = []int{4, 5, 6, 7, 8, 9}
+
+func RevolverKeyboard(selected int, trans *translator.Translator) []map[string]string {
+	var keyboard []map[string]string
+	for _, n := range revolverOptions {
+		s := strconv.Itoa(n)
+		arg := RequiredPlayers.SetArgs(s).ToString()
+		txt := trans.Get(fmt.Sprintf("%s shot revolver", s), translator.Config{})
+		if n == selected {
+			txt = fmt.Sprintf("🔫 %s", txt)
+		}
+		keyboard = append(keyboard, map[string]string{arg: txt})
+	}
+	return keyboard
+}
+
 type requiredPlayers struct {
 	chatRepo domain.ChatRepository
 	bot      *service.Bot
@@ -66,4 +82,7 @@ func (h *requiredPlayers) Execute(query *tgbotapi.CallbackQuery) {
 		h.trans.Get("settings will be applied for next games", translator.Config{}),
 	)
 	h.bot.AnswerCallback(query.ID, notification)
+
+	keyboard := RevolverKeyboard(players, h.trans)
+	h.bot.EditMessageReplyMarkup(chatID, query.Message.MessageID, keyboard)
 }

@@ -75,6 +75,22 @@ func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard []map[stri
 	return err
 }
 
+func (bot Bot) EditMessageReplyMarkup(chatID int64, messageID int, keyboard []map[string]string) error {
+	var rows [][]tgbotapi.InlineKeyboardButton
+	for _, row := range keyboard {
+		var cols []tgbotapi.InlineKeyboardButton
+		for key, val := range row {
+			cols = append(cols, tgbotapi.NewInlineKeyboardButtonData(val, key))
+		}
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(cols...))
+	}
+
+	markup := tgbotapi.NewInlineKeyboardMarkup(rows...)
+	_, err := bot.api.Request(tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup))
+
+	return err
+}
+
 func (bot Bot) AnswerCallback(callbackQueryID string, text string) error {
 	_, err := bot.api.Request(tgbotapi.NewCallback(callbackQueryID, text))
 
