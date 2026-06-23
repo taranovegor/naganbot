@@ -43,7 +43,7 @@ func (hdlr *settingsHandler) Execute(msg *tgbotapi.Message) {
 
 	message := hdlr.trans.Get("available settings below", translator.Config{})
 	var keyboard []map[string]string
-	for _, shotNum := range []int{4, 5, 6, 7, 8} {
+	for _, shotNum := range []int{4, 5, 6, 7, 8, 9} {
 		shotStr := strconv.Itoa(shotNum)
 		arg := callback.RequiredPlayers.SetArgs(shotStr).ToString()
 		txt := hdlr.trans.Get(fmt.Sprintf("%s shot revolver", shotStr), translator.Config{})
