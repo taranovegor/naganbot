@@ -207,6 +207,7 @@ var GameTranslations = translations{
 		"available settings below":               {message: SimpleMessage("Персонализируйте игру используя перечисленные ниже опции")},
 		"settings can be changed only by admins": {message: SimpleMessage("Изменять настройки игры могут только администраторы чата")},
 		"4 shot revolver":                        {message: SimpleMessage("Colt Cloverleaf - 4 игрока")},
+		"5 shot revolver":                        {message: SimpleMessage("S&W Model 642 - 5 игроков")},
 		"6 shot revolver":                        {message: SimpleMessage("Colt Python - 6 игроков")},
 		"7 shot revolver":                        {message: SimpleMessage("Наган - 7 игроков")},
 		"revolver has been replaced": {message: PluralMessage{
