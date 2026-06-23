@@ -16,6 +16,7 @@ type User struct {
 type UserRepository interface {
 	Exists(int64) bool
 	Get(int64) (User, error)
+	GetByUsername(string) (User, error)
 	GetByIDs([]int64) ([]User, error)
 	Store(*User) error
 	Update(*User) error

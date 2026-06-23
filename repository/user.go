@@ -34,6 +34,14 @@ func (repo UserRepository) Get(id int64) (domain.User, error) {
 	return user, nil
 }
 
+func (repo UserRepository) GetByUsername(username string) (domain.User, error) {
+	var user domain.User
+	if err := repo.orm.Where("username = ?", username).First(&user).Error; err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
 func (repo UserRepository) GetByIDs(ids []int64) ([]domain.User, error) {
 	var users []domain.User
 	if err := repo.orm.Where("id IN ?", ids).Find(&users).Error; err != nil {

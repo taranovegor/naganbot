@@ -22,8 +22,10 @@ import (
 const (
 	Bot                     = "bot"
 	BotTelegram             = "bot_telegram"
+	CallbackDuelResponse    = "callback_duel_response"
 	CallbackRegistry        = "callback_registry"
 	CallbackRequiredPlayers = "callback_required_players"
+	CommandDuel             = "command_duel"
 	CommandForce            = "command_force"
 	CommandJoin             = "command_join"
 	CommandJoined           = "command_joined"
@@ -37,6 +39,7 @@ const (
 	Nagan                   = "nagan"
 	ORM                     = "orm"
 	RepositoryChat          = "repository_chat"
+	RepositoryDuel          = "repository_duel"
 	RepositoryGame          = "repository_game"
 	RepositoryGunslinger    = "repository_gunslinger"
 	RepositoryUser          = "repository_user"
@@ -111,10 +114,23 @@ func buildHandler(builder *di.Builder) {
 
 func buildHandlerCallback(builder *di.Builder) {
 	builder.Add(di.Def{
+		Name: CallbackDuelResponse,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return callback.NewDuelResponse(
+				ctn.Get(Bot).(*service.Bot),
+				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(RepositoryDuel).(domain.DuelRepository),
+				ctn.Get(DrandClient).(*drand.Client),
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
 		Name: CallbackRegistry,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return callback.NewRegistry(
 				ctn.Get(CallbackRequiredPlayers).(callback.Handler),
+				ctn.Get(CallbackDuelResponse).(callback.Handler),
 			), nil
 		},
 	})
@@ -132,6 +148,18 @@ func buildHandlerCallback(builder *di.Builder) {
 }
 
 func buildHandlerCommand(builder *di.Builder) {
+	builder.Add(di.Def{
+		Name: CommandDuel,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return command.NewDuelHandler(
+				ctn.Get(Bot).(*service.Bot),
+				ctn.Get(Translator).(*translator.Translator),
+				ctn.Get(RepositoryUser).(domain.UserRepository),
+				ctn.Get(RepositoryDuel).(domain.DuelRepository),
+			), nil
+		},
+	})
+
 	builder.Add(di.Def{
 		Name: CommandForce,
 		Build: func(ctn di.Container) (interface{}, error) {
@@ -215,6 +243,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewRegistry(
 				config.CommandPrefix,
+				ctn.Get(CommandDuel).(command.Handler),
 				ctn.Get(CommandForce).(command.Handler),
 				ctn.Get(CommandJoin).(command.Handler),
 				ctn.Get(CommandJoined).(command.Handler),
@@ -241,6 +270,15 @@ func buildRepository(builder *di.Builder) {
 		Name: RepositoryUser,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return repository.NewUserRepository(
+				ctn.Get(ORM).(*gorm.DB),
+			), nil
+		},
+	})
+
+	builder.Add(di.Def{
+		Name: RepositoryDuel,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return repository.NewDuelRepository(
 				ctn.Get(ORM).(*gorm.DB),
 			), nil
 		},

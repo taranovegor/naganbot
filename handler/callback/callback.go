@@ -9,6 +9,7 @@ import (
 
 const (
 	RequiredPlayers Pattern = "required-players"
+	DuelResponse    Pattern = "duel-response"
 )
 
 type Pattern string

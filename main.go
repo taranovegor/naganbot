@@ -45,6 +45,7 @@ func main() {
 		&domain.User{},
 		&domain.Game{},
 		&domain.Gunslinger{},
+		&domain.Duel{},
 	)
 	if err != nil {
 		panic(err)
