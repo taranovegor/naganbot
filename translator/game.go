@@ -210,6 +210,7 @@ var GameTranslations = translations{
 		"5 shot revolver":                        {message: SimpleMessage("S&W Model 642 - 5 игроков")},
 		"6 shot revolver":                        {message: SimpleMessage("Colt Python - 6 игроков")},
 		"7 shot revolver":                        {message: SimpleMessage("Наган - 7 игроков")},
+		"8 shot revolver":                        {message: SimpleMessage("S&W Model 627 PC - 8 игроков")},
 		"revolver has been replaced": {message: PluralMessage{
 			one:  "Теперь в игре может участвовать %i игрок",
 			few:  "Теперь в игре могут участвовать %i игрока",
