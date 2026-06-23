@@ -113,3 +113,4 @@ func TestJoinGameUseCaseStoresAndReturnsTheGunslingerOnSuccess(t *testing.T) {
 		t.Fatal("expected the gunslinger to be stored")
 	}
 }
+func (r *joinGameUserRepo) GetByUsername(string) (domain.User, error) { return domain.User{}, nil }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,7 +28,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	if err := db.AutoMigrate(&domain.Chat{}, &domain.User{}, &domain.Game{}, &domain.Gunslinger{}); err != nil {
+	if err := db.AutoMigrate(&domain.Chat{}, &domain.User{}, &domain.Game{}, &domain.Gunslinger{}, &domain.Duel{}); err != nil {
 		panic(err)
 	}
 
@@ -332,5 +333,174 @@ func TestGunslingerRepositoryGetTopShotPlayersInChat(t *testing.T) {
 	}
 	if players[0].PlayerId != loser.ID || players[0].Times != 2 {
 		t.Fatalf("expected loser %d with 2 self-shots, got %+v", loser.ID, players[0])
+	}
+}
+
+func TestUserRepositoryGetByUsername(t *testing.T) {
+	tx := withTx(t)
+	repo := NewUserRepository(tx)
+	username := fmt.Sprintf("u%d", testID(0))
+
+	if err := repo.Save(domain.NewUser(testID(1), "Name", "", username)); err != nil {
+		t.Fatalf("save user: %v", err)
+	}
+
+	got, err := repo.GetByUsername(username)
+	if err != nil || got.Username != username {
+		t.Fatalf("expected the saved user, got %+v, err %v", got, err)
+	}
+	if upper, err := repo.GetByUsername(strings.ToUpper(username)); err != nil || upper.Username != username {
+		t.Fatalf("expected a case-insensitive match, got %+v, err %v", upper, err)
+	}
+	if _, err := repo.GetByUsername(username + "-missing"); err == nil {
+		t.Fatal("expected an error for an unknown username")
+	}
+}
+
+func TestDuelRepositoryStoreGetAndResolve(t *testing.T) {
+	tx := withTx(t)
+	users := NewUserRepository(tx)
+	repo := NewDuelRepository(tx)
+
+	challenger := domain.NewUser(testID(1), "Challenger", "", "challenger")
+	opponent := domain.NewUser(testID(2), "Opponent", "", "opponent")
+	for _, u := range []*domain.User{challenger, opponent} {
+		if err := users.Save(u); err != nil {
+			t.Fatalf("save user: %v", err)
+		}
+	}
+
+	duel := domain.NewDuel(testID(3), *challenger, *opponent)
+	if err := repo.Store(duel); err != nil {
+		t.Fatalf("store duel: %v", err)
+	}
+
+	got, err := repo.GetByID(duel.ID)
+	if err != nil {
+		t.Fatalf("get duel: %v", err)
+	}
+	if got.Challenger.ID != challenger.ID || got.Opponent.ID != opponent.ID {
+		t.Fatalf("expected participants to be preloaded, got %+v", got)
+	}
+	if got.IsPlayed() {
+		t.Fatal("a stored duel must not be played")
+	}
+
+	got.MarkAsPlayed(opponent.ID, "https://example.com/proof")
+	if claimed, err := repo.Resolve(got); err != nil || !claimed {
+		t.Fatalf("resolve duel: claimed=%v err=%v", claimed, err)
+	}
+
+	again, err := repo.GetByID(duel.ID)
+	if err != nil {
+		t.Fatalf("get duel: %v", err)
+	}
+	if !again.IsPlayed() || again.LoserID != opponent.ID || again.ProofURL != "https://example.com/proof" {
+		t.Fatalf("update was not persisted: %+v", again)
+	}
+}
+
+func TestDuelRepositoryResolveClosesTheDuelOnlyOnce(t *testing.T) {
+	tx := withTx(t)
+	repo := NewDuelRepository(tx)
+	users := NewUserRepository(tx)
+
+	challenger := domain.NewUser(testID(1), "Challenger", "", "challenger")
+	opponent := domain.NewUser(testID(2), "Opponent", "", "opponent")
+	for _, u := range []*domain.User{challenger, opponent} {
+		if err := users.Save(u); err != nil {
+			t.Fatalf("save user: %v", err)
+		}
+	}
+	duel := domain.NewDuel(testID(3), *challenger, *opponent)
+	if err := repo.Store(duel); err != nil {
+		t.Fatalf("store duel: %v", err)
+	}
+
+	first := *duel
+	first.MarkAsPlayed(challenger.ID, "first")
+	if claimed, err := repo.Resolve(&first); err != nil || !claimed {
+		t.Fatalf("first resolve: claimed=%v err=%v", claimed, err)
+	}
+
+	second := *duel
+	second.MarkAsPlayed(opponent.ID, "second")
+	if claimed, err := repo.Resolve(&second); err != nil || claimed {
+		t.Fatalf("second resolve must not claim: claimed=%v err=%v", claimed, err)
+	}
+
+	got, err := repo.GetByID(duel.ID)
+	if err != nil || got.LoserID != challenger.ID || got.ProofURL != "first" {
+		t.Fatalf("the first outcome must win, got %+v err=%v", got, err)
+	}
+}
+
+func TestDuelRepositoryResolveStoresDeclines(t *testing.T) {
+	tx := withTx(t)
+	repo := NewDuelRepository(tx)
+	users := NewUserRepository(tx)
+
+	challenger := domain.NewUser(testID(1), "Challenger", "", "challenger")
+	opponent := domain.NewUser(testID(2), "Opponent", "", "opponent")
+	for _, u := range []*domain.User{challenger, opponent} {
+		if err := users.Save(u); err != nil {
+			t.Fatalf("save user: %v", err)
+		}
+	}
+	duel := domain.NewDuel(testID(3), *challenger, *opponent)
+	if err := repo.Store(duel); err != nil {
+		t.Fatalf("store duel: %v", err)
+	}
+
+	duel.MarkAsDeclined()
+	if claimed, err := repo.Resolve(duel); err != nil || !claimed {
+		t.Fatalf("resolve: claimed=%v err=%v", claimed, err)
+	}
+
+	got, err := repo.GetByID(duel.ID)
+	if err != nil || !got.IsDeclined() || got.IsPlayed() {
+		t.Fatalf("expected a declined duel, got %+v err=%v", got, err)
+	}
+}
+
+func TestDuelRepositoryHasPendingFrom(t *testing.T) {
+	tx := withTx(t)
+	repo := NewDuelRepository(tx)
+	users := NewUserRepository(tx)
+
+	challenger := domain.NewUser(testID(1), "Challenger", "", "challenger")
+	opponent := domain.NewUser(testID(2), "Opponent", "", "opponent")
+	for _, u := range []*domain.User{challenger, opponent} {
+		if err := users.Save(u); err != nil {
+			t.Fatalf("save user: %v", err)
+		}
+	}
+	chatID := testID(3)
+	since := time.Now().Add(-domain.DuelTTL)
+
+	if has, err := repo.HasPendingFrom(chatID, challenger.ID, since); err != nil || has {
+		t.Fatalf("expected nothing pending, got %v err=%v", has, err)
+	}
+
+	duel := domain.NewDuel(chatID, *challenger, *opponent)
+	if err := repo.Store(duel); err != nil {
+		t.Fatalf("store duel: %v", err)
+	}
+	if has, err := repo.HasPendingFrom(chatID, challenger.ID, since); err != nil || !has {
+		t.Fatalf("expected a pending duel, got %v err=%v", has, err)
+	}
+	if has, _ := repo.HasPendingFrom(chatID, opponent.ID, since); has {
+		t.Fatal("the opponent has no pending challenge of their own")
+	}
+	if has, _ := repo.HasPendingFrom(chatID, challenger.ID, time.Now().Add(time.Minute)); has {
+		t.Fatal("a duel older than the window must not count")
+	}
+
+	duel.MarkAsDeclined()
+	if _, err := repo.Resolve(duel); err != nil {
+		t.Fatal(err)
+	}
+	if has, _ := repo.HasPendingFrom(chatID, challenger.ID, since); has {
+		t.Fatal("a closed duel must not count")
 	}
 }

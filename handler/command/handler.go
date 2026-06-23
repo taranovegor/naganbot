@@ -18,6 +18,8 @@ type messenger interface {
 	SendInlineKeyboard(chatID int64, text string, keyboard service.Keyboard)
 	Kick(chatID int64, userID int64) error
 	DeleteMessage(chatID int64, messageID int)
+	IsBot(chatID int64, userID int64) bool
+	IsChatMember(chatID int64, userID int64) bool
 }
 
 type Registry struct {

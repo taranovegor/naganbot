@@ -51,8 +51,9 @@ func (r joinTestUserRepo) Get(id int64) (domain.User, error) {
 	defer r.w.mu.Unlock()
 	return r.w.users[id], nil
 }
-func (r joinTestUserRepo) GetByIDs([]int64) ([]domain.User, error) { return nil, nil }
-func (r joinTestUserRepo) Save(*domain.User) error                 { return nil }
+func (r joinTestUserRepo) GetByUsername(string) (domain.User, error) { return domain.User{}, nil }
+func (r joinTestUserRepo) GetByIDs([]int64) ([]domain.User, error)   { return nil, nil }
+func (r joinTestUserRepo) Save(*domain.User) error                   { return nil }
 
 type joinTestGameRepo struct{ w *joinTestWorld }
 
@@ -572,3 +573,6 @@ func TestJoinHandlerExecuteCountdownStartsRightAwayWhenTheLobbyIsFull(t *testing
 		}
 	}
 }
+
+func (b *joinTestBot) IsBot(int64, int64) bool        { return false }
+func (b *joinTestBot) IsChatMember(int64, int64) bool { return true }

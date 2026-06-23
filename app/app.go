@@ -54,18 +54,20 @@ func New() (*App, error) {
 		users       = repository.NewUserRepository(orm)
 		games       = repository.NewGameRepository(orm)
 		gunslingers = repository.NewGunslingerRepository(orm)
+		duels       = repository.NewDuelRepository(orm)
 	)
 
 	bot := service.NewBot(botAPI)
 	trans := translator.NewTranslator("ru", translator.GameTranslations)
 	locker := service.NewLocker()
 	uow := repository.NewGameplayUnitOfWork(orm)
+	drandClient := drand.NewClient()
 	nagan := service.NewNagan(
 		service.NewBulletFactory(
 			service.NewLeadBullet(),
 			service.WeightedBullet{Chance: 3, Bullet: service.NewAtomicBullet()},
 		),
-		drand.NewClient(),
+		drandClient,
 	)
 
 	announcer := service.NewGameAnnouncer(bot, trans, time.Second)
@@ -85,6 +87,7 @@ func New() (*App, error) {
 		Chats:      chats,
 		Users:      users,
 		Commands: command.NewRegistry(config.CommandPrefix,
+			command.NewDuelHandler(bot, trans, users, duels),
 			command.NewForceHandler(bot),
 			command.NewJoinHandler(bot, createGame, joinGame, playGame, gunslingers, announcer, trans),
 			command.NewJoinedHandler(bot, trans, games),
@@ -96,6 +99,7 @@ func New() (*App, error) {
 		Callbacks: callback.NewRegistry(
 			callback.NewRequiredPlayers(chats, bot, trans),
 			callback.NewGameMode(chats, bot, trans),
+			callback.NewDuelResponse(bot, trans, usecase.NewRespondDuelUseCase(locker, duels, drandClient)),
 		),
 		dueGames:  dueGames,
 		announcer: announcer,

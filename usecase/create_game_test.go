@@ -137,3 +137,4 @@ func TestOwnerJoinsTheirOwnGameExactlyOnce(t *testing.T) {
 		t.Fatal("expected the owner to be recorded as having joined the game")
 	}
 }
+func (r *lifecycleUserRepo) GetByUsername(string) (domain.User, error) { return domain.User{}, nil }

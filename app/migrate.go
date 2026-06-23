@@ -13,6 +13,7 @@ func (a *App) Migrate() error {
 		&domain.User{},
 		&domain.Game{},
 		&domain.Gunslinger{},
+		&domain.Duel{},
 	); err != nil {
 		return err
 	}
