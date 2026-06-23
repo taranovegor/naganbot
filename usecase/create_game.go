@@ -66,7 +66,7 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 	}
 
 	game := &domain.Game{
-		ID:           uuid.New(),
+		ID:           uuid.Must(uuid.NewV7()),
 		ChatID:       chatID,
 		OwnerID:      ownerID,
 		Owner:        owner,

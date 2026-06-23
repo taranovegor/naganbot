@@ -33,7 +33,7 @@ type GunslingerRepository interface {
 
 func NewGunslinger(gameID uuid.UUID, playerID int64) *Gunslinger {
 	return &Gunslinger{
-		ID:          uuid.New(),
+		ID:          uuid.Must(uuid.NewV7()),
 		GameID:      gameID,
 		PlayerID:    playerID,
 		JoinedAt:    time.Now(),

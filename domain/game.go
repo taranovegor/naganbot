@@ -31,7 +31,7 @@ type GameRepository interface {
 }
 
 func NewGame(chatID int64, ownerID int64, playersCount int) *Game {
-	ID := uuid.New()
+	ID := uuid.Must(uuid.NewV7())
 	gunslinger := NewGunslinger(ID, ownerID)
 
 	game := &Game{

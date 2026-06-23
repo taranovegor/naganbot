@@ -40,7 +40,7 @@ func (uc *JoinGameUseCase) Execute(gameID uuid.UUID, userID int64) (*domain.Guns
 	}
 
 	gunslinger := &domain.Gunslinger{
-		ID:       uuid.New(),
+		ID:       uuid.Must(uuid.NewV7()),
 		GameID:   gameID,
 		PlayerID: userID,
 		Player:   user,
