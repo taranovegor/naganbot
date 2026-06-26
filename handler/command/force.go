@@ -25,6 +25,6 @@ func (hdlr ForceHandler) Name() string {
 
 func (hdlr ForceHandler) Execute(msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
-	hdlr.bot.Kick(chatID, msg.From.ID)
+	_ = hdlr.bot.Kick(chatID, msg.From.ID)
 	hdlr.bot.DeleteMessage(chatID, msg.MessageID)
 }
