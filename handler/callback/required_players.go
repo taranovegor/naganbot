@@ -76,7 +76,10 @@ func (h *requiredPlayers) Execute(query *tgbotapi.CallbackQuery) {
 	}
 
 	chat.Settings.RequiredPlayers = players
-	h.chatRepo.UpdateSettings(&chat)
+	if err := h.chatRepo.UpdateSettings(&chat); err != nil {
+		h.bot.AnswerCallback(query.ID, h.trans.Get("something went wrong", translator.Config{}))
+		return
+	}
 
 	notification := fmt.Sprintf(
 		"%s\n%s",
