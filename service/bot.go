@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"log"
 	"time"
 )
 
@@ -20,21 +21,23 @@ func NewBot(
 	}
 }
 
-func (bot Bot) SendMessage(chatID int64, text string) error {
+func (bot Bot) SendMessage(chatID int64, text string) {
 	_, err := bot.api.Send(tgbotapi.MessageConfig{
 		BaseChat:              tgbotapi.BaseChat{ChatID: chatID},
 		ParseMode:             parseMode,
 		Text:                  text,
 		DisableWebPagePreview: true,
 	})
-
-	return err
+	if err != nil {
+		log.Printf("failed to send message to chat %d: %v", chatID, err)
+	}
 }
 
-func (bot Bot) DeleteMessage(chatID int64, messageID int) error {
+func (bot Bot) DeleteMessage(chatID int64, messageID int) {
 	_, err := bot.api.Request(tgbotapi.NewDeleteMessage(chatID, messageID))
-
-	return err
+	if err != nil {
+		log.Printf("failed to delete message %d in chat %d: %v", messageID, chatID, err)
+	}
 }
 
 func (bot Bot) Ban(chatID int64, userID int64, untilDate int64) error {
@@ -45,6 +48,9 @@ func (bot Bot) Ban(chatID int64, userID int64, untilDate int64) error {
 		},
 		UntilDate: untilDate,
 	})
+	if err != nil {
+		log.Printf("failed to ban user %d in chat %d: %v", userID, chatID, err)
+	}
 
 	return err
 }
@@ -53,7 +59,7 @@ func (bot Bot) Kick(chatID int64, userID int64) error {
 	return bot.Ban(chatID, userID, time.Now().Add(time.Minute).Unix())
 }
 
-func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard []map[string]string) error {
+func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard []map[string]string) {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, row := range keyboard {
 		var cols []tgbotapi.InlineKeyboardButton
@@ -71,11 +77,12 @@ func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard []map[stri
 		ParseMode: parseMode,
 		Text:      text,
 	})
-
-	return err
+	if err != nil {
+		log.Printf("failed to send inline keyboard to chat %d: %v", chatID, err)
+	}
 }
 
-func (bot Bot) EditMessageReplyMarkup(chatID int64, messageID int, keyboard []map[string]string) error {
+func (bot Bot) EditMessageReplyMarkup(chatID int64, messageID int, keyboard []map[string]string) {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, row := range keyboard {
 		var cols []tgbotapi.InlineKeyboardButton
@@ -87,14 +94,16 @@ func (bot Bot) EditMessageReplyMarkup(chatID int64, messageID int, keyboard []ma
 
 	markup := tgbotapi.NewInlineKeyboardMarkup(rows...)
 	_, err := bot.api.Request(tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup))
-
-	return err
+	if err != nil {
+		log.Printf("failed to edit message %d reply markup in chat %d: %v", messageID, chatID, err)
+	}
 }
 
-func (bot Bot) AnswerCallback(callbackQueryID string, text string) error {
+func (bot Bot) AnswerCallback(callbackQueryID string, text string) {
 	_, err := bot.api.Request(tgbotapi.NewCallback(callbackQueryID, text))
-
-	return err
+	if err != nil {
+		log.Printf("failed to answer callback %s: %v", callbackQueryID, err)
+	}
 }
 
 func (bot Bot) IsAdmin(chatID int64, userID int64) (bool, error) {

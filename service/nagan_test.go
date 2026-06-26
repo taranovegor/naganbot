@@ -75,7 +75,7 @@ func TestBulletFactory_Create_Special(t *testing.T) {
 
 func TestNagan_Shoot(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(drand.Beacon{
+		_ = json.NewEncoder(w).Encode(drand.Beacon{
 			Round:      12345,
 			Randomness: "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
 			Signature:  "sig",
