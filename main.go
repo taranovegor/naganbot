@@ -51,13 +51,21 @@ func main() {
 	}
 
 	if orm.Migrator().HasColumn(&domain.Chat{}, "required_players") {
-		orm.Exec("UPDATE chats SET required_players = 6 WHERE required_players IS NULL")
-		orm.Migrator().AlterColumn(&domain.Chat{}, "Settings.RequiredPlayers")
+		if err := orm.Exec("UPDATE chats SET required_players = 6 WHERE required_players IS NULL").Error; err != nil {
+			panic(err)
+		}
+		if err := orm.Migrator().AlterColumn(&domain.Chat{}, "Settings.RequiredPlayers"); err != nil {
+			panic(err)
+		}
 	}
 
 	if orm.Migrator().HasColumn(&domain.Game{}, "players_count") {
-		orm.Exec("UPDATE games SET players_count = 6 WHERE players_count IS NULL")
-		orm.Migrator().AlterColumn(&domain.Game{}, "PlayersCount")
+		if err := orm.Exec("UPDATE games SET players_count = 6 WHERE players_count IS NULL").Error; err != nil {
+			panic(err)
+		}
+		if err := orm.Migrator().AlterColumn(&domain.Game{}, "PlayersCount"); err != nil {
+			panic(err)
+		}
 	}
 
 	trans := sc.Get(container.Translator).(*translator.Translator)
