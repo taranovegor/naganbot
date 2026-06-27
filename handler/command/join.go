@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -66,7 +66,7 @@ func (h *JoinHandler) Execute(msg *tgbotapi.Message) {
 
 	hitReport, err := h.playGameUC.Execute(context.TODO(), game.ID)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("failed to play game %s: %v", game.ID, err)
 		if game.Owner.ID != userID && errors.Is(err, usecase.ErrNotEnoughPlayers) {
 			h.bot.SendMessage(chatID, h.trans.Get("joining the game", translator.Config{}))
 		} else if !errors.Is(err, usecase.ErrNotEnoughPlayers) {
