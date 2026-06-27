@@ -1,6 +1,7 @@
 package container
 
 import (
+	"fmt"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -69,6 +70,12 @@ func (sc ServiceContainer) Get(name string) interface{} {
 	return sc.container.Get(name)
 }
 
+func mustAdd(builder *di.Builder, def di.Def) {
+	if err := builder.Add(def); err != nil {
+		panic(fmt.Errorf("register %s: %w", def.Name, err))
+	}
+}
+
 func build(builder *di.Builder) di.Container {
 	buildThirdParty(builder)
 	buildHandler(builder)
@@ -81,7 +88,7 @@ func build(builder *di.Builder) di.Container {
 }
 
 func buildThirdParty(builder *di.Builder) {
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: ORM,
 		Build: func(ctn di.Container) (interface{}, error) {
 			dsn := config.GetEnv(config.DatabaseDsn)
@@ -111,7 +118,7 @@ func buildThirdParty(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: BotTelegram,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return tgbotapi.NewBotAPI(config.GetEnv(config.TelegramBotToken))
@@ -125,7 +132,7 @@ func buildHandler(builder *di.Builder) {
 }
 
 func buildHandlerCallback(builder *di.Builder) {
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CallbackRegistry,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return callback.NewRegistry(
@@ -134,7 +141,7 @@ func buildHandlerCallback(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CallbackRequiredPlayers,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return callback.NewRequiredPlayers(
@@ -147,7 +154,7 @@ func buildHandlerCallback(builder *di.Builder) {
 }
 
 func buildHandlerCommand(builder *di.Builder) {
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CommandForce,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewForceHandler(
@@ -156,7 +163,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CommandJoin,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewJoinHandler(
@@ -169,7 +176,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CommandJoined,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewJoinedHandler(
@@ -180,7 +187,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CommandHistory,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewLogHandler(
@@ -191,7 +198,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CommandSettings,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewSettingsHandler(
@@ -202,7 +209,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CommandTop,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewTopHandler(
@@ -214,7 +221,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CommandStat,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewStatHandler(
@@ -225,7 +232,7 @@ func buildHandlerCommand(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: CommandRegistry,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return command.NewRegistry(
@@ -243,7 +250,7 @@ func buildHandlerCommand(builder *di.Builder) {
 }
 
 func buildRepository(builder *di.Builder) {
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: RepositoryChat,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return repository.NewChatRepository(
@@ -252,7 +259,7 @@ func buildRepository(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: RepositoryUser,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return repository.NewUserRepository(
@@ -261,7 +268,7 @@ func buildRepository(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: RepositoryGame,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return repository.NewGameRepository(
@@ -270,7 +277,7 @@ func buildRepository(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: RepositoryGunslinger,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return repository.NewGunslingerRepository(
@@ -279,7 +286,7 @@ func buildRepository(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: GameplayUnitOfWork,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return repository.NewGameplayUnitOfWork(
@@ -290,7 +297,7 @@ func buildRepository(builder *di.Builder) {
 }
 
 func buildService(builder *di.Builder) {
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: Bot,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return service.NewBot(
@@ -299,7 +306,7 @@ func buildService(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: BulletFactory,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return service.NewBulletFactory(
@@ -309,21 +316,21 @@ func buildService(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: DrandClient,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return drand.NewClient(), nil
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: ServiceLocker,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return service.NewLocker(), nil
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: Nagan,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return service.NewNagan(
@@ -335,7 +342,7 @@ func buildService(builder *di.Builder) {
 }
 
 func buildTranslator(builder *di.Builder) {
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: Translator,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return translator.NewTranslator(
@@ -347,7 +354,7 @@ func buildTranslator(builder *di.Builder) {
 }
 
 func buildUseCase(builder *di.Builder) {
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: UseCaseCreateGame,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return usecase.NewCreateGameUseCase(
@@ -359,7 +366,7 @@ func buildUseCase(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: UseCaseJoinGame,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return usecase.NewJoinGameUseCase(
@@ -370,7 +377,7 @@ func buildUseCase(builder *di.Builder) {
 		},
 	})
 
-	builder.Add(di.Def{
+	mustAdd(builder, di.Def{
 		Name: UseCasePlayGame,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return usecase.NewPlayGameUseCase(
