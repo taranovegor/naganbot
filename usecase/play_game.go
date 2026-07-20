@@ -36,8 +36,12 @@ func NewPlayGameUseCase(
 	}
 }
 
+func gameLockKey(gameID uuid.UUID) string {
+	return fmt.Sprintf("play-game-%s", gameID.String())
+}
+
 func (uc *PlayGameUseCase) Execute(ctx context.Context, gameID uuid.UUID) (*service.HitReport, error) {
-	locker := uc.locker.LockFor(fmt.Sprintf("play-game-%d", gameID.ID()))
+	locker := uc.locker.LockFor(gameLockKey(gameID))
 	if !locker.TryLock() {
 		return nil, service.ErrLockFailed
 	}
