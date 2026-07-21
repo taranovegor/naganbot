@@ -125,19 +125,26 @@ func (trans Translator) getTranslation(str string, locale string) (translation, 
 	return translation{}, fmt.Errorf("translation not found")
 }
 
-func (trans Translator) getOneOf(translated translation, cfg Config) (oneOf, error) {
-	var oneOfMany int
+func (trans Translator) getOneOfIndex(translated translation, cfg Config) (int, error) {
+	index := cfg.OneOfMany - 1
 	if cfg.OneOfMany == 0 {
-		oneOfMany = rand.Intn(translated.oneOfLen())
-	} else {
-		oneOfMany = cfg.OneOfMany - 1
+		index = rand.Intn(translated.oneOfLen())
 	}
 
-	if oneOfMany < 0 || oneOfMany >= translated.oneOfLen() {
-		return oneOf{}, fmt.Errorf("OneOf with index %d not found", oneOfMany)
+	if index < 0 || index >= translated.oneOfLen() {
+		return 0, fmt.Errorf("OneOf with index %d not found", index)
 	}
 
-	return translated.oneOf[oneOfMany], nil
+	return index, nil
+}
+
+func (trans Translator) getOneOf(translated translation, cfg Config) (oneOf, error) {
+	index, err := trans.getOneOfIndex(translated, cfg)
+	if err != nil {
+		return oneOf{}, err
+	}
+
+	return translated.oneOf[index], nil
 }
 
 func (trans Translator) Get(str string, cfg Config) string {
@@ -167,6 +174,10 @@ func (trans Translator) Get(str string, cfg Config) string {
 		}
 	}
 
+	if msg == nil {
+		return str
+	}
+
 	if cfg.Args == nil {
 		cfg.Args = make(map[string]string)
 	}
@@ -184,14 +195,17 @@ func (trans Translator) GetMany(str string, cfg Config) []string {
 		return []string{str}
 	}
 
-	oneOfTranslation, err := trans.getOneOf(translated, cfg)
+	oneOfIndex, err := trans.getOneOfIndex(translated, cfg)
 	if err != nil {
 		return []string{str}
 	}
+	cfg.OneOfMany = oneOfIndex + 1
+
+	oneOfTranslation := translated.oneOf[oneOfIndex]
 
 	var s []string
 	for oneOfAll := 1; oneOfAll <= oneOfTranslation.allOfLen(); oneOfAll++ {
-		cfg.OneOfAll += 1
+		cfg.OneOfAll = oneOfAll
 		s = append(s, trans.Get(str, cfg))
 	}
 
