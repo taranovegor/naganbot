@@ -14,11 +14,9 @@ type User struct {
 }
 
 type UserRepository interface {
-	Exists(int64) bool
 	Get(int64) (User, error)
 	GetByIDs([]int64) ([]User, error)
-	Store(*User) error
-	Update(*User) error
+	Save(*User) error
 }
 
 func NewUser(id int64, firstName string, lastName string, username string) *User {

@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/taranovegor/naganbot/domain"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserRepository struct {
@@ -16,13 +17,6 @@ func NewUserRepository(
 	return &UserRepository{
 		orm: orm,
 	}
-}
-
-func (repo UserRepository) Exists(id int64) bool {
-	var counter int64
-	repo.orm.Model(&domain.User{}).Where(id).Count(&counter)
-
-	return counter > 0
 }
 
 func (repo UserRepository) Get(id int64) (domain.User, error) {
@@ -43,10 +37,9 @@ func (repo UserRepository) GetByIDs(ids []int64) ([]domain.User, error) {
 	return users, nil
 }
 
-func (repo UserRepository) Store(user *domain.User) error {
-	return repo.orm.Create(user).Error
-}
-
-func (repo UserRepository) Update(user *domain.User) error {
-	return repo.orm.Updates(user).Error
+func (repo UserRepository) Save(user *domain.User) error {
+	return repo.orm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		UpdateAll: true,
+	}).Create(user).Error
 }

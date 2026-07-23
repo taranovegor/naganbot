@@ -12,10 +12,9 @@ type Chat struct {
 }
 
 type ChatRepository interface {
-	Exists(int64) bool
 	Get(int64) (Chat, error)
-	Store(*Chat) error
-	Update(*Chat) error
+	Save(*Chat) error
+	UpdateSettings(*Chat) error
 }
 
 func NewChat(id int64, title string, username string) *Chat {

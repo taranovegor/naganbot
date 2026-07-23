@@ -74,7 +74,7 @@ func (h *requiredPlayers) Execute(query *tgbotapi.CallbackQuery) {
 	}
 
 	chat.Settings.RequiredPlayers = players
-	h.chatRepo.Update(&chat)
+	h.chatRepo.UpdateSettings(&chat)
 
 	notification := fmt.Sprintf(
 		"%s\n%s",

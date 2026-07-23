@@ -76,62 +76,62 @@ func main() {
 
 	updates := botApi.GetUpdatesChan(u)
 	for update := range updates {
-		chat := update.FromChat()
-		if chat != nil {
-			if chat.IsPrivate() || chat.IsChannel() {
-				message := trans.Get("available only in chat", translator.Config{})
-				bot.SendMessage(chat.ID, message)
+		go safeExecute(func() {
+			handleUpdate(update, trans, bot, chatRepository, userRepository, cmdRegistry, clbRegistry)
+		})
+	}
+}
 
-				continue
-			}
+func handleUpdate(
+	update tgbotapi.Update,
+	trans *translator.Translator,
+	bot *service.Bot,
+	chatRepository domain.ChatRepository,
+	userRepository domain.UserRepository,
+	cmdRegistry *command.Registry,
+	clbRegistry *callback.Registry,
+) {
+	chat := update.FromChat()
+	if chat != nil {
+		if chat.IsPrivate() || chat.IsChannel() {
+			message := trans.Get("available only in chat", translator.Config{})
+			bot.SendMessage(chat.ID, message)
 
-			domainChat := domain.NewChat(chat.ID, chat.Title, chat.UserName)
-			if chatRepository.Exists(chat.ID) {
-				if err := chatRepository.Update(domainChat); err != nil {
-					log.Printf("failed to update chat %d: %v", chat.ID, err)
-				}
-			} else {
-				if err := chatRepository.Store(domainChat); err != nil {
-					log.Printf("failed to store chat %d: %v", chat.ID, err)
-				}
-			}
+			return
 		}
 
-		from := update.SentFrom()
-		if from != nil {
-			domainUser := domain.NewUser(from.ID, from.FirstName, from.LastName, from.UserName)
-			if userRepository.Exists(from.ID) {
-				if err := userRepository.Update(domainUser); err != nil {
-					log.Printf("failed to update user %d: %v", from.ID, err)
-				}
-			} else {
-				if err := userRepository.Store(domainUser); err != nil {
-					log.Printf("failed to store user %d: %v", from.ID, err)
-				}
-			}
+		if err := chatRepository.Save(domain.NewChat(chat.ID, chat.Title, chat.UserName)); err != nil {
+			log.Printf("failed to save chat %d: %v", chat.ID, err)
 		}
+	}
 
-		if update.Message != nil {
-			msg := update.Message
-			if !msg.IsCommand() {
-				continue
-			}
-			name := msg.Command()
-			cmd, err := cmdRegistry.Find(name)
-			if err == nil {
-				go safeExecute(func() { cmd.Execute(msg) })
-			} else {
-				log.Println(err.Error())
-			}
-		} else if update.CallbackQuery != nil {
-			callbackQuery := update.CallbackQuery
-			query := callback.Pattern(callbackQuery.Data)
-			hdlr, err := clbRegistry.Find(query)
-			if err == nil {
-				go safeExecute(func() { hdlr.Execute(callbackQuery) })
-			} else {
-				log.Println(err.Error())
-			}
+	from := update.SentFrom()
+	if from != nil {
+		if err := userRepository.Save(domain.NewUser(from.ID, from.FirstName, from.LastName, from.UserName)); err != nil {
+			log.Printf("failed to save user %d: %v", from.ID, err)
 		}
+	}
+
+	if update.Message != nil {
+		msg := update.Message
+		if !msg.IsCommand() {
+			return
+		}
+		name := msg.Command()
+		cmd, err := cmdRegistry.Find(name)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		cmd.Execute(msg)
+	} else if update.CallbackQuery != nil {
+		callbackQuery := update.CallbackQuery
+		query := callback.Pattern(callbackQuery.Data)
+		hdlr, err := clbRegistry.Find(query)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		hdlr.Execute(callbackQuery)
 	}
 }

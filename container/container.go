@@ -45,6 +45,8 @@ const (
 	UseCaseCreateGame       = "use_case_create_game"
 	UseCaseJoinGame         = "use_case_join_game"
 	UseCasePlayGame         = "use_case_play_game"
+
+	maxOpenConns = 10
 )
 
 type ServiceContainer struct {
@@ -92,7 +94,19 @@ func buildThirdParty(builder *di.Builder) {
 				dialector = mysql.Open(dsn)
 			}
 
-			return gorm.Open(dialector, &gorm.Config{})
+			orm, err := gorm.Open(dialector, &gorm.Config{})
+			if err != nil {
+				return nil, err
+			}
+
+			sqlDB, err := orm.DB()
+			if err != nil {
+				return nil, err
+			}
+			sqlDB.SetMaxOpenConns(maxOpenConns)
+			sqlDB.SetMaxIdleConns(maxOpenConns)
+
+			return orm, nil
 		},
 	})
 
