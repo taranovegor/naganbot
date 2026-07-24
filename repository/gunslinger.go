@@ -13,7 +13,7 @@ type GunslingerRepository struct {
 
 func NewGunslingerRepository(
 	orm *gorm.DB,
-) domain.GunslingerRepository {
+) *GunslingerRepository {
 	return &GunslingerRepository{
 		orm: orm,
 	}

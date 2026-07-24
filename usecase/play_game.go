@@ -19,6 +19,7 @@ type PlayGameUseCase struct {
 	locker         service.Locker
 	gameRepo       domain.GameRepository
 	gunslingerRepo domain.GunslingerRepository
+	uow            domain.GameplayUnitOfWork
 	nagan          *service.Nagan
 }
 
@@ -26,12 +27,14 @@ func NewPlayGameUseCase(
 	locker service.Locker,
 	gameRepo domain.GameRepository,
 	gunslingerRepo domain.GunslingerRepository,
+	uow domain.GameplayUnitOfWork,
 	nagan *service.Nagan,
 ) *PlayGameUseCase {
 	return &PlayGameUseCase{
 		locker:         locker,
 		gameRepo:       gameRepo,
 		gunslingerRepo: gunslingerRepo,
+		uow:            uow,
 		nagan:          nagan,
 	}
 }
@@ -74,11 +77,7 @@ func (uc *PlayGameUseCase) Execute(ctx context.Context, gameID uuid.UUID) (*serv
 	}
 
 	game.MarkAsPlayed(report.BulletType, report.ProofURL)
-	if err := uc.gameRepo.Update(game); err != nil {
-		return nil, err
-	}
-
-	if err := uc.gunslingerRepo.Update(report.Victims); err != nil {
+	if err := uc.uow.CommitPlayedGame(game, report.Victims); err != nil {
 		return nil, err
 	}
 

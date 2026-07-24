@@ -14,7 +14,7 @@ type GameRepository struct {
 
 func NewGameRepository(
 	orm *gorm.DB,
-) domain.GameRepository {
+) *GameRepository {
 	return &GameRepository{
 		orm: orm,
 	}

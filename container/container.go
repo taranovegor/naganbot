@@ -40,6 +40,7 @@ const (
 	RepositoryGame          = "repository_game"
 	RepositoryGunslinger    = "repository_gunslinger"
 	RepositoryUser          = "repository_user"
+	GameplayUnitOfWork      = "gameplay_unit_of_work"
 	ServiceLocker           = "service_locker"
 	Translator              = "translator"
 	UseCaseCreateGame       = "use_case_create_game"
@@ -277,6 +278,15 @@ func buildRepository(builder *di.Builder) {
 			), nil
 		},
 	})
+
+	builder.Add(di.Def{
+		Name: GameplayUnitOfWork,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return repository.NewGameplayUnitOfWork(
+				ctn.Get(ORM).(*gorm.DB),
+			), nil
+		},
+	})
 }
 
 func buildService(builder *di.Builder) {
@@ -367,6 +377,7 @@ func buildUseCase(builder *di.Builder) {
 				ctn.Get(ServiceLocker).(service.Locker),
 				ctn.Get(RepositoryGame).(domain.GameRepository),
 				ctn.Get(RepositoryGunslinger).(domain.GunslingerRepository),
+				ctn.Get(GameplayUnitOfWork).(domain.GameplayUnitOfWork),
 				ctn.Get(Nagan).(*service.Nagan),
 			), nil
 		},

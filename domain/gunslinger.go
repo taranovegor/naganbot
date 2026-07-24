@@ -22,7 +22,6 @@ type GunslingerTopShotPlayer struct {
 
 type GunslingerRepository interface {
 	Store(*Gunslinger) error
-	Update([]*Gunslinger) error
 	GetByGameID(uuid.UUID) ([]*Gunslinger, error)
 	IsPlayerExistsInGame(userID int64, gameID uuid.UUID) bool
 	GetTopShotPlayersInChat(int64) ([]GunslingerTopShotPlayer, error)
