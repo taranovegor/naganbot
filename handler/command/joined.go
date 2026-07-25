@@ -11,11 +11,12 @@ import (
 )
 
 type JoinedHandler struct {
-	Handler
 	bot   *service.Bot
 	trans *translator.Translator
 	game  domain.GameRepository
 }
+
+var _ Handler = (*JoinedHandler)(nil)
 
 func NewJoinedHandler(
 	bot *service.Bot,

@@ -7,9 +7,10 @@ import (
 )
 
 type ChatRepository struct {
-	domain.ChatRepository
 	orm *gorm.DB
 }
+
+var _ domain.ChatRepository = (*ChatRepository)(nil)
 
 func NewChatRepository(
 	orm *gorm.DB,

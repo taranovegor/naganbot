@@ -12,11 +12,12 @@ import (
 )
 
 type LogHandler struct {
-	Handler
 	bot   *service.Bot
 	trans *translator.Translator
 	game  domain.GameRepository
 }
+
+var _ Handler = (*LogHandler)(nil)
 
 func NewLogHandler(
 	bot *service.Bot,

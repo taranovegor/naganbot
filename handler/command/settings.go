@@ -14,6 +14,8 @@ type settingsHandler struct {
 	bot      *service.Bot
 }
 
+var _ Handler = (*settingsHandler)(nil)
+
 func NewSettingsHandler(
 	chatRepo domain.ChatRepository,
 	trans *translator.Translator,

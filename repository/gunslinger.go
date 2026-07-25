@@ -7,9 +7,10 @@ import (
 )
 
 type GunslingerRepository struct {
-	domain.GunslingerRepository
 	orm *gorm.DB
 }
+
+var _ domain.GunslingerRepository = (*GunslingerRepository)(nil)
 
 func NewGunslingerRepository(
 	orm *gorm.DB,

@@ -31,6 +31,8 @@ type requiredPlayers struct {
 	trans    *translator.Translator
 }
 
+var _ Handler = (*requiredPlayers)(nil)
+
 func NewRequiredPlayers(
 	chatRepo domain.ChatRepository,
 	bot *service.Bot,

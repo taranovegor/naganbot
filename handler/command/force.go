@@ -6,9 +6,10 @@ import (
 )
 
 type ForceHandler struct {
-	Handler
 	bot *service.Bot
 }
+
+var _ Handler = (*ForceHandler)(nil)
 
 func NewForceHandler(
 	bot *service.Bot,

@@ -8,9 +8,10 @@ import (
 )
 
 type GameRepository struct {
-	domain.GameRepository
 	orm *gorm.DB
 }
+
+var _ domain.GameRepository = (*GameRepository)(nil)
 
 func NewGameRepository(
 	orm *gorm.DB,

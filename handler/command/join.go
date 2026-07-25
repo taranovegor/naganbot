@@ -13,13 +13,14 @@ import (
 )
 
 type JoinHandler struct {
-	Handler
 	bot          *service.Bot
 	createGameUC *usecase.CreateGameUseCase
 	joinGameUC   *usecase.JoinGameUseCase
 	playGameUC   *usecase.PlayGameUseCase
 	trans        *translator.Translator
 }
+
+var _ Handler = (*JoinHandler)(nil)
 
 func NewJoinHandler(
 	bot *service.Bot,

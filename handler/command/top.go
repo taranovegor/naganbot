@@ -11,12 +11,13 @@ import (
 )
 
 type TopHandler struct {
-	Handler
 	bot        *service.Bot
 	trans      *translator.Translator
 	user       domain.UserRepository
 	gunslinger domain.GunslingerRepository
 }
+
+var _ Handler = (*TopHandler)(nil)
 
 func NewTopHandler(
 	bot *service.Bot,

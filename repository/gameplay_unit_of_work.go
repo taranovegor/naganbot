@@ -9,6 +9,8 @@ type GameplayUnitOfWork struct {
 	orm *gorm.DB
 }
 
+var _ domain.GameplayUnitOfWork = (*GameplayUnitOfWork)(nil)
+
 func NewGameplayUnitOfWork(
 	orm *gorm.DB,
 ) domain.GameplayUnitOfWork {

@@ -9,11 +9,12 @@ import (
 )
 
 type StatHandler struct {
-	Handler
 	bot        *service.Bot
 	trans      *translator.Translator
 	gunslinger domain.GunslingerRepository
 }
+
+var _ Handler = (*StatHandler)(nil)
 
 func NewStatHandler(
 	bot *service.Bot,

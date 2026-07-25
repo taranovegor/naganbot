@@ -12,9 +12,9 @@ const (
 	testHandlerNameInRegistry = testRegistryPrefix + testHandlerName
 )
 
-type testHandler struct {
-	Handler
-}
+type testHandler struct{}
+
+var _ Handler = (*testHandler)(nil)
 
 func (hdlr testHandler) Name() string {
 	return testHandlerName

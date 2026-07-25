@@ -7,9 +7,10 @@ import (
 )
 
 type UserRepository struct {
-	domain.UserRepository
 	orm *gorm.DB
 }
+
+var _ domain.UserRepository = (*UserRepository)(nil)
 
 func NewUserRepository(
 	orm *gorm.DB,
