@@ -1,9 +1,10 @@
-name: Publish
+name: CI
 
 on:
     push:
         branches: ['master']
         tags: ['v*']
+    pull_request:
 
 env:
     GO111MODULE: on
@@ -12,6 +13,9 @@ env:
 jobs:
     test:
         runs-on: ubuntu-24.04
+        permissions:
+            contents: read
+            checks: write
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -30,14 +34,17 @@ jobs:
             - name: Build
               run: go build -v ./...
 
-            - name: Run go vet
-              run: go vet ./...
+            - name: Run golangci-lint
+              uses: golangci/golangci-lint-action@v9
+              with:
+                  version: v2.12.2
 
             - name: Run go test
               run: go test ./...
 
     build:
         needs: [test]
+        if: github.event_name == 'push'
         strategy:
             fail-fast: false
             matrix:
