@@ -36,11 +36,11 @@ func NewCreateGameUseCase(
 }
 
 func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game, error) {
-	locker := uc.locker.LockFor(fmt.Sprintf("game-start-%d", chatID))
-	if !locker.TryLock() {
-		return nil, service.ErrLockFailed
+	release, ok := uc.locker.TryLock(fmt.Sprintf("game-start-%d", chatID))
+	if !ok {
+		return nil, service.ErrLockNotAcquired
 	}
-	defer locker.Unlock()
+	defer release()
 
 	if uc.gameRepo.HasActiveOrCreatedTodayInChat(chatID) {
 		game, err := uc.gameRepo.GetActiveForChat(chatID)

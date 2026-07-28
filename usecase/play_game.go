@@ -44,11 +44,11 @@ func gameLockKey(gameID uuid.UUID) string {
 }
 
 func (uc *PlayGameUseCase) Execute(ctx context.Context, gameID uuid.UUID) (*service.HitReport, error) {
-	locker := uc.locker.LockFor(gameLockKey(gameID))
-	if !locker.TryLock() {
-		return nil, service.ErrLockFailed
+	release, ok := uc.locker.TryLock(gameLockKey(gameID))
+	if !ok {
+		return nil, service.ErrLockNotAcquired
 	}
-	defer locker.Unlock()
+	defer release()
 
 	game, err := uc.gameRepo.GetByID(gameID)
 	if err != nil {

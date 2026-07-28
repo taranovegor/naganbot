@@ -19,12 +19,18 @@ func TestGameLockKeyIsUniquePerGame(t *testing.T) {
 	second := uuid.Must(uuid.NewV7())
 
 	locker := service.NewLocker()
-	firstMutex := locker.LockFor(gameLockKey(first))
-	secondMutex := locker.LockFor(gameLockKey(second))
 
-	if firstMutex == secondMutex {
+	releaseFirst, ok := locker.TryLock(gameLockKey(first))
+	if !ok {
+		t.Fatal("expected to acquire the lock for the first game")
+	}
+	defer releaseFirst()
+
+	releaseSecond, ok := locker.TryLock(gameLockKey(second))
+	if !ok {
 		t.Fatal("two distinct games were assigned the same lock")
 	}
+	releaseSecond()
 }
 
 type fakeGameRepo struct {
