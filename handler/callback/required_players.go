@@ -11,8 +11,8 @@ import (
 
 var revolverOptions = []int{4, 5, 6, 7, 8, 9}
 
-func RevolverKeyboard(selected int, trans *translator.Translator) []map[string]string {
-	var keyboard []map[string]string
+func RevolverKeyboard(selected int, trans *translator.Translator) service.Keyboard {
+	var keyboard service.Keyboard
 	for _, n := range revolverOptions {
 		s := strconv.Itoa(n)
 		arg := RequiredPlayers.SetArgs(s).ToString()
@@ -20,7 +20,7 @@ func RevolverKeyboard(selected int, trans *translator.Translator) []map[string]s
 		if n == selected {
 			txt = fmt.Sprintf("🔫 %s", txt)
 		}
-		keyboard = append(keyboard, map[string]string{arg: txt})
+		keyboard = append(keyboard, []service.Button{{Data: arg, Text: txt}})
 	}
 	return keyboard
 }
