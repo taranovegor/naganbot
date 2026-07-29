@@ -9,6 +9,26 @@ import (
 
 const parseMode = tgbotapi.ModeHTML
 
+type Button struct {
+	Data string
+	Text string
+}
+
+type Keyboard [][]Button
+
+func markup(keyboard Keyboard) tgbotapi.InlineKeyboardMarkup {
+	var rows [][]tgbotapi.InlineKeyboardButton
+	for _, row := range keyboard {
+		var cols []tgbotapi.InlineKeyboardButton
+		for _, button := range row {
+			cols = append(cols, tgbotapi.NewInlineKeyboardButtonData(button.Text, button.Data))
+		}
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(cols...))
+	}
+
+	return tgbotapi.NewInlineKeyboardMarkup(rows...)
+}
+
 type Bot struct {
 	api *tgbotapi.BotAPI
 }
@@ -59,20 +79,11 @@ func (bot Bot) Kick(chatID int64, userID int64) error {
 	return bot.Ban(chatID, userID, time.Now().Add(time.Minute).Unix())
 }
 
-func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard []map[string]string) {
-	var rows [][]tgbotapi.InlineKeyboardButton
-	for _, row := range keyboard {
-		var cols []tgbotapi.InlineKeyboardButton
-		for key, val := range row {
-			cols = append(cols, tgbotapi.NewInlineKeyboardButtonData(val, key))
-		}
-		rows = append(rows, tgbotapi.NewInlineKeyboardRow(cols...))
-	}
-
+func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard Keyboard) {
 	_, err := bot.api.Send(tgbotapi.MessageConfig{
 		BaseChat: tgbotapi.BaseChat{
 			ChatID:      chatID,
-			ReplyMarkup: tgbotapi.NewInlineKeyboardMarkup(rows...),
+			ReplyMarkup: markup(keyboard),
 		},
 		ParseMode: parseMode,
 		Text:      text,
@@ -82,18 +93,8 @@ func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard []map[stri
 	}
 }
 
-func (bot Bot) EditMessageReplyMarkup(chatID int64, messageID int, keyboard []map[string]string) {
-	var rows [][]tgbotapi.InlineKeyboardButton
-	for _, row := range keyboard {
-		var cols []tgbotapi.InlineKeyboardButton
-		for key, val := range row {
-			cols = append(cols, tgbotapi.NewInlineKeyboardButtonData(val, key))
-		}
-		rows = append(rows, tgbotapi.NewInlineKeyboardRow(cols...))
-	}
-
-	markup := tgbotapi.NewInlineKeyboardMarkup(rows...)
-	_, err := bot.api.Request(tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup))
+func (bot Bot) EditMessageReplyMarkup(chatID int64, messageID int, keyboard Keyboard) {
+	_, err := bot.api.Request(tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup(keyboard)))
 	if err != nil {
 		log.Printf("failed to edit message %d reply markup in chat %d: %v", messageID, chatID, err)
 	}

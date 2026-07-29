@@ -74,3 +74,62 @@ func TestKickReturnsErrorOnAPIFailure(t *testing.T) {
 		t.Fatal("expected an error from Kick when the API call fails")
 	}
 }
+
+func TestMarkupPreservesRowAndButtonOrder(t *testing.T) {
+	keyboard := Keyboard{
+		{{Data: "a1", Text: "one"}, {Data: "a2", Text: "two"}, {Data: "a3", Text: "three"}},
+		{{Data: "b1", Text: "four"}},
+	}
+
+	got := markup(keyboard)
+
+	if len(got.InlineKeyboard) != 2 {
+		t.Fatalf("expected 2 rows, got %d", len(got.InlineKeyboard))
+	}
+
+	firstRow := got.InlineKeyboard[0]
+	if len(firstRow) != 3 {
+		t.Fatalf("expected 3 buttons in the first row, got %d", len(firstRow))
+	}
+
+	wantFirstRow := []Button{{Data: "a1", Text: "one"}, {Data: "a2", Text: "two"}, {Data: "a3", Text: "three"}}
+	for i, want := range wantFirstRow {
+		got := firstRow[i]
+		if got.Text != want.Text {
+			t.Fatalf("button %d: expected text %q, got %q", i, want.Text, got.Text)
+		}
+		if got.CallbackData == nil || *got.CallbackData != want.Data {
+			t.Fatalf("button %d: expected callback data %q, got %v", i, want.Data, got.CallbackData)
+		}
+	}
+
+	secondRow := got.InlineKeyboard[1]
+	if len(secondRow) != 1 {
+		t.Fatalf("expected 1 button in the second row, got %d", len(secondRow))
+	}
+	if secondRow[0].Text != "four" || secondRow[0].CallbackData == nil || *secondRow[0].CallbackData != "b1" {
+		t.Fatalf("unexpected second row button: %+v", secondRow[0])
+	}
+}
+
+func TestMarkupDoesNotConfuseTextAndCallbackData(t *testing.T) {
+	keyboard := Keyboard{{{Data: "required-players_6", Text: "6 patronov"}}}
+
+	got := markup(keyboard)
+
+	button := got.InlineKeyboard[0][0]
+	if button.Text != "6 patronov" {
+		t.Fatalf("expected button text %q, got %q", "6 patronov", button.Text)
+	}
+	if button.CallbackData == nil || *button.CallbackData != "required-players_6" {
+		t.Fatalf("expected callback data %q, got %v", "required-players_6", button.CallbackData)
+	}
+}
+
+func TestMarkupHandlesEmptyKeyboardWithoutPanicking(t *testing.T) {
+	got := markup(nil)
+
+	if len(got.InlineKeyboard) != 0 {
+		t.Fatalf("expected no rows for an empty keyboard, got %d", len(got.InlineKeyboard))
+	}
+}
