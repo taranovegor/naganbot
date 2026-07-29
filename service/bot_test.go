@@ -75,13 +75,13 @@ func TestKickReturnsErrorOnAPIFailure(t *testing.T) {
 	}
 }
 
-func TestMarkupPreservesRowAndButtonOrder(t *testing.T) {
+func TestInlineKeyboardMarkupPreservesRowAndButtonOrder(t *testing.T) {
 	keyboard := Keyboard{
 		{{Data: "a1", Text: "one"}, {Data: "a2", Text: "two"}, {Data: "a3", Text: "three"}},
 		{{Data: "b1", Text: "four"}},
 	}
 
-	got := markup(keyboard)
+	got := inlineKeyboardMarkup(keyboard)
 
 	if len(got.InlineKeyboard) != 2 {
 		t.Fatalf("expected 2 rows, got %d", len(got.InlineKeyboard))
@@ -112,10 +112,10 @@ func TestMarkupPreservesRowAndButtonOrder(t *testing.T) {
 	}
 }
 
-func TestMarkupDoesNotConfuseTextAndCallbackData(t *testing.T) {
+func TestInlineKeyboardMarkupDoesNotConfuseTextAndCallbackData(t *testing.T) {
 	keyboard := Keyboard{{{Data: "required-players_6", Text: "6 patronov"}}}
 
-	got := markup(keyboard)
+	got := inlineKeyboardMarkup(keyboard)
 
 	button := got.InlineKeyboard[0][0]
 	if button.Text != "6 patronov" {
@@ -126,8 +126,8 @@ func TestMarkupDoesNotConfuseTextAndCallbackData(t *testing.T) {
 	}
 }
 
-func TestMarkupHandlesEmptyKeyboardWithoutPanicking(t *testing.T) {
-	got := markup(nil)
+func TestInlineKeyboardMarkupHandlesEmptyKeyboardWithoutPanicking(t *testing.T) {
+	got := inlineKeyboardMarkup(nil)
 
 	if len(got.InlineKeyboard) != 0 {
 		t.Fatalf("expected no rows for an empty keyboard, got %d", len(got.InlineKeyboard))

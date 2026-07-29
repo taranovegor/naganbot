@@ -16,7 +16,7 @@ type Button struct {
 
 type Keyboard [][]Button
 
-func markup(keyboard Keyboard) tgbotapi.InlineKeyboardMarkup {
+func inlineKeyboardMarkup(keyboard Keyboard) tgbotapi.InlineKeyboardMarkup {
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for _, row := range keyboard {
 		var cols []tgbotapi.InlineKeyboardButton
@@ -83,7 +83,7 @@ func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard Keyboard) 
 	_, err := bot.api.Send(tgbotapi.MessageConfig{
 		BaseChat: tgbotapi.BaseChat{
 			ChatID:      chatID,
-			ReplyMarkup: markup(keyboard),
+			ReplyMarkup: inlineKeyboardMarkup(keyboard),
 		},
 		ParseMode: parseMode,
 		Text:      text,
@@ -94,7 +94,7 @@ func (bot Bot) SendInlineKeyboard(chatID int64, text string, keyboard Keyboard) 
 }
 
 func (bot Bot) EditMessageReplyMarkup(chatID int64, messageID int, keyboard Keyboard) {
-	_, err := bot.api.Request(tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, markup(keyboard)))
+	_, err := bot.api.Request(tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, inlineKeyboardMarkup(keyboard)))
 	if err != nil {
 		log.Printf("failed to edit message %d reply markup in chat %d: %v", messageID, chatID, err)
 	}

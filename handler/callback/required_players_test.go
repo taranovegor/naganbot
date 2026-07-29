@@ -2,6 +2,7 @@ package callback
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/taranovegor/naganbot/translator"
@@ -47,8 +48,7 @@ func TestRevolverKeyboardMarksOnlyTheSelectedOption(t *testing.T) {
 	marked := 0
 	for i, n := range revolverOptions {
 		text := keyboard[i][0].Text
-		hasMark := len(text) > 0 && []rune(text)[0] == '🔫'
-		if hasMark {
+		if strings.HasPrefix(text, "🔫") {
 			marked++
 			if n != 4 {
 				t.Fatalf("expected only option 4 to be marked, but option %d was marked too", n)
