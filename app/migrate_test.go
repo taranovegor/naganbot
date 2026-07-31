@@ -53,8 +53,8 @@ func TestColumnNeedsNotNullFixupWhenColumnIsMissing(t *testing.T) {
 		fakeColumnType{name: "title", nullable: true, nullableKnown: true},
 	}
 
-	if !columnNeedsNotNullFixup(columns, "required_players") {
-		t.Fatal("expected a missing column to conservatively need the fixup")
+	if columnNeedsNotNullFixup(columns, "required_players") {
+		t.Fatal("expected a missing column to skip the fixup rather than run a backfill against a nonexistent column")
 	}
 }
 

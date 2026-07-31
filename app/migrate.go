@@ -68,5 +68,5 @@ func columnNeedsNotNullFixup(columns []gorm.ColumnType, name string) bool {
 		return nullable
 	}
 
-	return true
+	return false
 }
