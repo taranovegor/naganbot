@@ -22,7 +22,7 @@ import (
 const maxOpenConns = 10
 
 type App struct {
-	ORM        *gorm.DB
+	orm        *gorm.DB
 	BotAPI     *tgbotapi.BotAPI
 	Bot        *service.Bot
 	Translator *translator.Translator
@@ -69,7 +69,7 @@ func New() (*App, error) {
 	)
 
 	return &App{
-		ORM:        orm,
+		orm:        orm,
 		BotAPI:     botAPI,
 		Bot:        bot,
 		Translator: trans,

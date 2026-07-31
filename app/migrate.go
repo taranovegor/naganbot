@@ -8,7 +8,7 @@ import (
 )
 
 func (a *App) Migrate() error {
-	if err := a.ORM.AutoMigrate(
+	if err := a.orm.AutoMigrate(
 		&domain.Chat{},
 		&domain.User{},
 		&domain.Game{},
@@ -39,7 +39,7 @@ func (a *App) Migrate() error {
 }
 
 func (a *App) fixupNotNull(model interface{}, column string, field string, backfillSQL string) error {
-	columns, err := a.ORM.Migrator().ColumnTypes(model)
+	columns, err := a.orm.Migrator().ColumnTypes(model)
 	if err != nil {
 		return err
 	}
@@ -48,11 +48,11 @@ func (a *App) fixupNotNull(model interface{}, column string, field string, backf
 		return nil
 	}
 
-	if err := a.ORM.Exec(backfillSQL).Error; err != nil {
+	if err := a.orm.Exec(backfillSQL).Error; err != nil {
 		return err
 	}
 
-	return a.ORM.Migrator().AlterColumn(model, field)
+	return a.orm.Migrator().AlterColumn(model, field)
 }
 
 func columnNeedsNotNullFixup(columns []gorm.ColumnType, name string) bool {
