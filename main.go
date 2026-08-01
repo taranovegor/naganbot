@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
@@ -11,15 +14,6 @@ import (
 )
 
 var Version = "development"
-
-func safeExecute(fn func()) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Printf("recovered from panic: %v", r)
-		}
-	}()
-	fn()
-}
 
 func main() {
 	fmt.Println(fmt.Sprintf("Nagan bot! Version: %s", Version))
@@ -40,14 +34,20 @@ func main() {
 
 	log.Printf("authorized on account %s", a.BotAPI.Self.String())
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	u.AllowedUpdates = []string{tgbotapi.UpdateTypeMessage, tgbotapi.UpdateTypeCallbackQuery}
 
 	updates := a.BotAPI.GetUpdatesChan(u)
-	for update := range updates {
-		go safeExecute(func() {
-			a.HandleUpdate(context.Background(), update)
-		})
-	}
+
+	stopReceivingUpdates := sync.OnceFunc(a.BotAPI.StopReceivingUpdates)
+	go func() {
+		<-ctx.Done()
+		stopReceivingUpdates()
+	}()
+
+	a.Run(ctx, updates)
 }
