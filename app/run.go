@@ -37,9 +37,6 @@ loop:
 		}
 	}
 
-	graceTimer := time.AfterFunc(shutdownTimeout, cancelHandlers)
-	defer graceTimer.Stop()
-
 	waitForHandlers(&wg, shutdownTimeout)
 }
 

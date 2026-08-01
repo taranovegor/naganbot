@@ -73,8 +73,6 @@ func TestRunKeepsAnInFlightHandlerContextAliveAfterTheSignalContextIsCancelled(t
 
 	started := make(chan struct{})
 	release := make(chan struct{})
-	// Run cancels the handler context as part of its own cleanup once it returns,
-	// so the error must be captured while the handler is still in flight, not after.
 	var errWhileInFlight error
 
 	handler := &fakeCommandHandler{}
@@ -108,7 +106,12 @@ func TestRunKeepsAnInFlightHandlerContextAliveAfterTheSignalContextIsCancelled(t
 
 	cancel()
 	close(release)
-	<-done
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("expected Run to return once the in-flight handler finished")
+	}
 
 	if handler.capturedCtx == nil {
 		t.Fatal("expected the handler to capture a context")
