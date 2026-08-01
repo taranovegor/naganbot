@@ -42,7 +42,7 @@ func (h *JoinHandler) Name() string {
 	return "join"
 }
 
-func (h *JoinHandler) Execute(msg *tgbotapi.Message) {
+func (h *JoinHandler) Execute(ctx context.Context, msg *tgbotapi.Message) {
 	chatID, userID := msg.Chat.ID, msg.From.ID
 	game, err := h.createGameUC.Execute(chatID, userID)
 	if err != nil {
@@ -64,7 +64,7 @@ func (h *JoinHandler) Execute(msg *tgbotapi.Message) {
 		h.bot.SendMessage(chatID, h.trans.Get("game creation", translator.Config{}))
 	}
 
-	hitReport, err := h.playGameUC.Execute(context.TODO(), game.ID)
+	hitReport, err := h.playGameUC.Execute(ctx, game.ID)
 	if err != nil {
 		log.Printf("failed to play game %s: %v", game.ID, err)
 		if game.Owner.ID != userID && errors.Is(err, usecase.ErrNotEnoughPlayers) {

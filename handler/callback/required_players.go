@@ -1,12 +1,14 @@
 package callback
 
 import (
+	"context"
 	"fmt"
+	"strconv"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
-	"strconv"
 )
 
 var revolverOptions = []int{4, 5, 6, 7, 8, 9}
@@ -49,7 +51,7 @@ func (h *requiredPlayers) Pattern() Pattern {
 	return RequiredPlayers
 }
 
-func (h *requiredPlayers) Execute(query *tgbotapi.CallbackQuery) {
+func (h *requiredPlayers) Execute(_ context.Context, query *tgbotapi.CallbackQuery) {
 	chatID := query.Message.Chat.ID
 	isAdmin, err := h.bot.IsAdmin(chatID, query.From.ID)
 	if err != nil {

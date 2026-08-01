@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -46,7 +47,7 @@ func main() {
 	updates := a.BotAPI.GetUpdatesChan(u)
 	for update := range updates {
 		go safeExecute(func() {
-			a.HandleUpdate(update)
+			a.HandleUpdate(context.Background(), update)
 		})
 	}
 }

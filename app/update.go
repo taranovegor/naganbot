@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -9,7 +10,7 @@ import (
 	"github.com/taranovegor/naganbot/translator"
 )
 
-func (a *App) HandleUpdate(update tgbotapi.Update) {
+func (a *App) HandleUpdate(ctx context.Context, update tgbotapi.Update) {
 	chat := update.FromChat()
 	if chat != nil {
 		if chat.IsPrivate() || chat.IsChannel() {
@@ -42,7 +43,7 @@ func (a *App) HandleUpdate(update tgbotapi.Update) {
 			log.Println(err.Error())
 			return
 		}
-		cmd.Execute(msg)
+		cmd.Execute(ctx, msg)
 	} else if update.CallbackQuery != nil {
 		callbackQuery := update.CallbackQuery
 		query := callback.Pattern(callbackQuery.Data)
@@ -51,6 +52,6 @@ func (a *App) HandleUpdate(update tgbotapi.Update) {
 			log.Println(err.Error())
 			return
 		}
-		hdlr.Execute(callbackQuery)
+		hdlr.Execute(ctx, callbackQuery)
 	}
 }

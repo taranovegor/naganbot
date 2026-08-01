@@ -1,6 +1,8 @@
 package command
 
 import (
+	"context"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/handler/callback"
@@ -32,7 +34,7 @@ func (hdlr *settingsHandler) Name() string {
 	return "settings"
 }
 
-func (hdlr *settingsHandler) Execute(msg *tgbotapi.Message) {
+func (hdlr *settingsHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	chat, err := hdlr.chatRepo.Get(msg.Chat.ID)
 	if err != nil {
 		hdlr.bot.SendMessage(msg.Chat.ID, hdlr.trans.Get("something went wrong", translator.Config{}))

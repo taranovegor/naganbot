@@ -1,9 +1,11 @@
 package command
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"context"
 	"reflect"
 	"testing"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
@@ -20,7 +22,7 @@ func (hdlr testHandler) Name() string {
 	return testHandlerName
 }
 
-func (hdlr testHandler) Execute(*tgbotapi.Message) {
+func (hdlr testHandler) Execute(context.Context, *tgbotapi.Message) {
 }
 
 func newTestRegistry() *Registry {

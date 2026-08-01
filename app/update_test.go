@@ -2,6 +2,8 @@ package app
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"io"
 	"net/http"
 	"testing"
@@ -65,14 +67,16 @@ func (r *fakeUserRepo) Save(user *domain.User) error {
 }
 
 type fakeCommandHandler struct {
-	name      string
-	executed  bool
-	onExecute func()
+	name        string
+	executed    bool
+	capturedCtx context.Context
+	onExecute   func()
 }
 
 func (h *fakeCommandHandler) Name() string { return h.name }
-func (h *fakeCommandHandler) Execute(*tgbotapi.Message) {
+func (h *fakeCommandHandler) Execute(ctx context.Context, _ *tgbotapi.Message) {
 	h.executed = true
+	h.capturedCtx = ctx
 	if h.onExecute != nil {
 		h.onExecute()
 	}
@@ -84,7 +88,7 @@ type fakeCallbackHandler struct {
 }
 
 func (h *fakeCallbackHandler) Pattern() callback.Pattern { return h.pattern }
-func (h *fakeCallbackHandler) Execute(*tgbotapi.CallbackQuery) {
+func (h *fakeCallbackHandler) Execute(context.Context, *tgbotapi.CallbackQuery) {
 	h.executed = true
 }
 
@@ -126,7 +130,7 @@ func TestHandleUpdateSavesChatAndUserBeforeDispatchingCommand(t *testing.T) {
 	}
 
 	update := tgbotapi.Update{Message: commandMessage("/join")}
-	a.HandleUpdate(update)
+	a.HandleUpdate(context.Background(), update)
 
 	if !handler.executed {
 		t.Fatal("expected command handler to be executed")
@@ -163,7 +167,7 @@ func TestHandleUpdateSkipsSyncAndDispatchForPrivateChat(t *testing.T) {
 	privateMessage.Chat = &tgbotapi.Chat{ID: 7, Type: "private"}
 
 	update := tgbotapi.Update{Message: privateMessage}
-	a.HandleUpdate(update)
+	a.HandleUpdate(context.Background(), update)
 
 	if handler.executed {
 		t.Fatal("command must not run for a private chat")
@@ -193,7 +197,7 @@ func TestHandleUpdateSyncsButDoesNotDispatchPlainMessage(t *testing.T) {
 
 	plainMessage := &tgbotapi.Message{Chat: groupChat(), From: testUser(), Text: "hello"}
 	update := tgbotapi.Update{Message: plainMessage}
-	a.HandleUpdate(update)
+	a.HandleUpdate(context.Background(), update)
 
 	if len(chatRepo.saved) != 1 || len(userRepo.saved) != 1 {
 		t.Fatal("expected chat and user to still be synced for a plain message")
@@ -224,12 +228,41 @@ func TestHandleUpdateDispatchesCallbackQueryAfterSync(t *testing.T) {
 			Message: &tgbotapi.Message{Chat: groupChat()},
 		},
 	}
-	a.HandleUpdate(update)
+	a.HandleUpdate(context.Background(), update)
 
 	if !handler.executed {
 		t.Fatal("expected callback handler to be executed")
 	}
 	if len(chatRepo.saved) != 1 || len(userRepo.saved) != 1 {
 		t.Fatal("expected chat and user to be synced before callback dispatch")
+	}
+}
+
+func TestHandleUpdatePropagatesTheCallerContextToTheCommandHandler(t *testing.T) {
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	bot, _ := newTestBot(t)
+
+	handler := &fakeCommandHandler{name: "join"}
+
+	a := &App{
+		Translator: trans,
+		Bot:        bot,
+		Chats:      &fakeChatRepo{},
+		Users:      &fakeUserRepo{},
+		Commands:   command.NewRegistry("", handler),
+		Callbacks:  callback.NewRegistry(),
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	update := tgbotapi.Update{Message: commandMessage("/join")}
+	a.HandleUpdate(ctx, update)
+
+	if !handler.executed {
+		t.Fatal("expected the command handler to be executed")
+	}
+	if !errors.Is(handler.capturedCtx.Err(), context.Canceled) {
+		t.Fatalf("expected the handler to receive the caller's cancelled context, got err %v", handler.capturedCtx.Err())
 	}
 }

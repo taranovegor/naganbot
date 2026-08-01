@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"fmt"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -8,7 +9,7 @@ import (
 
 type Handler interface {
 	Name() string
-	Execute(*tgbotapi.Message)
+	Execute(context.Context, *tgbotapi.Message)
 }
 
 type Registry struct {

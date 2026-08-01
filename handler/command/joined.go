@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"strconv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -34,7 +35,7 @@ func (hdlr JoinedHandler) Name() string {
 	return "joined"
 }
 
-func (hdlr JoinedHandler) Execute(msg *tgbotapi.Message) {
+func (hdlr JoinedHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 	var message string
 

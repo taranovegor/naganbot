@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"log"
 	"strconv"
 
@@ -37,7 +38,7 @@ func (hdlr TopHandler) Name() string {
 	return "top"
 }
 
-func (hdlr TopHandler) Execute(msg *tgbotapi.Message) {
+func (hdlr TopHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	var players []domain.GunslingerTopShotPlayer
 	var err error
 	chatID := msg.Chat.ID

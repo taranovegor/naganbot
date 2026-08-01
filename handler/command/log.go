@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"log"
 	"strconv"
 	"strings"
@@ -35,7 +36,7 @@ func (hdlr LogHandler) Name() string {
 	return "history"
 }
 
-func (hdlr LogHandler) Execute(msg *tgbotapi.Message) {
+func (hdlr LogHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 
 	limit := 10

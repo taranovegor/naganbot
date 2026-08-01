@@ -1,11 +1,13 @@
 package command
 
 import (
+	"context"
+	"strconv"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
-	"strconv"
 )
 
 type StatHandler struct {
@@ -32,7 +34,7 @@ func (hdlr StatHandler) Name() string {
 	return "stat"
 }
 
-func (hdlr StatHandler) Execute(msg *tgbotapi.Message) {
+func (hdlr StatHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 	userID := msg.From.ID
 	numberOfGames := hdlr.gunslinger.CountNumberOfPlayerGamesInChat(userID, chatID)

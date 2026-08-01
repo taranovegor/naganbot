@@ -1,6 +1,7 @@
 package callback
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -35,7 +36,7 @@ func (h Pattern) GetArg(withArgs string, argNum int) string {
 
 type Handler interface {
 	Pattern() Pattern
-	Execute(*tgbotapi.CallbackQuery)
+	Execute(context.Context, *tgbotapi.CallbackQuery)
 }
 
 type Registry struct {
