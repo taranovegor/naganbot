@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -63,5 +64,101 @@ func TestRunReturnsImmediatelyWhenThereAreNoUpdates(t *testing.T) {
 	case <-done:
 	case <-time.After(2 * time.Second):
 		t.Fatal("expected Run to return quickly when there is nothing to wait for")
+	}
+}
+
+func TestRunKeepsAnInFlightHandlerContextAliveAfterTheSignalContextIsCancelled(t *testing.T) {
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	bot, _ := newTestBot(t)
+
+	started := make(chan struct{})
+	release := make(chan struct{})
+	// Run cancels the handler context as part of its own cleanup once it returns,
+	// so the error must be captured while the handler is still in flight, not after.
+	var errWhileInFlight error
+
+	handler := &fakeCommandHandler{}
+	handler.name = "join"
+	handler.onExecute = func() {
+		close(started)
+		<-release
+		errWhileInFlight = handler.capturedCtx.Err()
+	}
+
+	a := &App{
+		Translator: trans,
+		Bot:        bot,
+		Chats:      &fakeChatRepo{},
+		Users:      &fakeUserRepo{},
+		Commands:   command.NewRegistry("", handler),
+		Callbacks:  callback.NewRegistry(),
+	}
+
+	updates := make(chan tgbotapi.Update)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	done := make(chan struct{})
+	go func() {
+		a.Run(ctx, updates)
+		close(done)
+	}()
+
+	updates <- tgbotapi.Update{Message: commandMessage("/join")}
+	<-started
+
+	cancel()
+	close(release)
+	<-done
+
+	if handler.capturedCtx == nil {
+		t.Fatal("expected the handler to capture a context")
+	}
+	if errors.Is(errWhileInFlight, context.Canceled) {
+		t.Fatal("expected the in-flight handler's context to survive cancellation of the signal context, so it can finish within the grace period")
+	}
+}
+
+func TestRunStopsDispatchingNewHandlersOnceTheSignalContextIsCancelled(t *testing.T) {
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	bot, _ := newTestBot(t)
+
+	release := make(chan struct{})
+	first := &fakeCommandHandler{name: "join", onExecute: func() {
+		<-release
+	}}
+	second := &fakeCommandHandler{name: "settings"}
+
+	a := &App{
+		Translator: trans,
+		Bot:        bot,
+		Chats:      &fakeChatRepo{},
+		Users:      &fakeUserRepo{},
+		Commands:   command.NewRegistry("", first, second),
+		Callbacks:  callback.NewRegistry(),
+	}
+
+	updates := make(chan tgbotapi.Update)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	done := make(chan struct{})
+	go func() {
+		a.Run(ctx, updates)
+		close(done)
+	}()
+
+	updates <- tgbotapi.Update{Message: commandMessage("/join")}
+	cancel()
+
+	select {
+	case updates <- tgbotapi.Update{Message: commandMessage("/settings")}:
+		t.Fatal("expected the run loop to stop consuming updates once the context was cancelled")
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	close(release)
+	<-done
+
+	if second.executed {
+		t.Fatal("expected no new handler to be dispatched after the context was cancelled")
 	}
 }

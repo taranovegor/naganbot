@@ -12,16 +12,33 @@ import (
 const shutdownTimeout = 10 * time.Second
 
 func (a *App) Run(ctx context.Context, updates <-chan tgbotapi.Update) {
+	handlerCtx, cancelHandlers := context.WithCancel(context.WithoutCancel(ctx))
+	defer cancelHandlers()
+
 	var wg sync.WaitGroup
-	for update := range updates {
-		wg.Add(1)
-		go func(update tgbotapi.Update) {
-			defer wg.Done()
-			safeExecute(func() {
-				a.HandleUpdate(ctx, update)
-			})
-		}(update)
+
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break loop
+		case update, ok := <-updates:
+			if !ok {
+				break loop
+			}
+
+			wg.Add(1)
+			go func(update tgbotapi.Update) {
+				defer wg.Done()
+				safeExecute(func() {
+					a.HandleUpdate(handlerCtx, update)
+				})
+			}(update)
+		}
 	}
+
+	graceTimer := time.AfterFunc(shutdownTimeout, cancelHandlers)
+	defer graceTimer.Stop()
 
 	waitForHandlers(&wg, shutdownTimeout)
 }
