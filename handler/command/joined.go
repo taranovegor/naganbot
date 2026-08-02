@@ -11,31 +11,31 @@ import (
 	"github.com/taranovegor/naganbot/translator"
 )
 
-type JoinedHandler struct {
+type joinedHandler struct {
 	bot   *service.Bot
 	trans *translator.Translator
 	game  domain.GameRepository
 }
 
-var _ Handler = (*JoinedHandler)(nil)
+var _ Handler = (*joinedHandler)(nil)
 
 func NewJoinedHandler(
 	bot *service.Bot,
 	trans *translator.Translator,
 	game domain.GameRepository,
 ) Handler {
-	return &JoinedHandler{
+	return &joinedHandler{
 		bot:   bot,
 		trans: trans,
 		game:  game,
 	}
 }
 
-func (hdlr JoinedHandler) Name() string {
+func (hdlr *joinedHandler) Name() string {
 	return "joined"
 }
 
-func (hdlr JoinedHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
+func (hdlr *joinedHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 	var message string
 

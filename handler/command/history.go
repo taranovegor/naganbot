@@ -12,31 +12,31 @@ import (
 	"github.com/taranovegor/naganbot/translator"
 )
 
-type LogHandler struct {
+type historyHandler struct {
 	bot   *service.Bot
 	trans *translator.Translator
 	game  domain.GameRepository
 }
 
-var _ Handler = (*LogHandler)(nil)
+var _ Handler = (*historyHandler)(nil)
 
 func NewLogHandler(
 	bot *service.Bot,
 	trans *translator.Translator,
 	game domain.GameRepository,
 ) Handler {
-	return &LogHandler{
+	return &historyHandler{
 		bot:   bot,
 		trans: trans,
 		game:  game,
 	}
 }
 
-func (hdlr LogHandler) Name() string {
+func (hdlr *historyHandler) Name() string {
 	return "history"
 }
 
-func (hdlr LogHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
+func (hdlr *historyHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 
 	limit := 10

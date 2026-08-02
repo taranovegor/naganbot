@@ -7,25 +7,25 @@ import (
 	"github.com/taranovegor/naganbot/service"
 )
 
-type ForceHandler struct {
+type forceHandler struct {
 	bot *service.Bot
 }
 
-var _ Handler = (*ForceHandler)(nil)
+var _ Handler = (*forceHandler)(nil)
 
 func NewForceHandler(
 	bot *service.Bot,
 ) Handler {
-	return &ForceHandler{
+	return &forceHandler{
 		bot: bot,
 	}
 }
 
-func (hdlr ForceHandler) Name() string {
+func (hdlr *forceHandler) Name() string {
 	return "force"
 }
 
-func (hdlr ForceHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
+func (hdlr *forceHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 	_ = hdlr.bot.Kick(chatID, msg.From.ID)
 	hdlr.bot.DeleteMessage(chatID, msg.MessageID)

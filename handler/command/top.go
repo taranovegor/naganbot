@@ -11,14 +11,14 @@ import (
 	"github.com/taranovegor/naganbot/translator"
 )
 
-type TopHandler struct {
+type topHandler struct {
 	bot        *service.Bot
 	trans      *translator.Translator
 	user       domain.UserRepository
 	gunslinger domain.GunslingerRepository
 }
 
-var _ Handler = (*TopHandler)(nil)
+var _ Handler = (*topHandler)(nil)
 
 func NewTopHandler(
 	bot *service.Bot,
@@ -26,7 +26,7 @@ func NewTopHandler(
 	user domain.UserRepository,
 	gunslinger domain.GunslingerRepository,
 ) Handler {
-	return &TopHandler{
+	return &topHandler{
 		bot:        bot,
 		trans:      trans,
 		user:       user,
@@ -34,11 +34,11 @@ func NewTopHandler(
 	}
 }
 
-func (hdlr TopHandler) Name() string {
+func (hdlr *topHandler) Name() string {
 	return "top"
 }
 
-func (hdlr TopHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
+func (hdlr *topHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	var players []domain.GunslingerTopShotPlayer
 	var err error
 	chatID := msg.Chat.ID

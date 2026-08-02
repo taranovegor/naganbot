@@ -19,8 +19,8 @@ func NewGameplayUnitOfWork(
 	}
 }
 
-func (u GameplayUnitOfWork) CommitPlayedGame(game *domain.Game, victims []*domain.Gunslinger) error {
-	return u.orm.Transaction(func(tx *gorm.DB) error {
+func (repo GameplayUnitOfWork) CommitPlayedGame(game *domain.Game, victims []*domain.Gunslinger) error {
+	return repo.orm.Transaction(func(tx *gorm.DB) error {
 		if err := NewGameRepository(tx).Update(game); err != nil {
 			return err
 		}

@@ -10,31 +10,31 @@ import (
 	"github.com/taranovegor/naganbot/translator"
 )
 
-type StatHandler struct {
+type statHandler struct {
 	bot        *service.Bot
 	trans      *translator.Translator
 	gunslinger domain.GunslingerRepository
 }
 
-var _ Handler = (*StatHandler)(nil)
+var _ Handler = (*statHandler)(nil)
 
 func NewStatHandler(
 	bot *service.Bot,
 	trans *translator.Translator,
 	gunslinger domain.GunslingerRepository,
 ) Handler {
-	return &StatHandler{
+	return &statHandler{
 		bot:        bot,
 		trans:      trans,
 		gunslinger: gunslinger,
 	}
 }
 
-func (hdlr StatHandler) Name() string {
+func (hdlr *statHandler) Name() string {
 	return "stat"
 }
 
-func (hdlr StatHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
+func (hdlr *statHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 	userID := msg.From.ID
 	numberOfGames := hdlr.gunslinger.CountNumberOfPlayerGamesInChat(userID, chatID)

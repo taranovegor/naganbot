@@ -12,7 +12,7 @@ import (
 	"github.com/taranovegor/naganbot/usecase"
 )
 
-type JoinHandler struct {
+type joinHandler struct {
 	bot          *service.Bot
 	createGameUC *usecase.CreateGameUseCase
 	joinGameUC   *usecase.JoinGameUseCase
@@ -20,7 +20,7 @@ type JoinHandler struct {
 	trans        *translator.Translator
 }
 
-var _ Handler = (*JoinHandler)(nil)
+var _ Handler = (*joinHandler)(nil)
 
 func NewJoinHandler(
 	bot *service.Bot,
@@ -29,7 +29,7 @@ func NewJoinHandler(
 	playGameUC *usecase.PlayGameUseCase,
 	trans *translator.Translator,
 ) Handler {
-	return &JoinHandler{
+	return &joinHandler{
 		bot:          bot,
 		createGameUC: createGameUC,
 		joinGameUC:   joinGameUC,
@@ -38,64 +38,64 @@ func NewJoinHandler(
 	}
 }
 
-func (h *JoinHandler) Name() string {
+func (hdlr *joinHandler) Name() string {
 	return "join"
 }
 
-func (h *JoinHandler) Execute(ctx context.Context, msg *tgbotapi.Message) {
+func (hdlr *joinHandler) Execute(ctx context.Context, msg *tgbotapi.Message) {
 	chatID, userID := msg.Chat.ID, msg.From.ID
-	game, err := h.createGameUC.Execute(chatID, userID)
+	game, err := hdlr.createGameUC.Execute(chatID, userID)
 	if err != nil {
 		if errors.Is(err, usecase.ErrGameCooldown) {
-			h.bot.SendMessage(chatID, h.trans.Get("wait for game timeout", translator.Config{}))
+			hdlr.bot.SendMessage(chatID, hdlr.trans.Get("wait for game timeout", translator.Config{}))
 		}
 		return
 	}
 
-	_, err = h.joinGameUC.Execute(game.ID, msg.From.ID)
+	_, err = hdlr.joinGameUC.Execute(game.ID, msg.From.ID)
 	if err != nil {
 		if errors.Is(err, usecase.ErrPlayerAlreadyInGame) {
-			h.bot.SendMessage(chatID, h.trans.Get("player already in game", translator.Config{}))
+			hdlr.bot.SendMessage(chatID, hdlr.trans.Get("player already in game", translator.Config{}))
 		}
 		return
 	}
 
 	if game.Owner.ID == userID {
-		h.bot.SendMessage(chatID, h.trans.Get("game creation", translator.Config{}))
+		hdlr.bot.SendMessage(chatID, hdlr.trans.Get("game creation", translator.Config{}))
 	}
 
-	hitReport, err := h.playGameUC.Execute(ctx, game.ID)
+	hitReport, err := hdlr.playGameUC.Execute(ctx, game.ID)
 	if err != nil {
 		log.Printf("failed to play game %s: %v", game.ID, err)
 		if game.Owner.ID != userID && errors.Is(err, usecase.ErrNotEnoughPlayers) {
-			h.bot.SendMessage(chatID, h.trans.Get("joining the game", translator.Config{}))
+			hdlr.bot.SendMessage(chatID, hdlr.trans.Get("joining the game", translator.Config{}))
 		} else if !errors.Is(err, usecase.ErrNotEnoughPlayers) {
-			h.bot.SendMessage(chatID, h.trans.Get("something went wrong", translator.Config{}))
+			hdlr.bot.SendMessage(chatID, hdlr.trans.Get("something went wrong", translator.Config{}))
 		}
 		return
 	}
 
-	for _, message := range h.trans.GetMany("play the game", translator.Config{}) {
-		h.bot.SendMessage(chatID, message)
+	for _, message := range hdlr.trans.GetMany("play the game", translator.Config{}) {
+		hdlr.bot.SendMessage(chatID, message)
 		time.Sleep(time.Second)
 	}
 
 	isAtomic := hitReport.BulletType == service.BulletAtomicType
 
 	if isAtomic {
-		h.bot.SendMessage(chatID, h.trans.Get("killed by atomic bullet", translator.Config{}))
+		hdlr.bot.SendMessage(chatID, hdlr.trans.Get("killed by atomic bullet", translator.Config{}))
 	}
 
 	for _, victim := range hitReport.Victims {
 		if !isAtomic {
-			h.bot.SendMessage(chatID, h.trans.Get("gunslinger killed", translator.Config{
+			hdlr.bot.SendMessage(chatID, hdlr.trans.Get("gunslinger killed", translator.Config{
 				Args: map[string]string{"%gunslinger": victim.Player.Mention()},
 			}))
 		}
 
-		err = h.bot.Kick(chatID, victim.PlayerID)
+		err = hdlr.bot.Kick(chatID, victim.PlayerID)
 		if err != nil && !isAtomic {
-			h.bot.SendMessage(chatID, h.trans.Get("player is not kicked", translator.Config{}))
+			hdlr.bot.SendMessage(chatID, hdlr.trans.Get("player is not kicked", translator.Config{}))
 		}
 	}
 }
