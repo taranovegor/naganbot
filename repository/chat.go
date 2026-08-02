@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+var chatIdentityColumns = []string{"title", "username"}
+
 type ChatRepository struct {
 	orm *gorm.DB
 }
@@ -28,8 +30,6 @@ func (repo ChatRepository) Get(id int64) (domain.Chat, error) {
 
 	return chat, nil
 }
-
-var chatIdentityColumns = []string{"title", "username"}
 
 func (repo ChatRepository) Save(chat *domain.Chat) error {
 	return repo.orm.Clauses(clause.OnConflict{

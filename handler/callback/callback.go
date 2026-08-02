@@ -28,7 +28,7 @@ func (p Pattern) SetArgs(args ...string) Pattern {
 
 func (p Pattern) GetArg(withArgs string, argNum int) string {
 	separated := strings.Split(strings.Replace(withArgs, p.ToString(), "", 1), "_")
-	if 0 == argNum || len(separated) <= argNum {
+	if argNum == 0 || len(separated) <= argNum {
 		return ""
 	}
 	return separated[argNum]

@@ -55,7 +55,7 @@ type translation struct {
 }
 
 func (trans translation) isOneOf() bool {
-	return trans.oneOf != nil && len(trans.oneOf) > 0
+	return len(trans.oneOf) > 0
 }
 
 func (trans translation) oneOfLen() int {
@@ -63,7 +63,7 @@ func (trans translation) oneOfLen() int {
 }
 
 func (one oneOf) isAllOf() bool {
-	return one.allOf != nil && len(one.allOf) > 0
+	return len(one.allOf) > 0
 }
 
 func (one oneOf) allOfLen() int {

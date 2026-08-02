@@ -64,7 +64,7 @@ func TestRegistry_Find_NotExistingHandler(t *testing.T) {
 		t.Errorf("registry did not return any errors on a request for a non-existent handler %s", testRegistryPrefix)
 	}
 
-	if nil != handler {
+	if handler != nil {
 		t.Errorf("non-existent handler is not null, %s given", handler)
 	}
 }

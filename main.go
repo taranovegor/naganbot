@@ -16,7 +16,7 @@ import (
 var Version = "development"
 
 func main() {
-	fmt.Println(fmt.Sprintf("Nagan bot! Version: %s", Version))
+	fmt.Printf("Nagan bot! Version: %s\n", Version)
 
 	err := godotenv.Load()
 	if err != nil {

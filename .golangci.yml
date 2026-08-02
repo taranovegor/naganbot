@@ -5,6 +5,7 @@ linters:
     - errcheck
     - govet
     - ineffassign
+    - staticcheck
   exclusions:
     generated: lax
     presets:
