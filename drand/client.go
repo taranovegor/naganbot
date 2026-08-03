@@ -94,5 +94,10 @@ func (c *Client) GetLatest(ctx context.Context) (*Beacon, error) {
 }
 
 func (c *Client) ProofURL(round uint64, gameID uuid.UUID) string {
-	return fmt.Sprintf("%s/%s/public/%d?game[id]=%s", relayURLs[0], c.chainHash, round, gameID.String())
+	base := relayURLs[0]
+	if c.baseURL != "" {
+		base = c.baseURL
+	}
+
+	return fmt.Sprintf("%s/%s/public/%d?game[id]=%s", base, c.chainHash, round, gameID.String())
 }
