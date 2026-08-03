@@ -30,11 +30,12 @@ type GunslingerRepository interface {
 	CountNumberOfSelfShotsInChat(userID int64, chatID int64) int64
 }
 
-func NewGunslinger(gameID uuid.UUID, playerID int64) *Gunslinger {
+func NewGunslinger(gameID uuid.UUID, player User) *Gunslinger {
 	return &Gunslinger{
 		ID:          uuid.Must(uuid.NewV7()),
 		GameID:      gameID,
-		PlayerID:    playerID,
+		PlayerID:    player.ID,
+		Player:      player,
 		JoinedAt:    time.Now(),
 		ShotHimself: false,
 	}

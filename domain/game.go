@@ -29,22 +29,16 @@ type GameRepository interface {
 	HasActiveOrCreatedTodayInChat(id int64) bool
 }
 
-func NewGame(chatID int64, ownerID int64, playersCount int) *Game {
-	ID := uuid.Must(uuid.NewV7())
-	gunslinger := NewGunslinger(ID, ownerID)
-
-	game := &Game{
-		ID:           ID,
+func NewGame(chatID int64, ownerID int64, owner User, playersCount int) *Game {
+	return &Game{
+		ID:           uuid.Must(uuid.NewV7()),
 		ChatID:       chatID,
 		OwnerID:      ownerID,
-		Gunslingers:  []*Gunslinger{gunslinger},
+		Owner:        owner,
 		CreatedAt:    time.Now(),
 		PlayedAt:     sql.NullTime{},
 		PlayersCount: playersCount,
 	}
-	gunslinger.Game = game
-
-	return game
 }
 
 func (g *Game) IsPlayed() bool {
