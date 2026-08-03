@@ -5,12 +5,15 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/drand"
 )
+
+var ErrNoGunslingers = errors.New("no gunslingers to shoot")
 
 const (
 	BulletLeadType   string = "lead"
@@ -100,6 +103,10 @@ func NewNagan(bulletFactory *BulletFactory, drand *drand.Client) *Nagan {
 }
 
 func (ng *Nagan) Shoot(ctx context.Context, gameID uuid.UUID, gunslingers []*domain.Gunslinger) (*HitReport, error) {
+	if len(gunslingers) == 0 {
+		return nil, ErrNoGunslingers
+	}
+
 	beacon, err := ng.drand.GetLatest(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get drand beacon: %w", err)

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -105,5 +106,19 @@ func TestNagan_Shoot(t *testing.T) {
 
 	if report.ProofURL == "" {
 		t.Error("expected proof URL to be set")
+	}
+}
+
+func TestNagan_Shoot_EmptyGunslingersReturnsErrorInsteadOfPanicking(t *testing.T) {
+	client := drand.NewClientWithURL("http://unused.invalid")
+	factory := NewBulletFactory(NewLeadBullet())
+	nagan := NewNagan(factory, client)
+
+	report, err := nagan.Shoot(context.Background(), uuid.New(), nil)
+	if !errors.Is(err, ErrNoGunslingers) {
+		t.Fatalf("expected ErrNoGunslingers, got %v", err)
+	}
+	if report != nil {
+		t.Fatalf("expected a nil report, got %+v", report)
 	}
 }
