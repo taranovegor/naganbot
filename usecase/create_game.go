@@ -3,11 +3,9 @@ package usecase
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/service"
 	"gorm.io/gorm"
-	"time"
 )
 
 var (
@@ -65,14 +63,7 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 		return nil, err
 	}
 
-	game := &domain.Game{
-		ID:           uuid.Must(uuid.NewV7()),
-		ChatID:       chatID,
-		OwnerID:      ownerID,
-		Owner:        owner,
-		CreatedAt:    time.Now(),
-		PlayersCount: chat.Settings.RequiredPlayers,
-	}
+	game := domain.NewGame(chatID, ownerID, owner, chat.Settings.RequiredPlayers)
 
 	if err := uc.gameRepo.Store(game); err != nil {
 		return nil, err

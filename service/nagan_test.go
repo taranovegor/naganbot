@@ -16,7 +16,7 @@ import (
 func createGunslingers(n int) []*domain.Gunslinger {
 	gunslingers := make([]*domain.Gunslinger, n)
 	for i := 0; i < n; i++ {
-		gunslingers[i] = domain.NewGunslinger(uuid.New(), int64(i))
+		gunslingers[i] = domain.NewGunslinger(uuid.New(), domain.User{ID: int64(i)})
 	}
 	return gunslingers
 }

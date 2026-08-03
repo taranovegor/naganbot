@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
-	"time"
 )
 
 var (
@@ -39,13 +38,7 @@ func (uc *JoinGameUseCase) Execute(gameID uuid.UUID, userID int64) (*domain.Guns
 		return nil, err
 	}
 
-	gunslinger := &domain.Gunslinger{
-		ID:       uuid.Must(uuid.NewV7()),
-		GameID:   gameID,
-		PlayerID: userID,
-		Player:   user,
-		JoinedAt: time.Now(),
-	}
+	gunslinger := domain.NewGunslinger(gameID, user)
 
 	if err := uc.gunslingerRepo.Store(gunslinger); err != nil {
 		return nil, err
