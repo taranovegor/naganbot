@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"sync"
 	"testing"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -45,29 +46,37 @@ func newTestBot(t *testing.T) (*service.Bot, *fakeHTTPClient) {
 }
 
 type fakeChatRepo struct {
+	mu    sync.Mutex
 	saved []*domain.Chat
 }
 
 func (r *fakeChatRepo) Get(int64) (domain.Chat, error)    { return domain.Chat{}, nil }
 func (r *fakeChatRepo) UpdateSettings(*domain.Chat) error { return nil }
 func (r *fakeChatRepo) Save(chat *domain.Chat) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.saved = append(r.saved, chat)
 	return nil
 }
 
 type fakeUserRepo struct {
+	mu    sync.Mutex
 	saved []*domain.User
 }
 
 func (r *fakeUserRepo) Get(int64) (domain.User, error)          { return domain.User{}, nil }
 func (r *fakeUserRepo) GetByIDs([]int64) ([]domain.User, error) { return nil, nil }
 func (r *fakeUserRepo) Save(user *domain.User) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.saved = append(r.saved, user)
 	return nil
 }
 
 type fakeCommandHandler struct {
-	name        string
+	name string
+
+	mu          sync.Mutex
 	executed    bool
 	capturedCtx context.Context
 	onExecute   func()
@@ -75,20 +84,28 @@ type fakeCommandHandler struct {
 
 func (h *fakeCommandHandler) Name() string { return h.name }
 func (h *fakeCommandHandler) Execute(ctx context.Context, _ *tgbotapi.Message) {
+	h.mu.Lock()
 	h.executed = true
 	h.capturedCtx = ctx
-	if h.onExecute != nil {
-		h.onExecute()
+	onExecute := h.onExecute
+	h.mu.Unlock()
+
+	if onExecute != nil {
+		onExecute()
 	}
 }
 
 type fakeCallbackHandler struct {
-	pattern  callback.Pattern
+	pattern callback.Pattern
+
+	mu       sync.Mutex
 	executed bool
 }
 
 func (h *fakeCallbackHandler) Pattern() callback.Pattern { return h.pattern }
 func (h *fakeCallbackHandler) Execute(context.Context, *tgbotapi.CallbackQuery) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	h.executed = true
 }
 
