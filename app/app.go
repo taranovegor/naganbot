@@ -22,6 +22,8 @@ import (
 
 const maxOpenConns = 10
 
+const maxConcurrentHandlers = 64
+
 type App struct {
 	orm        *gorm.DB
 	BotAPI     *tgbotapi.BotAPI

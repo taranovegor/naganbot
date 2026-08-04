@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -164,4 +165,144 @@ func TestRunStopsDispatchingNewHandlersOnceTheSignalContextIsCancelled(t *testin
 	if second.executed {
 		t.Fatal("expected no new handler to be dispatched after the context was cancelled")
 	}
+}
+
+func TestRunCapsTheNumberOfConcurrentlyExecutingHandlers(t *testing.T) {
+	const capacity = 3
+
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	bot, _ := newTestBot(t)
+
+	started := make(chan struct{}, capacity+1)
+	release := make(chan struct{})
+
+	var active int32
+	var maxActive int32
+
+	handler := &fakeCommandHandler{name: "join", onExecute: func() {
+		n := atomic.AddInt32(&active, 1)
+		for {
+			cur := atomic.LoadInt32(&maxActive)
+			if n <= cur || atomic.CompareAndSwapInt32(&maxActive, cur, n) {
+				break
+			}
+		}
+
+		started <- struct{}{}
+		<-release
+		atomic.AddInt32(&active, -1)
+	}}
+
+	a := &App{
+		Translator: trans,
+		Bot:        bot,
+		Chats:      &fakeChatRepo{},
+		Users:      &fakeUserRepo{},
+		Commands:   command.NewRegistry("", handler),
+		Callbacks:  callback.NewRegistry(),
+	}
+
+	updates := make(chan tgbotapi.Update)
+	ctx := context.Background()
+
+	runDone := make(chan struct{})
+	go func() {
+		a.run(ctx, updates, capacity, shutdownTimeout)
+		close(runDone)
+	}()
+
+	for i := 0; i < capacity; i++ {
+		updates <- tgbotapi.Update{Message: commandMessage("/join")}
+	}
+	for i := 0; i < capacity; i++ {
+		<-started
+	}
+
+	sent := make(chan struct{})
+	go func() {
+		updates <- tgbotapi.Update{Message: commandMessage("/join")}
+		close(sent)
+	}()
+
+	select {
+	case <-sent:
+		t.Fatal("expected the loop to stop accepting updates once the pool is saturated")
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	release <- struct{}{}
+
+	select {
+	case <-sent:
+	case <-time.After(2 * time.Second):
+		t.Fatal("expected the pending update to be accepted once a slot freed up")
+	}
+	<-started
+
+	for i := 0; i < capacity; i++ {
+		release <- struct{}{}
+	}
+
+	select {
+	case <-runDone:
+		t.Fatal("Run returned before the context was cancelled")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	if maxActive > capacity {
+		t.Fatalf("expected at most %d concurrent handlers, got %d", capacity, maxActive)
+	}
+
+	close(updates)
+	<-runDone
+}
+
+func TestRunCancellationReturnsPromptlyEvenWhenThePoolIsSaturated(t *testing.T) {
+	const capacity = 2
+
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	bot, _ := newTestBot(t)
+
+	started := make(chan struct{}, capacity)
+	release := make(chan struct{})
+
+	handler := &fakeCommandHandler{name: "join", onExecute: func() {
+		started <- struct{}{}
+		<-release
+	}}
+
+	a := &App{
+		Translator: trans,
+		Bot:        bot,
+		Chats:      &fakeChatRepo{},
+		Users:      &fakeUserRepo{},
+		Commands:   command.NewRegistry("", handler),
+		Callbacks:  callback.NewRegistry(),
+	}
+
+	updates := make(chan tgbotapi.Update)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	runDone := make(chan struct{})
+	go func() {
+		a.run(ctx, updates, capacity, 100*time.Millisecond)
+		close(runDone)
+	}()
+
+	for i := 0; i < capacity; i++ {
+		updates <- tgbotapi.Update{Message: commandMessage("/join")}
+	}
+	for i := 0; i < capacity; i++ {
+		<-started
+	}
+
+	cancel()
+
+	select {
+	case <-runDone:
+	case <-time.After(2 * time.Second):
+		t.Fatal("expected Run to return promptly on cancellation instead of waiting to acquire a new slot")
+	}
+
+	close(release)
 }

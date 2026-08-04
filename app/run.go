@@ -12,24 +12,38 @@ import (
 const shutdownTimeout = 10 * time.Second
 
 func (a *App) Run(ctx context.Context, updates <-chan tgbotapi.Update) {
+	a.run(ctx, updates, maxConcurrentHandlers, shutdownTimeout)
+}
+
+func (a *App) run(ctx context.Context, updates <-chan tgbotapi.Update, maxConcurrent int, timeout time.Duration) {
 	handlerCtx, cancelHandlers := context.WithCancel(context.WithoutCancel(ctx))
 	defer cancelHandlers()
 
 	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxConcurrent)
 
 loop:
 	for {
 		select {
 		case <-ctx.Done():
 			break loop
+		case sem <- struct{}{}:
+		}
+
+		select {
+		case <-ctx.Done():
+			<-sem
+			break loop
 		case update, ok := <-updates:
 			if !ok {
+				<-sem
 				break loop
 			}
 
 			wg.Add(1)
 			go func(update tgbotapi.Update) {
 				defer wg.Done()
+				defer func() { <-sem }()
 				safeExecute(func() {
 					a.HandleUpdate(handlerCtx, update)
 				})
@@ -37,7 +51,7 @@ loop:
 		}
 	}
 
-	waitForHandlers(&wg, shutdownTimeout)
+	waitForHandlers(&wg, timeout)
 }
 
 func safeExecute(fn func()) {
