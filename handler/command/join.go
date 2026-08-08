@@ -18,6 +18,7 @@ type joinHandler struct {
 	joinGameUC   *usecase.JoinGameUseCase
 	playGameUC   *usecase.PlayGameUseCase
 	trans        *translator.Translator
+	messageDelay time.Duration
 }
 
 var _ Handler = (*joinHandler)(nil)
@@ -35,6 +36,7 @@ func NewJoinHandler(
 		joinGameUC:   joinGameUC,
 		playGameUC:   playGameUC,
 		trans:        trans,
+		messageDelay: time.Second,
 	}
 }
 
@@ -77,7 +79,7 @@ func (hdlr *joinHandler) Execute(ctx context.Context, msg *tgbotapi.Message) {
 
 	for _, message := range hdlr.trans.GetMany("play the game", translator.Config{}) {
 		hdlr.bot.SendMessage(chatID, message)
-		time.Sleep(time.Second)
+		time.Sleep(hdlr.messageDelay)
 	}
 
 	isAtomic := hitReport.BulletType == service.BulletAtomicType
