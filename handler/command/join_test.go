@@ -130,10 +130,12 @@ func (u joinTestUnitOfWork) CommitPlayedGame(game *domain.Game, _ []*domain.Guns
 }
 
 type joinTestBot struct {
-	mu       sync.Mutex
-	messages []string
-	kicked   []int64
-	kickErr  error
+	mu             sync.Mutex
+	messages       []string
+	kicked         []int64
+	kickErr        error
+	deletedMessage int
+	deleteCalled   bool
 }
 
 func (b *joinTestBot) SendMessage(_ int64, text string) {
@@ -148,7 +150,12 @@ func (b *joinTestBot) Kick(_ int64, userID int64) error {
 	b.kicked = append(b.kicked, userID)
 	return b.kickErr
 }
-func (b *joinTestBot) DeleteMessage(int64, int) {}
+func (b *joinTestBot) DeleteMessage(_ int64, messageID int) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.deleteCalled = true
+	b.deletedMessage = messageID
+}
 
 func (b *joinTestBot) sentMessages() []string {
 	b.mu.Lock()
