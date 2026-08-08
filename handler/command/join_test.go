@@ -171,8 +171,13 @@ func (b *joinTestBot) kickedPlayers() []int64 {
 
 func possibleTexts(trans *translator.Translator, key string, cfg translator.Config) map[string]bool {
 	texts := make(map[string]bool)
-	for i := 0; i < 300; i++ {
-		texts[trans.Get(key, cfg)] = true
+	for i := 1; ; i++ {
+		cfg.OneOfMany = i
+		got := trans.Get(key, cfg)
+		if got == key {
+			break
+		}
+		texts[got] = true
 	}
 	return texts
 }

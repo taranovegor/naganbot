@@ -107,12 +107,8 @@ func requiredPlayersQuery(chatID int64, fromID int64, messageID int, players str
 	}
 }
 
-func somethingWentWrongTexts(trans *translator.Translator) map[string]bool {
-	texts := make(map[string]bool)
-	for i := 0; i < 50; i++ {
-		texts[trans.Get("something went wrong", translator.Config{})] = true
-	}
-	return texts
+func somethingWentWrongText(trans *translator.Translator) string {
+	return trans.Get("something went wrong", translator.Config{})
 }
 
 func TestRequiredPlayersExecuteSendsSomethingWentWrongWhenIsAdminCheckFails(t *testing.T) {
@@ -122,7 +118,7 @@ func TestRequiredPlayersExecuteSendsSomethingWentWrongWhenIsAdminCheckFails(t *t
 
 	hdlr.Execute(context.Background(), requiredPlayersQuery(100, 7, 1, "6"))
 
-	if len(bot.answers) != 1 || !somethingWentWrongTexts(trans)[bot.answers[0]] {
+	if len(bot.answers) != 1 || bot.answers[0] != somethingWentWrongText(trans) {
 		t.Fatalf("expected a single 'something went wrong' answer, got %v", bot.answers)
 	}
 	if bot.editedKeyboard != nil {
@@ -138,11 +134,8 @@ func TestRequiredPlayersExecuteNotifiesNonAdmins(t *testing.T) {
 
 	hdlr.Execute(context.Background(), requiredPlayersQuery(100, 7, 1, "6"))
 
-	wantTexts := make(map[string]bool)
-	for i := 0; i < 50; i++ {
-		wantTexts[trans.Get("settings can be changed only by admins", translator.Config{})] = true
-	}
-	if len(bot.answers) != 1 || !wantTexts[bot.answers[0]] {
+	wantText := trans.Get("settings can be changed only by admins", translator.Config{})
+	if len(bot.answers) != 1 || bot.answers[0] != wantText {
 		t.Fatalf("expected a single admins-only answer, got %v", bot.answers)
 	}
 	if chatRepo.updated != nil {
@@ -160,7 +153,7 @@ func TestRequiredPlayersExecuteSendsSomethingWentWrongOnABadArgument(t *testing.
 
 	hdlr.Execute(context.Background(), query)
 
-	if len(bot.answers) != 1 || !somethingWentWrongTexts(trans)[bot.answers[0]] {
+	if len(bot.answers) != 1 || bot.answers[0] != somethingWentWrongText(trans) {
 		t.Fatalf("expected a single 'something went wrong' answer for a bad argument, got %v", bot.answers)
 	}
 }
@@ -173,7 +166,7 @@ func TestRequiredPlayersExecuteSendsSomethingWentWrongWhenChatLookupFails(t *tes
 
 	hdlr.Execute(context.Background(), requiredPlayersQuery(100, 7, 1, "6"))
 
-	if len(bot.answers) != 1 || !somethingWentWrongTexts(trans)[bot.answers[0]] {
+	if len(bot.answers) != 1 || bot.answers[0] != somethingWentWrongText(trans) {
 		t.Fatalf("expected a single 'something went wrong' answer when the chat lookup fails, got %v", bot.answers)
 	}
 }
@@ -186,7 +179,7 @@ func TestRequiredPlayersExecuteSendsSomethingWentWrongWhenUpdateSettingsFails(t 
 
 	hdlr.Execute(context.Background(), requiredPlayersQuery(100, 7, 1, "6"))
 
-	if len(bot.answers) != 1 || !somethingWentWrongTexts(trans)[bot.answers[0]] {
+	if len(bot.answers) != 1 || bot.answers[0] != somethingWentWrongText(trans) {
 		t.Fatalf("expected a single 'something went wrong' answer when UpdateSettings fails, got %v", bot.answers)
 	}
 	if bot.editedKeyboard != nil {
