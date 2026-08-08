@@ -13,7 +13,7 @@ import (
 )
 
 type historyHandler struct {
-	bot   *service.Bot
+	bot   messenger
 	trans *translator.Translator
 	game  domain.GameRepository
 }
@@ -21,7 +21,7 @@ type historyHandler struct {
 var _ Handler = (*historyHandler)(nil)
 
 func NewLogHandler(
-	bot *service.Bot,
+	bot messenger,
 	trans *translator.Translator,
 	game domain.GameRepository,
 ) Handler {

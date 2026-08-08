@@ -6,14 +6,13 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/handler/callback"
-	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
 )
 
 type settingsHandler struct {
 	chatRepo domain.ChatRepository
 	trans    *translator.Translator
-	bot      *service.Bot
+	bot      messenger
 }
 
 var _ Handler = (*settingsHandler)(nil)
@@ -21,7 +20,7 @@ var _ Handler = (*settingsHandler)(nil)
 func NewSettingsHandler(
 	chatRepo domain.ChatRepository,
 	trans *translator.Translator,
-	bot *service.Bot,
+	bot messenger,
 ) Handler {
 	return &settingsHandler{
 		chatRepo: chatRepo,

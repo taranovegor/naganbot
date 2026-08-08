@@ -5,11 +5,19 @@ import (
 	"fmt"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/taranovegor/naganbot/service"
 )
 
 type Handler interface {
 	Name() string
 	Execute(context.Context, *tgbotapi.Message)
+}
+
+type messenger interface {
+	SendMessage(chatID int64, text string)
+	SendInlineKeyboard(chatID int64, text string, keyboard service.Keyboard)
+	Kick(chatID int64, userID int64) error
+	DeleteMessage(chatID int64, messageID int)
 }
 
 type Registry struct {

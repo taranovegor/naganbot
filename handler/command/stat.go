@@ -6,12 +6,11 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/domain"
-	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
 )
 
 type statHandler struct {
-	bot        *service.Bot
+	bot        messenger
 	trans      *translator.Translator
 	gunslinger domain.GunslingerRepository
 }
@@ -19,7 +18,7 @@ type statHandler struct {
 var _ Handler = (*statHandler)(nil)
 
 func NewStatHandler(
-	bot *service.Bot,
+	bot messenger,
 	trans *translator.Translator,
 	gunslinger domain.GunslingerRepository,
 ) Handler {

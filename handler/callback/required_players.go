@@ -29,7 +29,7 @@ func RevolverKeyboard(selected int, trans *translator.Translator) service.Keyboa
 
 type requiredPlayers struct {
 	chatRepo domain.ChatRepository
-	bot      *service.Bot
+	bot      messenger
 	trans    *translator.Translator
 }
 
@@ -37,7 +37,7 @@ var _ Handler = (*requiredPlayers)(nil)
 
 func NewRequiredPlayers(
 	chatRepo domain.ChatRepository,
-	bot *service.Bot,
+	bot messenger,
 	trans *translator.Translator,
 ) Handler {
 	return &requiredPlayers{

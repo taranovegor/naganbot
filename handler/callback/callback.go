@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/taranovegor/naganbot/service"
 )
 
 const (
@@ -37,6 +38,12 @@ func (p Pattern) GetArg(withArgs string, argNum int) string {
 type Handler interface {
 	Pattern() Pattern
 	Execute(context.Context, *tgbotapi.CallbackQuery)
+}
+
+type messenger interface {
+	AnswerCallback(callbackQueryID string, text string)
+	EditMessageReplyMarkup(chatID int64, messageID int, keyboard service.Keyboard)
+	IsAdmin(chatID int64, userID int64) (bool, error)
 }
 
 type Registry struct {

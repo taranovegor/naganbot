@@ -12,7 +12,7 @@ import (
 )
 
 type joinedHandler struct {
-	bot   *service.Bot
+	bot   messenger
 	trans *translator.Translator
 	game  domain.GameRepository
 }
@@ -20,7 +20,7 @@ type joinedHandler struct {
 var _ Handler = (*joinedHandler)(nil)
 
 func NewJoinedHandler(
-	bot *service.Bot,
+	bot messenger,
 	trans *translator.Translator,
 	game domain.GameRepository,
 ) Handler {

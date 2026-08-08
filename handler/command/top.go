@@ -7,12 +7,11 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/domain"
-	"github.com/taranovegor/naganbot/service"
 	"github.com/taranovegor/naganbot/translator"
 )
 
 type topHandler struct {
-	bot        *service.Bot
+	bot        messenger
 	trans      *translator.Translator
 	user       domain.UserRepository
 	gunslinger domain.GunslingerRepository
@@ -21,7 +20,7 @@ type topHandler struct {
 var _ Handler = (*topHandler)(nil)
 
 func NewTopHandler(
-	bot *service.Bot,
+	bot messenger,
 	trans *translator.Translator,
 	user domain.UserRepository,
 	gunslinger domain.GunslingerRepository,

@@ -4,17 +4,16 @@ import (
 	"context"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/taranovegor/naganbot/service"
 )
 
 type forceHandler struct {
-	bot *service.Bot
+	bot messenger
 }
 
 var _ Handler = (*forceHandler)(nil)
 
 func NewForceHandler(
-	bot *service.Bot,
+	bot messenger,
 ) Handler {
 	return &forceHandler{
 		bot: bot,
