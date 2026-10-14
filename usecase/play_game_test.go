@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
@@ -37,12 +38,12 @@ type fakeGameRepo struct {
 	game *domain.Game
 }
 
-func (r *fakeGameRepo) GetByID(uuid.UUID) (*domain.Game, error)                { return r.game, nil }
-func (r *fakeGameRepo) GetLatestGamesInChat(int64, int) ([]domain.Game, error) { return nil, nil }
-func (r *fakeGameRepo) GetLatestForChat(int64) (*domain.Game, error)           { return nil, nil }
-func (r *fakeGameRepo) GetActiveForChat(int64) (*domain.Game, error)           { return nil, nil }
-func (r *fakeGameRepo) Store(*domain.Game) error                               { return nil }
-func (r *fakeGameRepo) HasActiveOrCreatedTodayInChat(int64) bool               { return false }
+func (r *fakeGameRepo) GetByID(uuid.UUID) (*domain.Game, error)                 { return r.game, nil }
+func (r *fakeGameRepo) GetLatestGamesInChat(int64, int) ([]domain.Game, error)  { return nil, nil }
+func (r *fakeGameRepo) GetLatestForChat(int64) (*domain.Game, error)            { return nil, nil }
+func (r *fakeGameRepo) GetActiveForChat(int64, time.Time) (*domain.Game, error) { return nil, nil }
+func (r *fakeGameRepo) Store(*domain.Game) error                                { return nil }
+func (r *fakeGameRepo) HasPlayedSince(int64, time.Time) bool                    { return false }
 
 type fakeGunslingerRepo struct {
 	gunslingers []*domain.Gunslinger

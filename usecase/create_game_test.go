@@ -2,10 +2,12 @@ package usecase
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/service"
+	"gorm.io/gorm"
 )
 
 type lifecycleChatRepo struct {
@@ -52,8 +54,10 @@ type lifecycleGameRepo struct {
 func (r *lifecycleGameRepo) GetByID(uuid.UUID) (*domain.Game, error)                { return nil, nil }
 func (r *lifecycleGameRepo) GetLatestGamesInChat(int64, int) ([]domain.Game, error) { return nil, nil }
 func (r *lifecycleGameRepo) GetLatestForChat(int64) (*domain.Game, error)           { return nil, nil }
-func (r *lifecycleGameRepo) GetActiveForChat(int64) (*domain.Game, error)           { return nil, nil }
-func (r *lifecycleGameRepo) HasActiveOrCreatedTodayInChat(int64) bool               { return false }
+func (r *lifecycleGameRepo) GetActiveForChat(int64, time.Time) (*domain.Game, error) {
+	return nil, gorm.ErrRecordNotFound
+}
+func (r *lifecycleGameRepo) HasPlayedSince(int64, time.Time) bool { return false }
 
 func (r *lifecycleGameRepo) Store(game *domain.Game) error {
 	for _, g := range game.Gunslingers {

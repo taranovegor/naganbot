@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+// LobbyIdleTTL is how long a lobby can stay without new players before it
+// stops blocking its chat.
+const LobbyIdleTTL = 6 * time.Hour
+
 type Game struct {
 	ID           uuid.UUID `gorm:"primary_key;size:36;<-:create"`
 	ChatID       int64
@@ -24,9 +28,11 @@ type GameRepository interface {
 	GetByID(uuid.UUID) (*Game, error)
 	GetLatestGamesInChat(int64, int) ([]Game, error)
 	GetLatestForChat(int64) (*Game, error)
-	GetActiveForChat(int64) (*Game, error)
+	// GetActiveForChat returns the newest unplayed game in the chat. It skips
+	// lobbies with no activity since idleSince.
+	GetActiveForChat(chatID int64, idleSince time.Time) (*Game, error)
 	Store(*Game) error
-	HasActiveOrCreatedTodayInChat(id int64) bool
+	HasPlayedSince(chatID int64, since time.Time) bool
 }
 
 func NewGame(chatID int64, ownerID int64, owner User, playersCount int) *Game {

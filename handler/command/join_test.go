@@ -62,7 +62,7 @@ func (r joinTestGameRepo) GetByID(uuid.UUID) (*domain.Game, error) {
 }
 func (r joinTestGameRepo) GetLatestGamesInChat(int64, int) ([]domain.Game, error) { return nil, nil }
 func (r joinTestGameRepo) GetLatestForChat(int64) (*domain.Game, error)           { return nil, nil }
-func (r joinTestGameRepo) GetActiveForChat(int64) (*domain.Game, error) {
+func (r joinTestGameRepo) GetActiveForChat(int64, time.Time) (*domain.Game, error) {
 	r.w.mu.Lock()
 	defer r.w.mu.Unlock()
 	if r.w.game == nil || r.w.game.IsPlayed() {
@@ -76,10 +76,10 @@ func (r joinTestGameRepo) Store(game *domain.Game) error {
 	r.w.game = game
 	return nil
 }
-func (r joinTestGameRepo) HasActiveOrCreatedTodayInChat(int64) bool {
+func (r joinTestGameRepo) HasPlayedSince(int64, time.Time) bool {
 	r.w.mu.Lock()
 	defer r.w.mu.Unlock()
-	return r.w.game != nil
+	return r.w.game != nil && r.w.game.IsPlayed()
 }
 
 type joinTestGunslingerRepo struct{ w *joinTestWorld }

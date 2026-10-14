@@ -3,6 +3,8 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/taranovegor/naganbot/domain"
 	"github.com/taranovegor/naganbot/service"
 	"gorm.io/gorm"
@@ -40,17 +42,18 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 	}
 	defer release()
 
-	if uc.gameRepo.HasActiveOrCreatedTodayInChat(chatID) {
-		game, err := uc.gameRepo.GetActiveForChat(chatID)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, ErrGameCooldown
-			}
+	now := time.Now()
 
-			return nil, err
-		}
-
+	game, err := uc.gameRepo.GetActiveForChat(chatID, now.Add(-domain.LobbyIdleTTL))
+	if err == nil {
 		return game, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	if uc.gameRepo.HasPlayedSince(chatID, startOfDay(now)) {
+		return nil, ErrGameCooldown
 	}
 
 	owner, err := uc.userRepo.Get(ownerID)
@@ -63,11 +66,17 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 		return nil, err
 	}
 
-	game := domain.NewGame(chatID, ownerID, owner, chat.Settings.RequiredPlayers)
+	game = domain.NewGame(chatID, ownerID, owner, chat.Settings.RequiredPlayers)
 
 	if err := uc.gameRepo.Store(game); err != nil {
 		return nil, err
 	}
 
 	return game, nil
+}
+
+func startOfDay(t time.Time) time.Time {
+	y, m, d := t.Date()
+
+	return time.Date(y, m, d, 0, 0, 0, 0, t.Location())
 }

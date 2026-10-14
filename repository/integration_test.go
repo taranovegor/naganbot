@@ -3,6 +3,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -83,53 +84,135 @@ func TestChatRepositorySavePreservesSettingsOnConflict(t *testing.T) {
 	}
 }
 
-func TestGameRepositoryHasActiveOrCreatedTodayInChat(t *testing.T) {
+type gameFixture struct {
+	tx          *gorm.DB
+	gameRepo    domain.GameRepository
+	gunslingers domain.GunslingerRepository
+	chatID      int64
+	owner       *domain.User
+}
+
+func newGameFixture(t *testing.T) gameFixture {
+	t.Helper()
+
 	tx := withTx(t)
-	chatRepo := NewChatRepository(tx)
-	userRepo := NewUserRepository(tx)
-	gameRepo := NewGameRepository(tx)
+	f := gameFixture{
+		tx:          tx,
+		gameRepo:    NewGameRepository(tx),
+		gunslingers: NewGunslingerRepository(tx),
+		chatID:      testID(0),
+		owner:       domain.NewUser(testID(1), "Owner", "", "owner"),
+	}
 
-	chatID := testID(0)
-	owner := domain.NewUser(testID(1), "Owner", "", "owner")
-
-	if err := chatRepo.Save(domain.NewChat(chatID, "Chat", "chat")); err != nil {
+	if err := NewChatRepository(tx).Save(domain.NewChat(f.chatID, "Chat", "chat")); err != nil {
 		t.Fatalf("save chat: %v", err)
 	}
-	if err := userRepo.Save(owner); err != nil {
+	if err := NewUserRepository(tx).Save(f.owner); err != nil {
 		t.Fatalf("save owner: %v", err)
 	}
 
-	if gameRepo.HasActiveOrCreatedTodayInChat(chatID) {
-		t.Fatal("expected no active or today's game before any game exists")
-	}
+	return f
+}
 
-	game := domain.NewGame(chatID, owner.ID, *owner, 6)
-	if err := gameRepo.Store(game); err != nil {
+func (f gameFixture) newGame(t *testing.T, createdAt time.Time) *domain.Game {
+	t.Helper()
+
+	game := domain.NewGame(f.chatID, f.owner.ID, *f.owner, 6)
+	game.CreatedAt = createdAt
+	if err := f.gameRepo.Store(game); err != nil {
 		t.Fatalf("store game: %v", err)
 	}
 
-	if !gameRepo.HasActiveOrCreatedTodayInChat(chatID) {
-		t.Fatal("expected a freshly created, unplayed game to count")
+	return game
+}
+
+func (f gameFixture) join(t *testing.T, game *domain.Game, joinedAt time.Time) {
+	t.Helper()
+
+	user := domain.NewUser(testID(100+int64(len(game.Gunslingers))+time.Now().UnixNano()%1000), "Player", "", "player")
+	if err := NewUserRepository(f.tx).Save(user); err != nil {
+		t.Fatalf("save player: %v", err)
 	}
 
-	game.MarkAsPlayed("lead", "")
-	if err := tx.Model(&domain.Game{}).Where("id = ?", game.ID).
-		Update("played_at", game.PlayedAt).Error; err != nil {
+	gunslinger := domain.NewGunslinger(game.ID, *user)
+	gunslinger.JoinedAt = joinedAt
+	if err := f.gunslingers.Store(gunslinger); err != nil {
+		t.Fatalf("store gunslinger: %v", err)
+	}
+}
+
+func (f gameFixture) markPlayed(t *testing.T, game *domain.Game, playedAt time.Time) {
+	t.Helper()
+
+	if err := f.tx.Model(&domain.Game{}).Where("id = ?", game.ID).
+		Update("played_at", playedAt).Error; err != nil {
 		t.Fatalf("mark played: %v", err)
 	}
+}
 
-	if !gameRepo.HasActiveOrCreatedTodayInChat(chatID) {
-		t.Fatal("expected a game played earlier today to still block a new one (same-day cooldown)")
+func TestGameRepositoryGetActiveForChat(t *testing.T) {
+	f := newGameFixture(t)
+	idleSince := time.Now().Add(-domain.LobbyIdleTTL)
+
+	if _, err := f.gameRepo.GetActiveForChat(f.chatID, idleSince); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("expected no active game in an empty chat, got %v", err)
 	}
 
-	twoDaysAgo := time.Now().Add(-48 * time.Hour)
-	if err := tx.Model(&domain.Game{}).Where("id = ?", game.ID).
-		Updates(map[string]interface{}{"created_at": twoDaysAgo, "played_at": twoDaysAgo}).Error; err != nil {
-		t.Fatalf("backdate game: %v", err)
+	stale := f.newGame(t, time.Now().Add(-2*domain.LobbyIdleTTL))
+	f.join(t, stale, time.Now().Add(-2*domain.LobbyIdleTTL))
+	if _, err := f.gameRepo.GetActiveForChat(f.chatID, idleSince); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("expected a lobby idle for longer than the TTL to be skipped, got %v", err)
 	}
 
-	if gameRepo.HasActiveOrCreatedTodayInChat(chatID) {
-		t.Fatal("expected a game created and played two days ago to no longer block a new game")
+	f.join(t, stale, time.Now().Add(-time.Hour))
+	got, err := f.gameRepo.GetActiveForChat(f.chatID, idleSince)
+	if err != nil {
+		t.Fatalf("expected a recent join to revive the old lobby, got %v", err)
+	}
+	if got.ID != stale.ID {
+		t.Fatalf("expected the revived lobby, got %s", got.ID)
+	}
+
+	fresh := f.newGame(t, time.Now())
+	got, err = f.gameRepo.GetActiveForChat(f.chatID, idleSince)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.ID != fresh.ID {
+		t.Fatalf("expected the newest active game to win, got %s", got.ID)
+	}
+
+	f.markPlayed(t, fresh, time.Now())
+	f.markPlayed(t, stale, time.Now())
+	if _, err := f.gameRepo.GetActiveForChat(f.chatID, idleSince); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("expected played games not to be active, got %v", err)
+	}
+}
+
+func TestGameRepositoryHasPlayedSince(t *testing.T) {
+	f := newGameFixture(t)
+	midnight := time.Now().Truncate(24 * time.Hour)
+
+	if f.gameRepo.HasPlayedSince(f.chatID, midnight) {
+		t.Fatal("expected nothing played in an empty chat")
+	}
+
+	game := f.newGame(t, time.Now())
+	if f.gameRepo.HasPlayedSince(f.chatID, midnight) {
+		t.Fatal("expected an unplayed lobby not to count as played")
+	}
+
+	f.markPlayed(t, game, time.Now())
+	if !f.gameRepo.HasPlayedSince(f.chatID, midnight) {
+		t.Fatal("expected a game played after the cutoff to count")
+	}
+	if f.gameRepo.HasPlayedSince(f.chatID+1, midnight) {
+		t.Fatal("expected another chat's games not to count")
+	}
+
+	f.markPlayed(t, game, time.Now().Add(-48*time.Hour))
+	if f.gameRepo.HasPlayedSince(f.chatID, midnight) {
+		t.Fatal("expected a game played before the cutoff not to count")
 	}
 }
 
