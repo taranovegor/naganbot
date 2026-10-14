@@ -211,8 +211,8 @@ func newJoinTestHandler(w *joinTestWorld, bot *joinTestBot, nagan *service.Nagan
 		createGameUC: usecase.NewCreateGameUseCase(service.NewLocker(), chatRepo, gameRepo, userRepo),
 		joinGameUC:   usecase.NewJoinGameUseCase(gameRepo, gunslingerRepo, userRepo),
 		playGameUC:   usecase.NewPlayGameUseCase(service.NewLocker(), gameRepo, gunslingerRepo, uow, nagan),
+		announcer:    service.NewGameAnnouncer(bot, trans, 0),
 		trans:        trans,
-		messageDelay: 0,
 	}
 }
 

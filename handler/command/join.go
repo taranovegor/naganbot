@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/taranovegor/naganbot/service"
@@ -12,13 +11,17 @@ import (
 	"github.com/taranovegor/naganbot/usecase"
 )
 
+type resultAnnouncer interface {
+	AnnounceResult(chatID int64, report *service.HitReport)
+}
+
 type joinHandler struct {
 	bot          messenger
 	createGameUC *usecase.CreateGameUseCase
 	joinGameUC   *usecase.JoinGameUseCase
 	playGameUC   *usecase.PlayGameUseCase
+	announcer    resultAnnouncer
 	trans        *translator.Translator
-	messageDelay time.Duration
 }
 
 var _ Handler = (*joinHandler)(nil)
@@ -28,6 +31,7 @@ func NewJoinHandler(
 	createGameUC *usecase.CreateGameUseCase,
 	joinGameUC *usecase.JoinGameUseCase,
 	playGameUC *usecase.PlayGameUseCase,
+	announcer resultAnnouncer,
 	trans *translator.Translator,
 ) Handler {
 	return &joinHandler{
@@ -35,8 +39,8 @@ func NewJoinHandler(
 		createGameUC: createGameUC,
 		joinGameUC:   joinGameUC,
 		playGameUC:   playGameUC,
+		announcer:    announcer,
 		trans:        trans,
-		messageDelay: time.Second,
 	}
 }
 
@@ -77,27 +81,5 @@ func (hdlr *joinHandler) Execute(ctx context.Context, msg *tgbotapi.Message) {
 		return
 	}
 
-	for _, message := range hdlr.trans.GetMany("play the game", translator.Config{}) {
-		hdlr.bot.SendMessage(chatID, message)
-		time.Sleep(hdlr.messageDelay)
-	}
-
-	isAtomic := hitReport.BulletType == service.BulletAtomicType
-
-	if isAtomic {
-		hdlr.bot.SendMessage(chatID, hdlr.trans.Get("killed by atomic bullet", translator.Config{}))
-	}
-
-	for _, victim := range hitReport.Victims {
-		if !isAtomic {
-			hdlr.bot.SendMessage(chatID, hdlr.trans.Get("gunslinger killed", translator.Config{
-				Args: map[string]string{"%gunslinger": victim.Player.Mention()},
-			}))
-		}
-
-		err = hdlr.bot.Kick(chatID, victim.PlayerID)
-		if err != nil && !isAtomic {
-			hdlr.bot.SendMessage(chatID, hdlr.trans.Get("player is not kicked", translator.Config{}))
-		}
-	}
+	hdlr.announcer.AnnounceResult(chatID, hitReport)
 }

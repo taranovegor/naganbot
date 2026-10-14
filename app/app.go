@@ -65,6 +65,8 @@ func New() (*App, error) {
 		drand.NewClient(),
 	)
 
+	announcer := service.NewGameAnnouncer(bot, trans, time.Second)
+
 	var (
 		createGame = usecase.NewCreateGameUseCase(locker, chats, games, users)
 		joinGame   = usecase.NewJoinGameUseCase(games, gunslingers, users)
@@ -80,7 +82,7 @@ func New() (*App, error) {
 		Users:      users,
 		Commands: command.NewRegistry(config.CommandPrefix,
 			command.NewForceHandler(bot),
-			command.NewJoinHandler(bot, createGame, joinGame, playGame, trans),
+			command.NewJoinHandler(bot, createGame, joinGame, playGame, announcer, trans),
 			command.NewJoinedHandler(bot, trans, games),
 			command.NewLogHandler(bot, trans, games),
 			command.NewSettingsHandler(chats, trans, bot),
