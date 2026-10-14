@@ -21,6 +21,13 @@ make container-build
 make container-pull
 ```
 
+## Game modes
+
+Chat admins choose the mode with `/ngsettings`. The new mode is used from the next game.
+
+- Fixed (default): the game starts when the needed number of players has joined.
+- Countdown: the game starts by itself. When 3 players have joined, a timer starts, and every new join resets it. The timer is 60 minutes for 3 players, 30 for 4, and 15 for 5 or more. The game never waits past midnight, and it starts at once when 10 players have joined. A lobby with no new players for 6 hours stops blocking the chat.
+
 ## Randomness & Verification
 
 The bot uses [drand](https://drand.love) as its source of randomness — a decentralized, publicly verifiable random beacon operated by Cloudflare, Protocol Labs, and others.

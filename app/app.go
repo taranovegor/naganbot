@@ -33,6 +33,9 @@ type App struct {
 	Users      domain.UserRepository
 	Commands   *command.Registry
 	Callbacks  *callback.Registry
+
+	dueGames  *usecase.StartDueGamesUseCase
+	announcer *service.GameAnnouncer
 }
 
 func New() (*App, error) {
@@ -71,6 +74,7 @@ func New() (*App, error) {
 		createGame = usecase.NewCreateGameUseCase(locker, chats, games, users)
 		joinGame   = usecase.NewJoinGameUseCase(games, gunslingers, users)
 		playGame   = usecase.NewPlayGameUseCase(locker, games, gunslingers, uow, nagan)
+		dueGames   = usecase.NewStartDueGamesUseCase(games, playGame)
 	)
 
 	return &App{
@@ -82,7 +86,7 @@ func New() (*App, error) {
 		Users:      users,
 		Commands: command.NewRegistry(config.CommandPrefix,
 			command.NewForceHandler(bot),
-			command.NewJoinHandler(bot, createGame, joinGame, playGame, announcer, trans),
+			command.NewJoinHandler(bot, createGame, joinGame, playGame, gunslingers, announcer, trans),
 			command.NewJoinedHandler(bot, trans, games),
 			command.NewLogHandler(bot, trans, games),
 			command.NewSettingsHandler(chats, trans, bot),
@@ -91,7 +95,10 @@ func New() (*App, error) {
 		),
 		Callbacks: callback.NewRegistry(
 			callback.NewRequiredPlayers(chats, bot, trans),
+			callback.NewGameMode(chats, bot, trans),
 		),
+		dueGames:  dueGames,
+		announcer: announcer,
 	}, nil
 }
 

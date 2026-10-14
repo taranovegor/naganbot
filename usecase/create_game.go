@@ -66,7 +66,7 @@ func (uc *CreateGameUseCase) Execute(chatID int64, ownerID int64) (*domain.Game,
 		return nil, err
 	}
 
-	game = domain.NewGame(chatID, ownerID, owner, chat.Settings.RequiredPlayers)
+	game = domain.NewGame(chatID, ownerID, owner, chat.Settings.RequiredPlayers, chat.Settings.Mode)
 
 	if err := uc.gameRepo.Store(game); err != nil {
 		return nil, err

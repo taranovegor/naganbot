@@ -11,6 +11,7 @@ import (
 
 const (
 	RequiredPlayers Pattern = "required-players"
+	GameMode        Pattern = "game-mode"
 )
 
 type Pattern string

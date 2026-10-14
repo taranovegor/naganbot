@@ -27,6 +27,27 @@ func RevolverKeyboard(selected int, trans *translator.Translator) service.Keyboa
 	return keyboard
 }
 
+var gameModes = []domain.GameMode{domain.GameModeFixed, domain.GameModeCountdown}
+
+// SettingsKeyboard shows the game modes. In the fixed mode it also shows the
+// revolvers, which set the number of players. A countdown game has no such number.
+func SettingsKeyboard(mode domain.GameMode, requiredPlayers int, trans *translator.Translator) service.Keyboard {
+	var keyboard service.Keyboard
+	for _, m := range gameModes {
+		txt := trans.Get(fmt.Sprintf("%s mode", m), translator.Config{})
+		if m == mode || (m == domain.GameModeFixed && mode == "") {
+			txt = fmt.Sprintf("✅ %s", txt)
+		}
+		keyboard = append(keyboard, []service.Button{{Data: GameMode.SetArgs(string(m)).ToString(), Text: txt}})
+	}
+
+	if mode == domain.GameModeCountdown {
+		return keyboard
+	}
+
+	return append(keyboard, RevolverKeyboard(requiredPlayers, trans)...)
+}
+
 type requiredPlayers struct {
 	chatRepo domain.ChatRepository
 	bot      messenger
@@ -90,6 +111,6 @@ func (hdlr *requiredPlayers) Execute(_ context.Context, query *tgbotapi.Callback
 	)
 	hdlr.bot.AnswerCallback(query.ID, notification)
 
-	keyboard := RevolverKeyboard(players, hdlr.trans)
+	keyboard := SettingsKeyboard(chat.Settings.Mode, players, hdlr.trans)
 	hdlr.bot.EditMessageReplyMarkup(chatID, query.Message.MessageID, keyboard)
 }

@@ -43,6 +43,6 @@ func (hdlr *settingsHandler) Execute(_ context.Context, msg *tgbotapi.Message) {
 	settings := chat.Settings
 
 	message := hdlr.trans.Get("available settings below", translator.Config{})
-	keyboard := callback.RevolverKeyboard(settings.RequiredPlayers, hdlr.trans)
+	keyboard := callback.SettingsKeyboard(settings.Mode, settings.RequiredPlayers, hdlr.trans)
 	hdlr.bot.SendInlineKeyboard(msg.Chat.ID, message, keyboard)
 }

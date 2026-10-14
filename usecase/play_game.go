@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/taranovegor/naganbot/domain"
@@ -64,7 +65,7 @@ func (uc *PlayGameUseCase) Execute(ctx context.Context, gameID uuid.UUID) (*serv
 		return nil, err
 	}
 
-	if len(gunslingers) < game.PlayersCount {
+	if !game.ShouldStart(gunslingers, time.Now()) {
 		return nil, ErrNotEnoughPlayers
 	}
 

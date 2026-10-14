@@ -44,9 +44,10 @@ func (r *scriptedGameRepo) Store(game *domain.Game) error {
 	return nil
 }
 
-func newScriptedCreateGame(repo *scriptedGameRepo) *CreateGameUseCase {
+func newScriptedCreateGame(repo *scriptedGameRepo, mode domain.GameMode) *CreateGameUseCase {
 	chat := domain.Chat{ID: 100}
 	chat.Settings.RequiredPlayers = 6
+	chat.Settings.Mode = mode
 
 	return NewCreateGameUseCase(
 		service.NewLocker(),
@@ -60,7 +61,7 @@ func TestCreateGameReturnsTheActiveGameWithoutCreatingAnother(t *testing.T) {
 	active := &domain.Game{ID: uuid.Must(uuid.NewV7())}
 	repo := &scriptedGameRepo{active: active, playedToday: true}
 
-	game, err := newScriptedCreateGame(repo).Execute(100, 7)
+	game, err := newScriptedCreateGame(repo, domain.GameModeFixed).Execute(100, 7)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -76,7 +77,7 @@ func TestCreateGameIgnoresLobbiesIdleForLongerThanTheTTL(t *testing.T) {
 	repo := &scriptedGameRepo{}
 
 	before := time.Now()
-	if _, err := newScriptedCreateGame(repo).Execute(100, 7); err != nil {
+	if _, err := newScriptedCreateGame(repo, domain.GameModeFixed).Execute(100, 7); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -92,7 +93,7 @@ func TestCreateGameIgnoresLobbiesIdleForLongerThanTheTTL(t *testing.T) {
 func TestCreateGameRefusesWhileTheChatCoolsDownAfterTodaysGame(t *testing.T) {
 	repo := &scriptedGameRepo{playedToday: true}
 
-	_, err := newScriptedCreateGame(repo).Execute(100, 7)
+	_, err := newScriptedCreateGame(repo, domain.GameModeFixed).Execute(100, 7)
 	if !errors.Is(err, ErrGameCooldown) {
 		t.Fatalf("expected ErrGameCooldown, got %v", err)
 	}
@@ -107,11 +108,24 @@ func TestCreateGameRefusesWhileTheChatCoolsDownAfterTodaysGame(t *testing.T) {
 	}
 }
 
+func TestCreateGameStartsTheGameInTheModeOfTheChat(t *testing.T) {
+	for _, mode := range []domain.GameMode{domain.GameModeFixed, domain.GameModeCountdown} {
+		repo := &scriptedGameRepo{}
+
+		if _, err := newScriptedCreateGame(repo, mode).Execute(100, 7); err != nil {
+			t.Fatalf("%s: unexpected error: %v", mode, err)
+		}
+		if repo.stored == nil || repo.stored.Mode != mode {
+			t.Fatalf("expected a %s game to be stored, got %+v", mode, repo.stored)
+		}
+	}
+}
+
 func TestCreateGamePropagatesRepositoryErrors(t *testing.T) {
 	boom := errors.New("db is down")
 	repo := &scriptedGameRepo{activeErr: boom}
 
-	_, err := newScriptedCreateGame(repo).Execute(100, 7)
+	_, err := newScriptedCreateGame(repo, domain.GameModeFixed).Execute(100, 7)
 	if !errors.Is(err, boom) {
 		t.Fatalf("expected the repository error, got %v", err)
 	}

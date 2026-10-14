@@ -211,7 +211,7 @@ func TestRequiredPlayersExecuteUpdatesSettingsAndEditsTheKeyboardOnSuccess(t *te
 	if bot.editedKeyboard == nil {
 		t.Fatal("expected the keyboard to be edited on success")
 	}
-	wantKeyboard := RevolverKeyboard(8, trans)
+	wantKeyboard := SettingsKeyboard(domain.GameModeFixed, 8, trans)
 	if !reflect.DeepEqual(*bot.editedKeyboard, wantKeyboard) {
 		t.Fatalf("expected keyboard %+v, got %+v", wantKeyboard, *bot.editedKeyboard)
 	}

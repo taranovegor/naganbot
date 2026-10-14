@@ -114,10 +114,10 @@ func newGameFixture(t *testing.T) gameFixture {
 	return f
 }
 
-func (f gameFixture) newGame(t *testing.T, createdAt time.Time) *domain.Game {
+func (f gameFixture) newGame(t *testing.T, mode domain.GameMode, createdAt time.Time) *domain.Game {
 	t.Helper()
 
-	game := domain.NewGame(f.chatID, f.owner.ID, *f.owner, 6)
+	game := domain.NewGame(f.chatID, f.owner.ID, *f.owner, 6, mode)
 	game.CreatedAt = createdAt
 	if err := f.gameRepo.Store(game); err != nil {
 		t.Fatalf("store game: %v", err)
@@ -150,6 +150,30 @@ func (f gameFixture) markPlayed(t *testing.T, game *domain.Game, playedAt time.T
 	}
 }
 
+func TestGameRepositoryStoresTheModeAndDefaultsExistingRowsToFixed(t *testing.T) {
+	f := newGameFixture(t)
+
+	countdown := f.newGame(t, domain.GameModeCountdown, time.Now())
+	got, err := f.gameRepo.GetByID(countdown.ID)
+	if err != nil {
+		t.Fatalf("get game: %v", err)
+	}
+	if got.Mode != domain.GameModeCountdown {
+		t.Fatalf("expected the countdown mode to round-trip, got %q", got.Mode)
+	}
+
+	if err := f.tx.Exec("INSERT INTO chats (id) VALUES (?)", f.chatID+1).Error; err != nil {
+		t.Fatalf("insert bare chat: %v", err)
+	}
+	chat, err := NewChatRepository(f.tx).Get(f.chatID + 1)
+	if err != nil {
+		t.Fatalf("get chat: %v", err)
+	}
+	if chat.Settings.Mode != domain.GameModeFixed {
+		t.Fatalf("expected a chat without an explicit mode to be fixed, got %q", chat.Settings.Mode)
+	}
+}
+
 func TestGameRepositoryGetActiveForChat(t *testing.T) {
 	f := newGameFixture(t)
 	idleSince := time.Now().Add(-domain.LobbyIdleTTL)
@@ -158,7 +182,7 @@ func TestGameRepositoryGetActiveForChat(t *testing.T) {
 		t.Fatalf("expected no active game in an empty chat, got %v", err)
 	}
 
-	stale := f.newGame(t, time.Now().Add(-2*domain.LobbyIdleTTL))
+	stale := f.newGame(t, domain.GameModeFixed, time.Now().Add(-2*domain.LobbyIdleTTL))
 	f.join(t, stale, time.Now().Add(-2*domain.LobbyIdleTTL))
 	if _, err := f.gameRepo.GetActiveForChat(f.chatID, idleSince); !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatalf("expected a lobby idle for longer than the TTL to be skipped, got %v", err)
@@ -173,7 +197,7 @@ func TestGameRepositoryGetActiveForChat(t *testing.T) {
 		t.Fatalf("expected the revived lobby, got %s", got.ID)
 	}
 
-	fresh := f.newGame(t, time.Now())
+	fresh := f.newGame(t, domain.GameModeFixed, time.Now())
 	got, err = f.gameRepo.GetActiveForChat(f.chatID, idleSince)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -197,7 +221,7 @@ func TestGameRepositoryHasPlayedSince(t *testing.T) {
 		t.Fatal("expected nothing played in an empty chat")
 	}
 
-	game := f.newGame(t, time.Now())
+	game := f.newGame(t, domain.GameModeFixed, time.Now())
 	if f.gameRepo.HasPlayedSince(f.chatID, midnight) {
 		t.Fatal("expected an unplayed lobby not to count as played")
 	}
@@ -213,6 +237,42 @@ func TestGameRepositoryHasPlayedSince(t *testing.T) {
 	f.markPlayed(t, game, time.Now().Add(-48*time.Hour))
 	if f.gameRepo.HasPlayedSince(f.chatID, midnight) {
 		t.Fatal("expected a game played before the cutoff not to count")
+	}
+}
+
+func TestGameRepositoryGetActiveCountdownGames(t *testing.T) {
+	f := newGameFixture(t)
+	idleSince := time.Now().Add(-domain.LobbyIdleTTL)
+
+	countdown := f.newGame(t, domain.GameModeCountdown, time.Now())
+	f.join(t, countdown, time.Now().Add(-2*time.Minute))
+	f.join(t, countdown, time.Now().Add(-time.Minute))
+
+	f.newGame(t, domain.GameModeFixed, time.Now())
+	f.newGame(t, domain.GameModeCountdown, time.Now().Add(-2*domain.LobbyIdleTTL))
+
+	played := f.newGame(t, domain.GameModeCountdown, time.Now())
+	f.markPlayed(t, played, time.Now())
+
+	games, err := f.gameRepo.GetActiveCountdownGames(idleSince)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var ours []*domain.Game
+	for _, game := range games {
+		if game.ChatID == f.chatID {
+			ours = append(ours, game)
+		}
+	}
+	if len(ours) != 1 || ours[0].ID != countdown.ID {
+		t.Fatalf("expected only the live countdown lobby, got %d games", len(ours))
+	}
+	if len(ours[0].Gunslingers) != 2 {
+		t.Fatalf("expected the gunslingers to be preloaded, got %d", len(ours[0].Gunslingers))
+	}
+	if !ours[0].Gunslingers[0].JoinedAt.Before(ours[0].Gunslingers[1].JoinedAt) {
+		t.Fatal("expected the gunslingers ordered by join time")
 	}
 }
 
@@ -238,7 +298,7 @@ func TestGunslingerRepositoryGetTopShotPlayersInChat(t *testing.T) {
 	}
 
 	for i := 0; i < 2; i++ {
-		game := domain.NewGame(chatID, loser.ID, *loser, 2)
+		game := domain.NewGame(chatID, loser.ID, *loser, 2, domain.GameModeFixed)
 		if err := gameRepo.Store(game); err != nil {
 			t.Fatalf("store game: %v", err)
 		}

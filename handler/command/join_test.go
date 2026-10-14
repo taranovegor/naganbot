@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -62,6 +63,9 @@ func (r joinTestGameRepo) GetByID(uuid.UUID) (*domain.Game, error) {
 }
 func (r joinTestGameRepo) GetLatestGamesInChat(int64, int) ([]domain.Game, error) { return nil, nil }
 func (r joinTestGameRepo) GetLatestForChat(int64) (*domain.Game, error)           { return nil, nil }
+func (r joinTestGameRepo) GetActiveCountdownGames(time.Time) ([]*domain.Game, error) {
+	return nil, nil
+}
 func (r joinTestGameRepo) GetActiveForChat(int64, time.Time) (*domain.Game, error) {
 	r.w.mu.Lock()
 	defer r.w.mu.Unlock()
@@ -207,12 +211,13 @@ func newJoinTestHandler(w *joinTestWorld, bot *joinTestBot, nagan *service.Nagan
 	uow := joinTestUnitOfWork{w}
 
 	return &joinHandler{
-		bot:          bot,
-		createGameUC: usecase.NewCreateGameUseCase(service.NewLocker(), chatRepo, gameRepo, userRepo),
-		joinGameUC:   usecase.NewJoinGameUseCase(gameRepo, gunslingerRepo, userRepo),
-		playGameUC:   usecase.NewPlayGameUseCase(service.NewLocker(), gameRepo, gunslingerRepo, uow, nagan),
-		announcer:    service.NewGameAnnouncer(bot, trans, 0),
-		trans:        trans,
+		bot:            bot,
+		createGameUC:   usecase.NewCreateGameUseCase(service.NewLocker(), chatRepo, gameRepo, userRepo),
+		joinGameUC:     usecase.NewJoinGameUseCase(gameRepo, gunslingerRepo, userRepo),
+		playGameUC:     usecase.NewPlayGameUseCase(service.NewLocker(), gameRepo, gunslingerRepo, uow, nagan),
+		gunslingerRepo: gunslingerRepo,
+		announcer:      service.NewGameAnnouncer(bot, trans, 0),
+		trans:          trans,
 	}
 }
 
@@ -434,5 +439,136 @@ func TestJoinHandlerExecuteSendsMessageWhenKickFails(t *testing.T) {
 	}
 	if !possibleTexts(trans, "player is not kicked", translator.Config{})[msgs[3]] {
 		t.Fatalf("expected the last message to report the failed kick, got %q", msgs[3])
+	}
+}
+
+func countdownWorld(existingPlayers int) (*joinTestWorld, domain.User) {
+	gameID := uuid.Must(uuid.NewV7())
+	owner := domain.User{ID: 1, FirstName: "Owner"}
+
+	w := &joinTestWorld{
+		chat:  domain.Chat{ID: 100},
+		users: map[int64]domain.User{owner.ID: owner},
+		game: &domain.Game{
+			ID:           gameID,
+			ChatID:       100,
+			OwnerID:      owner.ID,
+			Owner:        owner,
+			PlayersCount: 6,
+			Mode:         domain.GameModeCountdown,
+		},
+	}
+	w.chat.Settings.Mode = domain.GameModeCountdown
+	w.chat.Settings.RequiredPlayers = 6
+
+	for i := 0; i < existingPlayers; i++ {
+		user := domain.User{ID: int64(i + 1), FirstName: fmt.Sprintf("Player %d", i+1)}
+		w.users[user.ID] = user
+		w.gunslingers = append(w.gunslingers, &domain.Gunslinger{
+			ID:       uuid.Must(uuid.NewV7()),
+			GameID:   gameID,
+			PlayerID: user.ID,
+			Player:   user,
+			JoinedAt: time.Now(),
+		})
+	}
+
+	newcomer := domain.User{ID: 100, FirstName: "Newcomer"}
+	w.users[newcomer.ID] = newcomer
+
+	return w, newcomer
+}
+
+func TestJoinHandlerExecuteCountdownAsksForMorePlayersUntilThereAreThree(t *testing.T) {
+	w, newcomer := countdownWorld(1)
+
+	bot := &joinTestBot{}
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	hdlr := newJoinTestHandler(w, bot, newTestNaganWithBullet(t, service.NewLeadBullet()))
+
+	hdlr.Execute(context.Background(), joinMessage(100, newcomer.ID))
+
+	msgs := bot.sentMessages()
+	if len(msgs) != 2 {
+		t.Fatalf("expected the usual joining message plus the countdown status, got %d: %v", len(msgs), msgs)
+	}
+	if !possibleTexts(trans, "joining the game", translator.Config{})[msgs[0]] {
+		t.Fatalf("expected the usual joining message first, got %q", msgs[0])
+	}
+	if want := trans.Get("countdown waiting for players", translator.Config{Count: 1}); msgs[1] != want {
+		t.Fatalf("expected %q, got %q", want, msgs[1])
+	}
+}
+
+func TestJoinHandlerExecuteCountdownTellsHowLongIsLeftOnceThereAreThree(t *testing.T) {
+	w, newcomer := countdownWorld(2)
+
+	bot := &joinTestBot{}
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	hdlr := newJoinTestHandler(w, bot, newTestNaganWithBullet(t, service.NewLeadBullet()))
+
+	hdlr.Execute(context.Background(), joinMessage(100, newcomer.ID))
+
+	msgs := bot.sentMessages()
+	if len(msgs) != 2 {
+		t.Fatalf("expected the usual joining message plus the countdown status, got %d: %v", len(msgs), msgs)
+	}
+	want := trans.Get("countdown starts in", translator.Config{
+		Count: 60,
+		Args:  map[string]string{"%max": "10"},
+	})
+	if msgs[1] != want {
+		t.Fatalf("expected %q, got %q", want, msgs[1])
+	}
+	if len(bot.kickedPlayers()) != 0 {
+		t.Fatal("expected the game not to start before its deadline")
+	}
+}
+
+func TestJoinHandlerExecuteCountdownOwnerCreatingGameGetsCreationAndStatus(t *testing.T) {
+	w := &joinTestWorld{
+		chat:  domain.Chat{ID: 100},
+		users: map[int64]domain.User{1: {ID: 1, FirstName: "Owner"}},
+	}
+	w.chat.Settings.Mode = domain.GameModeCountdown
+	w.chat.Settings.RequiredPlayers = 6
+
+	bot := &joinTestBot{}
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	hdlr := newJoinTestHandler(w, bot, newTestNaganWithBullet(t, service.NewLeadBullet()))
+
+	hdlr.Execute(context.Background(), joinMessage(100, 1))
+
+	msgs := bot.sentMessages()
+	if len(msgs) != 2 {
+		t.Fatalf("expected the creation message plus the countdown status, got %d: %v", len(msgs), msgs)
+	}
+	if !possibleTexts(trans, "game creation", translator.Config{})[msgs[0]] {
+		t.Fatalf("expected a game-creation message first, got %q", msgs[0])
+	}
+	if want := trans.Get("countdown waiting for players", translator.Config{Count: 2}); msgs[1] != want {
+		t.Fatalf("expected %q, got %q", want, msgs[1])
+	}
+	if w.game.Mode != domain.GameModeCountdown {
+		t.Fatalf("expected the game to take the chat's mode, got %q", w.game.Mode)
+	}
+}
+
+func TestJoinHandlerExecuteCountdownStartsRightAwayWhenTheLobbyIsFull(t *testing.T) {
+	w, newcomer := countdownWorld(domain.CountdownMaxPlayers - 1)
+
+	bot := &joinTestBot{}
+	trans := translator.NewTranslator("ru", translator.GameTranslations)
+	hdlr := newJoinTestHandler(w, bot, newTestNaganWithBullet(t, service.NewLeadBullet()))
+
+	hdlr.Execute(context.Background(), joinMessage(100, newcomer.ID))
+
+	if len(bot.kickedPlayers()) == 0 {
+		t.Fatal("expected the full lobby to be played, with a victim kicked")
+	}
+	for _, msg := range bot.sentMessages() {
+		if msg == trans.Get("countdown waiting for players", translator.Config{Count: 1}) {
+			t.Fatalf("expected no countdown status once the game has started, got %q", msg)
+		}
 	}
 }

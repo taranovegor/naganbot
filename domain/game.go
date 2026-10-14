@@ -6,10 +6,6 @@ import (
 	"time"
 )
 
-// LobbyIdleTTL is how long a lobby can stay without new players before it
-// stops blocking its chat.
-const LobbyIdleTTL = 6 * time.Hour
-
 type Game struct {
 	ID           uuid.UUID `gorm:"primary_key;size:36;<-:create"`
 	ChatID       int64
@@ -21,7 +17,8 @@ type Game struct {
 	PlayedAt     sql.NullTime
 	BulletType   string
 	ProofURL     string
-	PlayersCount int `gorm:"->;<-:create;not null;default:6"`
+	PlayersCount int      `gorm:"->;<-:create;not null;default:6"`
+	Mode         GameMode `gorm:"->;<-:create;not null;default:'fixed'"`
 }
 
 type GameRepository interface {
@@ -31,11 +28,14 @@ type GameRepository interface {
 	// GetActiveForChat returns the newest unplayed game in the chat. It skips
 	// lobbies with no activity since idleSince.
 	GetActiveForChat(chatID int64, idleSince time.Time) (*Game, error)
+	// GetActiveCountdownGames returns unplayed countdown games with their
+	// gunslingers. It skips games with no activity since idleSince.
+	GetActiveCountdownGames(idleSince time.Time) ([]*Game, error)
 	Store(*Game) error
 	HasPlayedSince(chatID int64, since time.Time) bool
 }
 
-func NewGame(chatID int64, ownerID int64, owner User, playersCount int) *Game {
+func NewGame(chatID int64, ownerID int64, owner User, playersCount int, mode GameMode) *Game {
 	return &Game{
 		ID:           uuid.Must(uuid.NewV7()),
 		ChatID:       chatID,
@@ -44,6 +44,7 @@ func NewGame(chatID int64, ownerID int64, owner User, playersCount int) *Game {
 		CreatedAt:    time.Now(),
 		PlayedAt:     sql.NullTime{},
 		PlayersCount: playersCount,
+		Mode:         mode,
 	}
 }
 

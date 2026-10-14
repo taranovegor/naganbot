@@ -42,8 +42,11 @@ func (r *fakeGameRepo) GetByID(uuid.UUID) (*domain.Game, error)                 
 func (r *fakeGameRepo) GetLatestGamesInChat(int64, int) ([]domain.Game, error)  { return nil, nil }
 func (r *fakeGameRepo) GetLatestForChat(int64) (*domain.Game, error)            { return nil, nil }
 func (r *fakeGameRepo) GetActiveForChat(int64, time.Time) (*domain.Game, error) { return nil, nil }
-func (r *fakeGameRepo) Store(*domain.Game) error                                { return nil }
-func (r *fakeGameRepo) HasPlayedSince(int64, time.Time) bool                    { return false }
+func (r *fakeGameRepo) GetActiveCountdownGames(time.Time) ([]*domain.Game, error) {
+	return nil, nil
+}
+func (r *fakeGameRepo) Store(*domain.Game) error             { return nil }
+func (r *fakeGameRepo) HasPlayedSince(int64, time.Time) bool { return false }
 
 type fakeGunslingerRepo struct {
 	gunslingers []*domain.Gunslinger
@@ -110,5 +113,53 @@ func TestExecuteDoesNotPersistAnythingWhenTheAtomicCommitFails(t *testing.T) {
 	}
 	if uow.committedFor == nil || !uow.committedFor.IsPlayed() {
 		t.Fatal("expected the unit of work to receive the game marked as played")
+	}
+}
+
+func TestExecuteStartsACountdownGameOnlyOnceItsDeadlineHasPassed(t *testing.T) {
+	tests := []struct {
+		name        string
+		joinedAgo   time.Duration
+		players     int
+		expectError error
+	}{
+		{"deadline not reached", 10 * time.Minute, 3, ErrNotEnoughPlayers},
+		{"deadline reached", 61 * time.Minute, 3, nil},
+		{"below the minimum", 24 * time.Hour, 2, ErrNotEnoughPlayers},
+		{"full lobby", 0, domain.CountdownMaxPlayers, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gameID := uuid.Must(uuid.NewV7())
+			game := &domain.Game{ID: gameID, PlayersCount: 6, Mode: domain.GameModeCountdown}
+
+			var gunslingers []*domain.Gunslinger
+			for i := 0; i < tt.players; i++ {
+				gunslingers = append(gunslingers, &domain.Gunslinger{
+					ID:       uuid.Must(uuid.NewV7()),
+					GameID:   gameID,
+					Game:     game,
+					JoinedAt: time.Now().Add(-tt.joinedAgo),
+				})
+			}
+
+			uow := &fakeUnitOfWork{}
+			uc := NewPlayGameUseCase(
+				service.NewLocker(),
+				&fakeGameRepo{game: game},
+				&fakeGunslingerRepo{gunslingers: gunslingers},
+				uow,
+				newTestNagan(t),
+			)
+
+			_, err := uc.Execute(context.Background(), gameID)
+			if !errors.Is(err, tt.expectError) {
+				t.Fatalf("expected %v, got %v", tt.expectError, err)
+			}
+			if (uow.committedFor != nil) != (tt.expectError == nil) {
+				t.Fatalf("committed=%t does not match expected error %v", uow.committedFor != nil, tt.expectError)
+			}
+		})
 	}
 }

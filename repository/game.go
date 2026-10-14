@@ -58,6 +58,20 @@ func (repo GameRepository) GetActiveForChat(chatID int64, idleSince time.Time) (
 	return &game, err
 }
 
+func (repo GameRepository) GetActiveCountdownGames(idleSince time.Time) ([]*domain.Game, error) {
+	var games []*domain.Game
+	err := repo.orm.
+		Preload("Gunslingers", func(db *gorm.DB) *gorm.DB {
+			return db.Order("joined_at ASC")
+		}).
+		Scopes(activeSince(idleSince)).
+		Where("mode = ?", domain.GameModeCountdown).
+		Find(&games).
+		Error
+
+	return games, err
+}
+
 func (repo GameRepository) Store(game *domain.Game) error {
 	return repo.orm.Create(game).Error
 }

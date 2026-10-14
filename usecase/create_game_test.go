@@ -57,6 +57,9 @@ func (r *lifecycleGameRepo) GetLatestForChat(int64) (*domain.Game, error)       
 func (r *lifecycleGameRepo) GetActiveForChat(int64, time.Time) (*domain.Game, error) {
 	return nil, gorm.ErrRecordNotFound
 }
+func (r *lifecycleGameRepo) GetActiveCountdownGames(time.Time) ([]*domain.Game, error) {
+	return nil, nil
+}
 func (r *lifecycleGameRepo) HasPlayedSince(int64, time.Time) bool { return false }
 
 func (r *lifecycleGameRepo) Store(game *domain.Game) error {

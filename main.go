@@ -49,5 +49,13 @@ func main() {
 		stopReceivingUpdates()
 	}()
 
+	var schedulerDone sync.WaitGroup
+	schedulerDone.Add(1)
+	go func() {
+		defer schedulerDone.Done()
+		a.RunScheduler(ctx)
+	}()
+
 	a.Run(ctx, updates)
+	schedulerDone.Wait()
 }

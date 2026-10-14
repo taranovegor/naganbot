@@ -217,6 +217,24 @@ var GameTranslations = translations{
 			few:  "Теперь в игре могут участвовать %i игрока",
 			many: "Теперь в игре могут участвовать %i игроков",
 		}},
+		"fixed mode":     {message: SimpleMessage("Фиксированный набор")},
+		"countdown mode": {message: SimpleMessage("Обратный отсчёт")},
+		"fixed mode has been set": {message: SimpleMessage(
+			"Игра начнётся, как только наберётся нужное число игроков",
+		)},
+		"countdown mode has been set": {message: SimpleMessage(
+			"Игра начнётся по таймеру: от 3 игроков, и чем больше собралось, тем раньше выстрел. Таймер не длиннее, чем до полуночи",
+		)},
+		"countdown waiting for players": {message: PluralMessage{
+			one:  "Отсчёт начнётся, когда соберётся ещё %i игрок",
+			few:  "Отсчёт начнётся, когда соберутся ещё %i игрока",
+			many: "Отсчёт начнётся, когда соберутся ещё %i игроков",
+		}},
+		"countdown starts in": {message: PluralMessage{
+			one:  "Наган проснётся через %i минуту. Если соберётся %max игроков, то сразу",
+			few:  "Наган проснётся через %i минуты. Если соберётся %max игроков, то сразу",
+			many: "Наган проснётся через %i минут. Если соберётся %max игроков, то сразу",
+		}},
 		"settings will be applied for next games": {message: SimpleMessage("Изменения вступят в силу со следующего раунда")},
 		"proof link":      {message: SimpleMessage("<a href=\"%url\">🔐 Источник случайности</a>")},
 		"game log header": {message: SimpleMessage("Последние %number игр:")},
